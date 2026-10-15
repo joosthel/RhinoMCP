@@ -32,18 +32,39 @@ namespace RhinoMCP
     }
 
     /// <summary>Wraps a mutation in one undo record named "MCP: &lt;tool&gt;".</summary>
+    /// <summary>
+    /// One undo record per mutating tool call. Rhino (7, Mac) can hold an undo record open outside any command;
+    /// while one is open BeginUndoRecord returns 0 and our edits would silently merge into it. So close a stray
+    /// record first (only when no command is running), then open ours.
+    /// </summary>
     public sealed class UndoScope : IDisposable
     {
         readonly RhinoDoc _doc;
         readonly uint _serial;
+        public bool ClosedStray { get; private set; }
         public UndoScope(RhinoDoc doc, string name)
         {
             _doc = doc;
+            ClosedStray = CloseStray(doc);
             _serial = doc.BeginUndoRecord("MCP: " + name);
         }
+        public uint Serial { get { return _serial; } }
         public void Dispose()
         {
             if (_serial != 0) _doc.EndUndoRecord(_serial);
+        }
+
+        public static bool CloseStray(RhinoDoc doc)
+        {
+            try
+            {
+                if (doc == null || !doc.UndoRecordingIsActive || Rhino.Commands.Command.InCommand()) return false;
+                uint sn = doc.CurrentUndoRecordSerialNumber;
+                if (sn == 0) return false;
+                doc.EndUndoRecord(sn);
+                return true;
+            }
+            catch (Exception) { return false; }
         }
     }
 

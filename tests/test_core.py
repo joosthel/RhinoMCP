@@ -81,6 +81,15 @@ class CoreTests(unittest.TestCase):
         self.assertTrue(r["ok"], r)
         self.assertEqual(c.call("context_get")["data"]["objects"]["total"], before)
 
+    def test_mutating_tool_is_one_undo_step(self):
+        before = c.call("context_get")["data"]["objects"]["total"]
+        r = c.call("geometry_create", {"items": [{"kind": "box", "corner": [0, 0, 0], "size": [1, 1, 1], "layer": "_mcp_test::core"}]})
+        self.assertTrue(r["ok"], r)
+        self.assertEqual(c.call("context_get")["data"]["objects"]["total"], before + 1)
+        r = c.call("history_undo", {"steps": 1})
+        self.assertTrue(r["ok"], r)
+        self.assertEqual(c.call("context_get")["data"]["objects"]["total"], before)
+
     def test_command_waiting_for_input_is_cancelled(self):
         r = c.call("run_command", {"command": "_Line", "input_timeout_s": 2})
         self.assertFalse(r["ok"])
