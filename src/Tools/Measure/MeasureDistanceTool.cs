@@ -1,4 +1,5 @@
 using System;
+using RhinoMCP.Tools.Shared;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -41,8 +42,8 @@ namespace RhinoMCP.Tools.Measure
             bool hasPoint = a.Has("point"), hasA = a.Has("a");
             if (hasPoint == hasA) a.Error("Provide exactly one of 'a' (target) or 'point' ([x,y,z])");
             Point3d pt = hasPoint ? a.Point3d("point") : Point3d.Unset;
-            var aObjs = hasA ? a.Target("a", ctx) : new List<Rhino.DocObjects.RhinoObject>();
-            var bObjs = a.Target("b", ctx);
+            var aObjs = hasA ? ObjectQuery.TargetOf(ctx, args, a, "a") : new List<Rhino.DocObjects.RhinoObject>();
+            var bObjs = ObjectQuery.TargetOf(ctx, args, a, "b");
             int budget = a.Int("budget_ms", false, 20000, 100, 600000);
             if (a.HasErrors) return a.ErrorResult();
 

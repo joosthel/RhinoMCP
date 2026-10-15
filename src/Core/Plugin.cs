@@ -16,7 +16,7 @@ namespace RhinoMCP
 {
     public sealed class RhinoMCPPlugin : PlugIn
     {
-        public const string VersionString = "0.1.0";
+        public const string VersionString = "0.2.0";
         static readonly object Gate = new object();
 
         public static RhinoMCPPlugin Instance { get; private set; }

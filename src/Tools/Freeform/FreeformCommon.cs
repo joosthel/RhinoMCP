@@ -58,7 +58,7 @@ namespace RhinoMCP.Tools.Freeform
         public static RhinoObject OneObject(P p, JToken t, string field)
         {
             var ar = new ArgReader(new JObject { { "t", t.DeepClone() } });
-            var l = ar.Target("t", p.Ctx);
+            var l = ObjectQuery.Resolve(p.Ctx, t, ar, "t");
             if (ar.HasErrors) { p.Err("'" + field + "': " + ar.ErrorResult().Message.Replace("'t'", "value")); return null; }
             if (l.Count != 1) { p.Err("'" + field + "' must resolve to exactly one object (got " + l.Count + ")"); return null; }
             return l[0];

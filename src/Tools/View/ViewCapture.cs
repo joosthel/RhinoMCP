@@ -171,7 +171,7 @@ namespace RhinoMCP.Tools.View
                 if (e != null) a.Error(e);
             }
             s.HasZoom = ViewCommon.ResolveZoom(a, args, ctx, out s.ZoomBox, out s.ZoomLabel);
-            if (a.Has("highlight")) s.Highlight = a.Target("highlight", ctx);
+            if (a.Has("highlight")) s.Highlight = ObjectQuery.TargetOf(ctx, args, a, "highlight");
             if (a.HasErrors) return a.ErrorResult();
 
             var blocked = Resources.CheckRss("view_capture");

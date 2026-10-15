@@ -1,4 +1,5 @@
 using System;
+using RhinoMCP.Tools.Shared;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using Rhino;
@@ -48,7 +49,7 @@ namespace RhinoMCP.Tools.View
             DisplayModeDescription mode = null;
             string dm = a.String("display_mode");
             if (dm != null) { string e; mode = ViewCommon.FindDisplayMode(dm, out e); if (e != null) a.Error(e); }
-            List<Rhino.DocObjects.RhinoObject> hl = a.Has("highlight") ? a.Target("highlight", ctx) : null;
+            List<Rhino.DocObjects.RhinoObject> hl = a.Has("highlight") ? ObjectQuery.TargetOf(ctx, args, a, "highlight") : null;
             if (a.HasErrors) return a.ErrorResult();
 
             int cnt; var bb = ViewCommon.VisibleBBox(doc, out cnt);

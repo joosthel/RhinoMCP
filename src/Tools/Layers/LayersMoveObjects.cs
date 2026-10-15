@@ -1,4 +1,5 @@
 using System;
+using RhinoMCP.Tools.Shared;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json.Linq;
@@ -15,7 +16,7 @@ namespace RhinoMCP.Tools.Layers
             {
                 return "Move objects to a layer (changes only the layer, not geometry). target = handle | GUID | {set} | {query:{layer,type,name}} | array. " +
                        "layer = full path with '::'. The layer must exist unless create:true (then the parent chain is built). " +
-                       "Objects already on the layer are skipped. Note: {query} targets exclude hidden objects. " +
+                       "Objects already on the layer are skipped. {query} targets include hidden objects unless the query has include_hidden:false (same in every tool). " +
                        "Returns moved/skipped/failed counts, up to 100 handles and the bbox of the moved objects. Fails with NOT_FOUND if the layer is missing.";
             }
         }
@@ -39,10 +40,10 @@ namespace RhinoMCP.Tools.Layers
             var a = new ArgReader(args);
             string path = (a.String("layer", true) ?? "").Trim();
             bool create = a.Bool("create", false);
-            var objs = a.Target("target", ctx);
+            var objs = ObjectQuery.TargetOf(ctx, args, a, "target");
             if (path.Length > 0) { var pe = LayerUtil.ValidatePath(path); if (pe != null) a.Error("layer: " + pe); }
             if (a.HasErrors) return a.ErrorResult();
-            if (objs.Count == 0) return ToolResult.Fail("NOT_FOUND", "The target matched no objects", "Check the handle/set/query. {query} targets exclude hidden objects.");
+            if (objs.Count == 0) return ToolResult.Fail("NOT_FOUND", "The target matched no objects", "Check the handle/set/query.");
 
             var tree = LayerTree.Build(doc, false);
             var layer = tree.Find(path);
