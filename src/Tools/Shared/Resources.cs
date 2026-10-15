@@ -27,6 +27,7 @@ namespace RhinoMCP.Tools.Shared
         public int ClashMaxPairs = 5000;
         public int BooleanBudgetMs = 30000;
         public int ClashBudgetMs = 30000;
+        public int FilletBudgetMs = 30000;
         public double WarnRssMb = 4000;
         public double BlockRssMb = 12000;
         public int WarnCallMs = 10000;
@@ -47,6 +48,7 @@ namespace RhinoMCP.Tools.Shared
                 { "clash_max_pairs", ClashMaxPairs },
                 { "boolean_budget_ms", BooleanBudgetMs },
                 { "clash_budget_ms", ClashBudgetMs },
+                { "fillet_budget_ms", FilletBudgetMs },
                 { "warn_rss_mb", WarnRssMb },
                 { "block_rss_mb", BlockRssMb },
                 { "warn_call_ms", WarnCallMs }
@@ -126,6 +128,7 @@ namespace RhinoMCP.Tools.Shared
             l.WarnCallMs = I(o, "warn_call_ms", l.WarnCallMs);
             l.BooleanBudgetMs = I(o, "boolean_budget_ms", l.BooleanBudgetMs);
             l.ClashBudgetMs = I(o, "clash_budget_ms", l.ClashBudgetMs);
+            l.FilletBudgetMs = I(o, "fillet_budget_ms", l.FilletBudgetMs);
             l.WarnRssMb = D(o, "warn_rss_mb", l.WarnRssMb);
             l.BlockRssMb = D(o, "block_rss_mb", l.BlockRssMb);
             JToken t;
