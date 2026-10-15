@@ -35,3 +35,8 @@ Text placed in the layout (paper space) is already at printed size; only use the
 - US: architectural units, feet-inches with fractions, arrows or ticks per office.
 - Dimension in the layout when possible: set model-space dimension styles to scale 1:1 with the unit conversion handled by the detail.
 - Always verify one dimension against `measure_distance`.
+
+## What `annotate` does (verified on Rhino 7.39 Mac)
+- The style stores the printed height and sets the dimension scale to the denominator (`TextHeight` 3.5, `DimensionScale` 100 at 1:100). In model space the text is 350 model mm; inside a 1:100 detail it prints at exactly 3.5 mm. Storing 350 with scale 1 prints 350 mm text in the detail.
+- Hatch pattern scale behaves the same way in details: `annotate` takes the printed line spacing (`spacing_mm`).
+- Text and dimensions placed in a layout (`layout` argument) use printed sizes directly.

@@ -1,0 +1,165 @@
+{
+ "n": 20000,
+ "layer": "_mcp_test::scale",
+ "create_secs": 13.0,
+ "created": 20000,
+ "rows": [
+  {
+   "label": "context_get (baseline, before)",
+   "tool": "context_get",
+   "ok": true,
+   "secs": 0.034,
+   "bytes": 687,
+   "approx_tokens": 196
+  },
+  {
+   "label": "context_get",
+   "tool": "context_get",
+   "ok": true,
+   "secs": 0.6,
+   "bytes": 713,
+   "approx_tokens": 203
+  },
+  {
+   "label": "model_changes since creation",
+   "tool": "model_changes",
+   "ok": true,
+   "secs": 0.012,
+   "bytes": 4276,
+   "approx_tokens": 1221
+  },
+  {
+   "label": "model_overview (all sections, whole doc)",
+   "tool": "model_overview",
+   "ok": true,
+   "secs": 0.942,
+   "bytes": 1612,
+   "approx_tokens": 460
+  },
+  {
+   "label": "model_overview (scope = scale layer)",
+   "tool": "model_overview",
+   "ok": true,
+   "secs": 0.856,
+   "bytes": 1511,
+   "approx_tokens": 431
+  },
+  {
+   "label": "model_overview (layers+totals only)",
+   "tool": "model_overview",
+   "ok": true,
+   "secs": 0.095,
+   "bytes": 523,
+   "approx_tokens": 149
+  },
+  {
+   "label": "objects_query group_by layer, limit 0",
+   "tool": "objects_query",
+   "ok": true,
+   "secs": 0.092,
+   "bytes": 206,
+   "approx_tokens": 58
+  },
+  {
+   "label": "objects_query group_by type, scale layer, limit 0",
+   "tool": "objects_query",
+   "ok": true,
+   "secs": 0.049,
+   "bytes": 165,
+   "approx_tokens": 47
+  },
+  {
+   "label": "objects_query rows limit 50",
+   "tool": "objects_query",
+   "ok": true,
+   "secs": 0.035,
+   "bytes": 3675,
+   "approx_tokens": 1050
+  },
+  {
+   "label": "objects_near cold (builds RTree)",
+   "tool": "objects_near",
+   "ok": true,
+   "secs": 0.127,
+   "bytes": 1827,
+   "approx_tokens": 522
+  },
+  {
+   "label": "objects_near warm, nearest 20",
+   "tool": "objects_near",
+   "ok": true,
+   "secs": 0.004,
+   "bytes": 1824,
+   "approx_tokens": 521
+  },
+  {
+   "label": "objects_near warm, radius 50",
+   "tool": "objects_near",
+   "ok": true,
+   "secs": 0.002,
+   "bytes": 4158,
+   "approx_tokens": 1188
+  },
+  {
+   "label": "objects_near warm, bbox",
+   "tool": "objects_near",
+   "ok": true,
+   "secs": 0.006,
+   "bytes": 1999,
+   "approx_tokens": 571
+  },
+  {
+   "label": "verify_audit whole model",
+   "tool": "verify_audit",
+   "ok": true,
+   "secs": 0.995,
+   "bytes": 661,
+   "approx_tokens": 188
+  },
+  {
+   "label": "verify_audit since creation",
+   "tool": "verify_audit",
+   "ok": true,
+   "secs": 0.871,
+   "bytes": 400,
+   "approx_tokens": 114
+  },
+  {
+   "label": "verify_audit target = scale layer, fast checks",
+   "tool": "verify_audit",
+   "ok": true,
+   "secs": 1.832,
+   "bytes": 401,
+   "approx_tokens": 114
+  },
+  {
+   "label": "model_changes since 1 add",
+   "tool": "model_changes",
+   "ok": true,
+   "secs": 0.433,
+   "bytes": 452,
+   "approx_tokens": 129
+  },
+  {
+   "label": "objects_near after 1 add (rebuild)",
+   "tool": "objects_near",
+   "ok": true,
+   "secs": 0.138,
+   "bytes": 1827,
+   "approx_tokens": 522
+  },
+  {
+   "label": "verify_audit since 1 add",
+   "tool": "verify_audit",
+   "ok": true,
+   "secs": 0.008,
+   "bytes": 390,
+   "approx_tokens": 111
+  }
+ ],
+ "delete_secs": 1.4,
+ "deleted": 20001,
+ "left_on_layer": 0,
+ "doc_total_before": 4,
+ "doc_total_after": 4
+}
