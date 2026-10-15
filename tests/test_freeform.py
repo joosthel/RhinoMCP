@@ -220,7 +220,11 @@ class FreeformTests(unittest.TestCase):
         angles = {}
         for cont in ("position", "tangent"):
             n = net(cont)
-            angles[cont] = max(self.cont(a, n)["max_angle_deg"], self.cont(n, b)["max_angle_deg"])
+            mids = []
+            for pr in ((a, n), (n, b)):
+                sl = self.cont(*pr, include_samples=True)["sample_list"]
+                mids.append(min(sl, key=lambda e: abs(e["t"] - 0.5))["angle_deg"])   # mid-edge: corners are special
+            angles[cont] = max(mids)
         # brep-edge inputs carry the adjacent surface: tangent continuity must beat plain position continuity
         self.assertLess(angles["tangent"], angles["position"] * 0.5, angles)
 

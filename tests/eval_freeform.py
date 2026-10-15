@@ -133,6 +133,7 @@ def hood(s):
     out = {}
     nx, ny = 7, 7
     L, W = 300.0, 200.0
+    X0 = 200.0   # keep the shapes apart
 
     def hz(x, y):
         sx = (x - L / 2) / (L / 2)
@@ -142,8 +143,8 @@ def hood(s):
     pts = []
     for i in range(nx):
         x = L * i / (nx - 1.0)
-        pts.append([[x, W * j / (ny - 1.0), hz(x, W * j / (ny - 1.0))] for j in range(ny)])
-    flange = [[[L * i / 3.0, -90.0 + 60.0 * j / 3.0, 0.0] for j in range(4)] for i in range(4)]   # y -90..-30, z=0
+        pts.append([[x + X0, W * j / (ny - 1.0), hz(x, W * j / (ny - 1.0))] for j in range(ny)])
+    flange = [[[X0 + L * i / 3.0, -90.0 + 60.0 * j / 3.0, 0.0] for j in range(4)] for i in range(4)]   # y -90..-30, z=0
     d = s.data("freeform_surface", {"layer": LAYER, "items": [
         {"kind": "nurbs_points", "points": pts, "degree_u": 3, "degree_v": 3, "name": "hood_panel"},
         {"kind": "nurbs_points", "points": flange, "degree_u": 3, "degree_v": 3, "name": "hood_flange"},
@@ -189,7 +190,7 @@ def hood(s):
     # second route to G2: network surface between the two brep edges, curvature continuity requested
     nb = s.data("freeform_surface", {"layer": LAYER, "items": [
         {"kind": "network", "u_curves": [{"target": panel["handle"], "edge": ep}, {"target": fl["handle"], "edge": ef}],
-         "v_curves": [[[0, 0, 0], [0, -30, 0]], [[300, 0, 0], [300, -30, 0]]],
+         "v_curves": [[[X0, 0, 0], [X0, -30, 0]], [[X0 + 300, 0, 0], [X0 + 300, -30, 0]]],
          "continuity": "curvature", "interior_tol": 0.5, "edge_tol": 0.5, "name": "hood_net_G2"}]}, "alternative: network between the two edges, curvature continuity")
     if nb:
         nh = nb["items"][0]["handle"]
@@ -211,13 +212,14 @@ def hood(s):
 def stool(s):
     s.shape = "stool"
     out = {}
-    seat = s.data("subd", {"op": "create_from_mesh", "layer": LAYER, "name": "stool_seat_subd",
+    PL = {"origin": [900, 0, 0], "x_axis": [1, 0, 0], "y_axis": [0, 1, 0]}
+    seat = s.data("subd", {"op": "create_from_mesh", "plane": PL, "layer": LAYER, "name": "stool_seat_subd",
                            "primitive": {"type": "box", "corner": [-180, -180, 280], "size": [360, 360, 50], "nx": 4, "ny": 4, "nz": 1}},
                   "seat blob: SubD from a 4x4x1 box mesh")
     if not seat:
         return out
     out["seat_raw"] = {k: seat[k] for k in ("faces", "edges", "vertices", "is_solid")}
-    cr = s.data("subd", {"op": "crease_edges", "target": seat["handle"], "in_box": {"min": [-200, -200, 270], "max": [200, 200, 281]},
+    cr = s.data("subd", {"op": "crease_edges", "plane": PL, "target": seat["handle"], "in_box": {"min": [-200, -200, 270], "max": [200, 200, 281]},
                          "replace": True, "name": "stool_seat_subd", "layer": LAYER}, "crease the underside so the bottom stays flat")
     if cr:
         out["seat_creased"] = {"tagged": cr["tagged"], "faces": cr["faces"]}
@@ -226,7 +228,7 @@ def stool(s):
     if sub:
         seat = sub
         out["seat_subdivided"] = {"faces": sub["faces"], "is_solid": sub["is_solid"]}
-    leg = s.data("subd", {"op": "create_from_mesh", "layer": LAYER, "name": "stool_leg_subd",
+    leg = s.data("subd", {"op": "create_from_mesh", "plane": PL, "layer": LAYER, "name": "stool_leg_subd",
                           "primitive": {"type": "cylinder", "base": [-140, -140, 0], "radius": 18, "height": 285, "around": 8, "vertical": 3, "caps": True, "cap_edges": "smooth"}},
                  "first leg: SubD cylinder")
     legs = [leg["handle"]] if leg else []
@@ -298,7 +300,28 @@ def report(s, results):
     return "\n".join(L)
 
 
-FINDINGS = "## What was hard for an agent\n\n(see below, filled in after the run)\n"
+FINDINGS = """## Findings
+
+### Results at a glance
+- **Vase**: 7 profile circles per shell, lofted and capped, hollowed with one boolean. 5 calls, no failures. Height 200 mm, solid, closed bottom, open top. Max |principal curvature| 0.039 (min radius 25.5 mm) in the shoulder.
+- **Hood**: double-curved 7x7 control-point panel + flat flange, joined by a blend. G1 blend: reaches **G1** on both sides (max normal angle 0.6 deg). G2 blend: **G2 on the flat flange side, only G1 on the panel side** (curvature difference up to ~196 percent along the edge). A network surface between the two brep edges with curvature continuity requested also only reached G1 (tangent honoured, curvature not). So true G2 against a doubly curved edge was **not** achieved with the R7 RhinoCommon calls; `analyze_continuity` made that visible with numbers instead of a misleading zebra image.
+- **Stool**: SubD seat blob (box 4x4x1, underside creased, one subdivision) plus 4 SubD cylinder legs; each converted with `to_brep` and fused with one boolean union into a **solid** NURBS brep. The editable SubD cages sit beside it.
+
+### What was hard for an agent
+- **Edge addressing.** `blend_surface` and the network need edge indices. An agent has to call `analyze_surface` first just to learn them (that is why it lists edges). Natural-language "the edge at y=0" does not exist yet.
+- **No SubD vertex editing and no SubD boolean in R7.** The only shaping levers are primitive choice, grid density, creases and offset. The stool needed 5 `to_brep` calls plus a union: `to_brep` takes one target per call (a candidate for a batch form).
+- **G2 is not guaranteed.** Asking for G2 does not give G2 (see hood). The agent must verify and decide what to do; the tools report the class and the worst sample, but RhinoCommon offers no "add control points" switch for blends.
+- **Loft input hygiene.** Seam alignment and direction are handled by `align:true`; inline point curves of 3 points needed degree 3 interpolation (degree 2 returned null in Rhino). Network curves must meet within `interior_tol`, otherwise the sorter fails with a terse code.
+- **Closed bottoms.** `cap:true` caps both ends of a loft, so a hollow vessel needs the inner-loft-and-subtract pattern (one extra boolean).
+
+### Rhino surprises
+- `Curve.CreateInterpolatedCurve` with degree 2 and 3 points returns null; degree 3 works.
+- `CreateBlendCurve` 8-argument form: `reverse` must equal "attached at the curve start" for both curves.
+- `SubD.Vertices` has no enumerator (linked list via `First`/`Next`).
+- `BlendContinuity` in R7 has only Position, Tangency and Curvature (no G3).
+- `-_ViewCaptureToFile` options (`Width=`/`Height=`) must precede the file name or they are ignored (64x64 px); the `view_capture` tool is used when present.
+- Curvature signs reported by `SurfaceCurvature` are not orientation-consistent across faces; `analyze_continuity` therefore derives the normal-section curvature from Su/Sv/Suu/Suv/Svv against a common normal (validated by analytic parabola tests).
+"""
 
 
 class EvalRun(unittest.TestCase):

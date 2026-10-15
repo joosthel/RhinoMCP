@@ -1,0 +1,1146 @@
+{
+ "results": {
+  "vase": {
+   "outer": {
+    "handle": "o1941",
+    "solid": true,
+    "volume": 1035813.975517,
+    "area": 60110.273233,
+    "faces": 3
+   },
+   "max_abs_curvature": {
+    "value": 0.039216597,
+    "min_radius": 25.499408,
+    "at": [
+     -24.728253,
+     6.223161,
+     158.384142
+    ]
+   },
+   "gaussian": {
+    "min": -0.000571567,
+    "max": 0.000245716,
+    "avg": -2.3387e-05,
+    "min_at": {
+     "point": [
+      -25.313967,
+      6.370562,
+      149.183702
+     ],
+     "uv": [
+      172.6676,
+      202.1095
+     ],
+     "face": 0
+    },
+    "max_at": {
+     "point": [
+      39.999912,
+      -10.066456,
+      13.874576
+     ],
+     "uv": [
+      19.1853,
+      422.5926
+     ],
+     "face": 0
+    }
+   },
+   "mean_curvature": {
+    "min": 0.0,
+    "max": 0.016414332,
+    "avg": 0.005333628,
+    "min_at": {
+     "point": [
+      -35.53,
+      -12.92,
+      200.0
+     ],
+     "uv": [
+      -73.53,
+      -12.92
+     ],
+     "face": 1
+    },
+    "max_at": {
+     "point": [
+      39.999912,
+      -10.066456,
+      13.874576
+     ],
+     "uv": [
+      19.1853,
+      422.5926
+     ],
+     "face": 0
+    }
+   },
+   "faces_outer": 3,
+   "boolean": {
+    "created": [
+     "o1943"
+    ],
+    "solid": true,
+    "volume_a": 1035813.975517,
+    "volume_b": 897199.487907,
+    "volume_result": 157386.199318,
+    "step_used": "document_tolerance",
+    "bbox": {
+     "min": [
+      -52.473437,
+      -52.473437,
+      0.0
+     ],
+     "max": [
+      52.473437,
+      52.473437,
+      200.0
+     ]
+    }
+   },
+   "boolean_raw_keys": [
+    "bbox",
+    "created",
+    "deleted",
+    "op",
+    "solid",
+    "step_used",
+    "volume_a",
+    "volume_b",
+    "volume_result"
+   ],
+   "measure": {
+    "count": 1,
+    "measured": 1,
+    "totals": {
+     "count": 1,
+     "length": 0.0,
+     "length_objects": 0,
+     "area": 106846.863803,
+     "area_objects": 1,
+     "volume": 157386.199318,
+     "volume_objects": 1,
+     "centroid": [
+      0.0,
+      0.0,
+      83.473734
+     ],
+     "centroid_basis": "volume",
+     "bbox": {
+      "min": [
+       -52.473437,
+       -52.473437,
+       0.0
+      ],
+      "max": [
+       52.473437,
+       52.473437,
+       200.0
+      ]
+     }
+    },
+    "units": {
+     "length": "Millimeters",
+     "area": "Millimeters^2",
+     "volume": "Millimeters^3"
+    },
+    "objects": [
+     {
+      "handle": "o1943",
+      "type": "Brep",
+      "layer": "_mcp_eval::freeform",
+      "area": 106846.863803,
+      "volume": 157386.199318,
+      "centroid": [
+       0.0,
+       0.0,
+       83.473734
+      ]
+     }
+    ]
+   },
+   "validate": {
+    "summary": {
+     "valid": 1,
+     "invalid": 0,
+     "with_problems": 0,
+     "with_naked_edges": 0,
+     "with_non_manifold_edges": 0,
+     "with_tiny_edges": 0,
+     "open_breps_not_solid": 0,
+     "tiny_threshold": 0.002,
+     "checked": 1
+    },
+    "total": 1,
+    "returned": 1,
+    "objects": [
+     {
+      "handle": "o1943",
+      "type": "Brep",
+      "valid": true,
+      "faces": 5,
+      "edges": 6,
+      "naked_edges": 0,
+      "non_manifold_edges": 0,
+      "tiny_edges": 0,
+      "solid": true,
+      "closed": true,
+      "volume": 157386.199318,
+      "area": 106846.863803,
+      "issues": [],
+      "layer": "_mcp_eval::freeform"
+     }
+    ]
+   },
+   "image": "vase.png"
+  },
+  "hood": {
+   "panel": {
+    "handle": "o1944",
+    "area": 64753.60964,
+    "degree_u": 3,
+    "degree_v": 3,
+    "cp_u": 7,
+    "cp_v": 7,
+    "kinks_u": 0,
+    "kinks_v": 0,
+    "bbox": {
+     "min": [
+      200.0,
+      0.0,
+      0.0
+     ],
+     "max": [
+      500.0,
+      200.0,
+      42.216856
+     ]
+    }
+   },
+   "max_abs_curvature": {
+    "value": 0.009722222,
+    "min_radius": 102.857143,
+    "at": [
+     500.0,
+     0.0,
+     0.0
+    ]
+   },
+   "gaussian": {
+    "min": -9.4522e-05,
+    "max": 4.5481e-05,
+    "avg": 7.26e-06,
+    "min_at": {
+     "point": [
+      500.0,
+      0.0,
+      0.0
+     ],
+     "uv": [
+      4.0,
+      0.0
+     ],
+     "face": 0
+    },
+    "max_at": {
+     "point": [
+      366.820988,
+      105.568416,
+      42.065496
+     ],
+     "uv": [
+      2.3333,
+      2.1667
+     ],
+     "face": 0
+    }
+   },
+   "mean_curvature": {
+    "min": -0.007194202,
+    "max": 0.0,
+    "avg": -0.003521059,
+    "min_at": {
+     "point": [
+      366.820988,
+      88.786008,
+      41.620209
+     ],
+     "uv": [
+      2.3333,
+      1.6667
+     ],
+     "face": 0
+    },
+    "max_at": {
+     "point": [
+      200.0,
+      0.0,
+      0.0
+     ],
+     "uv": [
+      0.0,
+      0.0
+     ],
+     "face": 0
+    }
+   },
+   "edge_panel": 0,
+   "edge_flange": 2,
+   "baseline": {
+    "class": "none",
+    "max_gap": 30.0,
+    "max_angle_deg": 36.1215,
+    "max_curv_diff_pct": 100.0,
+    "max_curv_diff_abs": 0.0015396,
+    "samples": 21,
+    "edge_a": {
+     "target": "o1944",
+     "face": 0,
+     "edge": 0,
+     "length": 300.0
+    },
+    "edge_b": {
+     "target": "o1945",
+     "face": 0,
+     "edge": 2,
+     "length": 300.0
+    },
+    "same_object": false,
+    "worst": {
+     "t": 0.55,
+     "at": [
+      360.033333,
+      0.0,
+      0.0
+     ],
+     "gap": 30.0,
+     "angle_deg": 36.1215,
+     "curv_diff_pct": 100.0,
+     "curvature_a": -0.001538571,
+     "curvature_b": 0.0
+    },
+    "thresholds": {
+     "g0_gap_max": 0.001,
+     "g1_angle_deg_max": 1.0,
+     "g2_curv_diff_pct_max": 10.0,
+     "note": "G0: gap <= g0; G1: also angle <= g1; G2: also curvature difference <= g2 percent"
+    }
+   },
+   "blends": {
+    "G1": {
+     "handle": "o1946",
+     "area": 9084.691235,
+     "panel_vs_blend": {
+      "class": "G1",
+      "max_gap": 0.0,
+      "max_angle_deg": 0.595,
+      "max_curv_diff_pct": 101.7168,
+      "max_curv_diff_abs": 0.132456922,
+      "samples": 41,
+      "edge_a": {
+       "target": "o1944",
+       "face": 0,
+       "edge": 0,
+       "length": 300.0
+      },
+      "edge_b": {
+       "target": "o1946",
+       "face": 0,
+       "edge": 0,
+       "length": 300.0
+      },
+      "same_object": false,
+      "worst": {
+       "t": 0.925,
+       "at": [
+        461.1875,
+        0.0,
+        0.0
+       ],
+       "gap": 0.0,
+       "angle_deg": 0.5511,
+       "curv_diff_pct": 101.4484,
+       "curvature_a": -0.001169445,
+       "curvature_b": 0.080742069
+      },
+      "thresholds": {
+       "g0_gap_max": 0.001,
+       "g1_angle_deg_max": 1.0,
+       "g2_curv_diff_pct_max": 10.0,
+       "note": "G0: gap <= g0; G1: also angle <= g1; G2: also curvature difference <= g2 percent"
+      }
+     },
+     "blend_vs_flange": {
+      "class": "G1",
+      "max_gap": 0.0,
+      "max_angle_deg": 0.0,
+      "max_curv_diff_pct": 100.0,
+      "max_curv_diff_abs": 0.05034157,
+      "samples": 41,
+      "edge_a": {
+       "target": "o1946",
+       "face": 0,
+       "edge": 2,
+       "length": 300.0
+      },
+      "edge_b": {
+       "target": "o1945",
+       "face": 0,
+       "edge": 2,
+       "length": 300.0
+      },
+      "same_object": false,
+      "worst": {
+       "t": 0.025,
+       "at": [
+        492.500056,
+        -30.0,
+        0.0
+       ],
+       "gap": 0.0,
+       "angle_deg": 0.0,
+       "curv_diff_pct": 100.0,
+       "curvature_a": 0.005620628,
+       "curvature_b": 0.0
+      },
+      "thresholds": {
+       "g0_gap_max": 0.001,
+       "g1_angle_deg_max": 1.0,
+       "g2_curv_diff_pct_max": 10.0,
+       "note": "G0: gap <= g0; G1: also angle <= g1; G2: also curvature difference <= g2 percent"
+      }
+     },
+     "cp": [
+      4,
+      4
+     ]
+    },
+    "G2": {
+     "handle": "o1947",
+     "area": 9125.516271,
+     "panel_vs_blend": {
+      "class": "G1",
+      "max_gap": 0.0,
+      "max_angle_deg": 0.595,
+      "max_curv_diff_pct": 196.2667,
+      "max_curv_diff_abs": 0.011199682,
+      "samples": 41,
+      "edge_a": {
+       "target": "o1944",
+       "face": 0,
+       "edge": 0,
+       "length": 300.0
+      },
+      "edge_b": {
+       "target": "o1947",
+       "face": 0,
+       "edge": 0,
+       "length": 300.0
+      },
+      "same_object": false,
+      "worst": {
+       "t": 0.175,
+       "at": [
+        275.395833,
+        0.0,
+        0.0
+       ],
+       "gap": 0.0,
+       "angle_deg": 0.2365,
+       "curv_diff_pct": 196.2667,
+       "curvature_a": -0.001396108,
+       "curvature_b": 0.001343987
+      },
+      "thresholds": {
+       "g0_gap_max": 0.001,
+       "g1_angle_deg_max": 1.0,
+       "g2_curv_diff_pct_max": 10.0,
+       "note": "G0: gap <= g0; G1: also angle <= g1; G2: also curvature difference <= g2 percent"
+      }
+     },
+     "blend_vs_flange": {
+      "class": "G2",
+      "max_gap": 0.0,
+      "max_angle_deg": 0.0,
+      "max_curv_diff_pct": 0.0,
+      "max_curv_diff_abs": 0.0,
+      "samples": 41,
+      "edge_a": {
+       "target": "o1947",
+       "face": 0,
+       "edge": 2,
+       "length": 300.0
+      },
+      "edge_b": {
+       "target": "o1945",
+       "face": 0,
+       "edge": 2,
+       "length": 300.0
+      },
+      "same_object": false,
+      "worst": {
+       "t": 0.15,
+       "at": [
+        455.000233,
+        -30.0,
+        0.0
+       ],
+       "gap": 0.0,
+       "angle_deg": 0.0,
+       "curv_diff_pct": 0.0,
+       "curvature_a": 0.0,
+       "curvature_b": 0.0
+      },
+      "thresholds": {
+       "g0_gap_max": 0.001,
+       "g1_angle_deg_max": 1.0,
+       "g2_curv_diff_pct_max": 10.0,
+       "note": "G0: gap <= g0; G1: also angle <= g1; G2: also curvature difference <= g2 percent"
+      }
+     },
+     "cp": [
+      4,
+      6
+     ]
+    }
+   },
+   "network_g2": {
+    "handle": "o1948",
+    "panel_vs_network": {
+     "class": "G1",
+     "max_gap": 0.0,
+     "max_angle_deg": 0.5048,
+     "max_curv_diff_pct": 101.8831,
+     "max_curv_diff_abs": 0.138224454,
+     "samples": 41,
+     "edge_a": {
+      "target": "o1944",
+      "face": 0,
+      "edge": 0,
+      "length": 300.0
+     },
+     "edge_b": {
+      "target": "o1948",
+      "face": 0,
+      "edge": 0,
+      "length": 300.0
+     },
+     "same_object": false,
+     "worst": {
+      "t": 0.025,
+      "at": [
+       214.270833,
+       0.0,
+       0.0
+      ],
+      "gap": 0.0,
+      "angle_deg": 0.0485,
+      "curv_diff_pct": 101.8831,
+      "curvature_a": -0.000385963,
+      "curvature_b": 0.020495708
+     },
+     "thresholds": {
+      "g0_gap_max": 0.001,
+      "g1_angle_deg_max": 1.0,
+      "g2_curv_diff_pct_max": 10.0,
+      "note": "G0: gap <= g0; G1: also angle <= g1; G2: also curvature difference <= g2 percent"
+     }
+    },
+    "network_vs_flange": {
+     "class": "G1",
+     "max_gap": 0.0,
+     "max_angle_deg": 0.1291,
+     "max_curv_diff_pct": 100.0,
+     "max_curv_diff_abs": 0.015361355,
+     "samples": 41,
+     "edge_a": {
+      "target": "o1948",
+      "face": 0,
+      "edge": 2,
+      "length": 300.0
+     },
+     "edge_b": {
+      "target": "o1945",
+      "face": 0,
+      "edge": 2,
+      "length": 300.0
+     },
+     "same_object": false,
+     "worst": {
+      "t": 0.475,
+      "at": [
+       357.5,
+       -30.0,
+       0.0
+      ],
+      "gap": 0.0,
+      "angle_deg": 0.1291,
+      "curv_diff_pct": 100.0,
+      "curvature_a": 0.015361355,
+      "curvature_b": 0.0
+     },
+     "thresholds": {
+      "g0_gap_max": 0.001,
+      "g1_angle_deg_max": 1.0,
+      "g2_curv_diff_pct_max": 10.0,
+      "note": "G0: gap <= g0; G1: also angle <= g1; G2: also curvature difference <= g2 percent"
+     }
+    }
+   },
+   "image": "hood.png"
+  },
+  "stool": {
+   "seat_raw": {
+    "faces": 48,
+    "edges": 96,
+    "vertices": 50,
+    "is_solid": true
+   },
+   "seat_creased": {
+    "tagged": 40,
+    "faces": 48
+   },
+   "seat_subdivided": {
+    "faces": 192,
+    "is_solid": true
+   },
+   "leg_copy_keys": [
+    "bbox",
+    "by_source",
+    "count",
+    "created",
+    "op"
+   ],
+   "leg_count": 4,
+   "breps": {
+    "seat": {
+     "handle": "o1956",
+     "solid": true,
+     "faces": 192,
+     "volume": 5864705.859028,
+     "naked_edges": 0
+    },
+    "leg0": {
+     "handle": "o1957",
+     "solid": true,
+     "faces": 32,
+     "volume": 215612.746623,
+     "naked_edges": 0
+    },
+    "leg1": {
+     "handle": "o1958",
+     "solid": true,
+     "faces": 32,
+     "volume": 215612.746623,
+     "naked_edges": 0
+    },
+    "leg2": {
+     "handle": "o1959",
+     "solid": true,
+     "faces": 32,
+     "volume": 215612.746623,
+     "naked_edges": 0
+    },
+    "leg3": {
+     "handle": "o1960",
+     "solid": true,
+     "faces": 32,
+     "volume": 215612.746623,
+     "naked_edges": 0
+    }
+   },
+   "union": {
+    "created": [
+     "o1961"
+    ],
+    "solid": true,
+    "volume_a": 6727156.845521,
+    "volume_result": 6722661.520645,
+    "step_used": "document_tolerance",
+    "bbox": {
+     "min": [
+      720.0,
+      -180.0,
+      0.0
+     ],
+     "max": [
+      1080.0,
+      180.0,
+      330.0
+     ]
+    }
+   },
+   "measure": {
+    "count": 6,
+    "measured": 6,
+    "totals": {
+     "count": 6,
+     "length": 0.0,
+     "length_objects": 0,
+     "area": 816323.982174,
+     "area_objects": 6,
+     "volume": 13449818.366165,
+     "volume_objects": 6,
+     "centroid": [
+      900.0,
+      0.0,
+      282.927708
+     ],
+     "centroid_basis": "volume",
+     "bbox": {
+      "min": [
+       720.0,
+       -180.0,
+       0.0
+      ],
+      "max": [
+       1080.0,
+       180.0,
+       330.0
+      ]
+     }
+    },
+    "units": {
+     "length": "Millimeters",
+     "area": "Millimeters^2",
+     "volume": "Millimeters^3"
+    },
+    "objects": [
+     {
+      "handle": "o1961",
+      "type": "Brep",
+      "layer": "_mcp_eval::freeform",
+      "area": 406531.680353,
+      "volume": 6722661.520645,
+      "centroid": [
+       900.0,
+       0.0,
+       282.928042
+      ]
+     },
+     {
+      "handle": "o1955",
+      "type": "SubD",
+      "layer": "_mcp_eval::freeform",
+      "area": 28118.980761,
+      "volume": 215612.746623,
+      "centroid": [
+       1040.0,
+       140.0,
+       142.5
+      ]
+     },
+     {
+      "handle": "o1954",
+      "type": "SubD",
+      "layer": "_mcp_eval::freeform",
+      "area": 28118.980761,
+      "volume": 215612.746623,
+      "centroid": [
+       760.0,
+       140.0,
+       142.5
+      ]
+     },
+     {
+      "handle": "o1953",
+      "type": "SubD",
+      "layer": "_mcp_eval::freeform",
+      "area": 28118.980761,
+      "volume": 215612.746623,
+      "centroid": [
+       1040.0,
+       -140.0,
+       142.5
+      ]
+     },
+     {
+      "handle": "o1952",
+      "type": "SubD",
+      "layer": "_mcp_eval::freeform",
+      "area": 28118.980761,
+      "volume": 215612.746623,
+      "centroid": [
+       760.0,
+       -140.0,
+       142.5
+      ]
+     }
+    ],
+    "objects_truncated": true
+   },
+   "validate": {
+    "summary": {
+     "valid": 6,
+     "invalid": 0,
+     "with_problems": 0,
+     "with_naked_edges": 0,
+     "with_non_manifold_edges": 0,
+     "with_tiny_edges": 0,
+     "open_breps_not_solid": 0,
+     "tiny_threshold": 0.002,
+     "checked": 6
+    },
+    "total": 6,
+    "returned": 6,
+    "objects": [
+     {
+      "handle": "o1961",
+      "type": "Brep",
+      "valid": true,
+      "faces": 320,
+      "edges": 672,
+      "naked_edges": 0,
+      "non_manifold_edges": 0,
+      "tiny_edges": 0,
+      "solid": true,
+      "closed": true,
+      "volume": 6722661.520645,
+      "area": 406531.680353,
+      "issues": [],
+      "layer": "_mcp_eval::freeform"
+     },
+     {
+      "handle": "o1955",
+      "type": "SubD",
+      "valid": true,
+      "issues": [],
+      "layer": "_mcp_eval::freeform"
+     },
+     {
+      "handle": "o1954",
+      "type": "SubD",
+      "valid": true,
+      "issues": [],
+      "layer": "_mcp_eval::freeform"
+     },
+     {
+      "handle": "o1953",
+      "type": "SubD",
+      "valid": true,
+      "issues": [],
+      "layer": "_mcp_eval::freeform"
+     },
+     {
+      "handle": "o1952",
+      "type": "SubD",
+      "valid": true,
+      "issues": [],
+      "layer": "_mcp_eval::freeform"
+     },
+     {
+      "handle": "o1951",
+      "type": "SubD",
+      "valid": true,
+      "issues": [],
+      "layer": "_mcp_eval::freeform"
+     }
+    ]
+   },
+   "sources_moved": true,
+   "image": "stool.png"
+  }
+ },
+ "calls": [
+  {
+   "shape": "vase",
+   "tool": "freeform_surface",
+   "ok": true,
+   "why": "loft outer + inner profile circles (7 each), capped",
+   "secs": 0.76
+  },
+  {
+   "shape": "vase",
+   "tool": "analyze_surface",
+   "ok": true,
+   "why": "curvature of the outer shell",
+   "secs": 0.42
+  },
+  {
+   "shape": "vase",
+   "tool": "geometry_boolean",
+   "ok": true,
+   "why": "hollow the vase (open top, closed bottom)",
+   "secs": 1.49
+  },
+  {
+   "shape": "vase",
+   "tool": "measure",
+   "ok": true,
+   "why": "measure the hollow vase",
+   "secs": 0.8
+  },
+  {
+   "shape": "vase",
+   "tool": "geometry_validate",
+   "ok": true,
+   "why": "validate the result",
+   "secs": 0.6
+  },
+  {
+   "shape": "hood",
+   "tool": "freeform_surface",
+   "ok": true,
+   "why": "panel from a 7x7 control-point grid (double curvature) + flat flange",
+   "secs": 0.03
+  },
+  {
+   "shape": "hood",
+   "tool": "analyze_surface",
+   "ok": true,
+   "why": "panel curvature + edge list",
+   "secs": 0.02
+  },
+  {
+   "shape": "hood",
+   "tool": "analyze_surface",
+   "ok": true,
+   "why": "flange edge list",
+   "secs": 0.01
+  },
+  {
+   "shape": "hood",
+   "tool": "analyze_continuity",
+   "ok": true,
+   "why": "baseline: panel vs flange (30 mm apart)",
+   "secs": 0.03
+  },
+  {
+   "shape": "hood",
+   "tool": "freeform_surface",
+   "ok": true,
+   "why": "blend panel edge to flange, G1",
+   "secs": 0.01
+  },
+  {
+   "shape": "hood",
+   "tool": "analyze_continuity",
+   "ok": true,
+   "why": "panel vs blend (G1)",
+   "secs": 0.02
+  },
+  {
+   "shape": "hood",
+   "tool": "analyze_continuity",
+   "ok": true,
+   "why": "blend vs flange (G1)",
+   "secs": 0.01
+  },
+  {
+   "shape": "hood",
+   "tool": "freeform_surface",
+   "ok": true,
+   "why": "blend panel edge to flange, G2",
+   "secs": 0.01
+  },
+  {
+   "shape": "hood",
+   "tool": "analyze_continuity",
+   "ok": true,
+   "why": "panel vs blend (G2)",
+   "secs": 0.02
+  },
+  {
+   "shape": "hood",
+   "tool": "analyze_continuity",
+   "ok": true,
+   "why": "blend vs flange (G2)",
+   "secs": 0.01
+  },
+  {
+   "shape": "hood",
+   "tool": "freeform_surface",
+   "ok": true,
+   "why": "alternative: network between the two edges, curvature continuity",
+   "secs": 0.02
+  },
+  {
+   "shape": "hood",
+   "tool": "analyze_continuity",
+   "ok": true,
+   "why": "panel vs network",
+   "secs": 0.02
+  },
+  {
+   "shape": "hood",
+   "tool": "analyze_continuity",
+   "ok": true,
+   "why": "network vs flange",
+   "secs": 0.0
+  },
+  {
+   "shape": "hood",
+   "tool": "run_command",
+   "ok": true,
+   "why": "",
+   "secs": 0.06
+  },
+  {
+   "shape": "hood",
+   "tool": "run_command",
+   "ok": true,
+   "why": "",
+   "secs": 0.15
+  },
+  {
+   "shape": "hood",
+   "tool": "run_command",
+   "ok": true,
+   "why": "",
+   "secs": 0.1
+  },
+  {
+   "shape": "hood",
+   "tool": "run_command",
+   "ok": true,
+   "why": "",
+   "secs": 0.05
+  },
+  {
+   "shape": "stool",
+   "tool": "subd",
+   "ok": true,
+   "why": "seat blob: SubD from a 4x4x1 box mesh",
+   "secs": 0.04
+  },
+  {
+   "shape": "stool",
+   "tool": "subd",
+   "ok": true,
+   "why": "crease the underside so the bottom stays flat",
+   "secs": 0.02
+  },
+  {
+   "shape": "stool",
+   "tool": "subd",
+   "ok": true,
+   "why": "subdivide once for a denser control net",
+   "secs": 0.02
+  },
+  {
+   "shape": "stool",
+   "tool": "subd",
+   "ok": true,
+   "why": "first leg: SubD cylinder",
+   "secs": 0.01
+  },
+  {
+   "shape": "stool",
+   "tool": "geometry_transform",
+   "ok": true,
+   "why": "copy leg to the 4 corners",
+   "secs": 0.03
+  },
+  {
+   "shape": "stool",
+   "tool": "subd",
+   "ok": true,
+   "why": "SubD -> NURBS brep: seat",
+   "secs": 7.16
+  },
+  {
+   "shape": "stool",
+   "tool": "subd",
+   "ok": true,
+   "why": "SubD -> NURBS brep: leg0",
+   "secs": 2.24
+  },
+  {
+   "shape": "stool",
+   "tool": "subd",
+   "ok": true,
+   "why": "SubD -> NURBS brep: leg1",
+   "secs": 2.14
+  },
+  {
+   "shape": "stool",
+   "tool": "subd",
+   "ok": true,
+   "why": "SubD -> NURBS brep: leg2",
+   "secs": 2.35
+  },
+  {
+   "shape": "stool",
+   "tool": "subd",
+   "ok": true,
+   "why": "SubD -> NURBS brep: leg3",
+   "secs": 3.07
+  },
+  {
+   "shape": "stool",
+   "tool": "geometry_boolean",
+   "ok": true,
+   "why": "union all parts into one solid",
+   "secs": 37.87
+  },
+  {
+   "shape": "stool",
+   "tool": "measure",
+   "ok": true,
+   "why": "measure result",
+   "secs": 38.47
+  },
+  {
+   "shape": "stool",
+   "tool": "geometry_validate",
+   "ok": true,
+   "why": "validate result",
+   "secs": 19.67
+  },
+  {
+   "shape": "stool",
+   "tool": "geometry_transform",
+   "ok": true,
+   "why": "move the SubD sources beside the union",
+   "secs": 0.18
+  },
+  {
+   "shape": "stool",
+   "tool": "run_command",
+   "ok": true,
+   "why": "",
+   "secs": 0.05
+  }
+ ],
+ "failures": [],
+ "tools": [
+  "analyze_continuity",
+  "analyze_surface",
+  "clash_check",
+  "commands_search",
+  "context_get",
+  "dev_reload",
+  "freeform_surface",
+  "geometry_boolean",
+  "geometry_create",
+  "geometry_edit",
+  "geometry_transform",
+  "geometry_validate",
+  "history_redo",
+  "history_undo",
+  "layers_apply_scheme",
+  "layers_audit",
+  "layers_list",
+  "layers_manage",
+  "layers_move_objects",
+  "measure",
+  "measure_distance",
+  "objects_delete",
+  "objects_get",
+  "objects_query",
+  "objects_select",
+  "objects_set_props",
+  "run_command",
+  "run_csharp",
+  "run_python",
+  "server_info",
+  "sets_delete",
+  "sets_list",
+  "sets_save",
+  "subd",
+  "view_capture",
+  "view_capture_sheet",
+  "view_set",
+  "views_named"
+ ]
+}
