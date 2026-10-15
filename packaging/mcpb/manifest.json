@@ -1,0 +1,30 @@
+{
+  "manifest_version": "0.3",
+  "name": "rhino-mcp",
+  "display_name": "Rhino MCP",
+  "version": "0.1.0",
+  "description": "Drive Rhino 7 (macOS) from Claude: modelling, layers, drawings and exports.",
+  "long_description": "Connects Claude to a running Rhino 7 with the RhinoMCP plugin installed. The bundled bridge talks to Rhino over an authenticated loopback-only connection (127.0.0.1). If Rhino is closed, Claude is told to open it; no restart of Claude is needed. Requires the RhinoMCP plugin in Rhino (see the project's INSTALL.md).",
+  "author": {
+    "name": "joosthel",
+    "url": "https://github.com/joosthel"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/joosthel/RhinoMCP"
+  },
+  "homepage": "https://github.com/joosthel/RhinoMCP",
+  "license": "MIT",
+  "keywords": ["rhino", "cad", "architecture", "3d", "design"],
+  "server": {
+    "type": "binary",
+    "entry_point": "server/rhinomcp-bridge",
+    "mcp_config": {
+      "command": "${__dirname}/server/rhinomcp-bridge",
+      "args": []
+    }
+  },
+  "compatibility": {
+    "platforms": ["darwin"]
+  }
+}

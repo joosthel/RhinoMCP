@@ -1,0 +1,12 @@
+name: rhino-mcp
+version: 0.1.0
+authors:
+- joosthel
+description: Model Context Protocol server inside Rhino 7 (macOS). Lets AI agents (Claude, Cursor, ...) model, organise layers and produce drawings. Includes a stdio bridge for clients that cannot speak HTTP.
+url: https://github.com/joosthel/RhinoMCP
+keywords:
+- mcp
+- ai
+- claude
+- agent
+- automation
