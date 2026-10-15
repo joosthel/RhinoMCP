@@ -766,8 +766,32 @@ namespace RhinoMCP.Tools.Drawing
             double radius = Math.Max(bb.Diagonal.Length / 2.0, 1.0);
             if (v.Perspective && v.Info != null)
             {
+                // Perspective: keep the user's viewing direction, up vector and lens, but move the camera so the SOURCE box fills the
+                // frustum (temporary ViewportInfo; the live viewport is untouched). The drawing then does not depend on where the
+                // user's Perspective camera happens to stand (or whether it is inside the model).
                 var info = new ViewportInfo(v.Info);
-                try { info.SetFrustumNearFar(bb); } catch (Exception) { }
+                try
+                {
+                    double fl, fr, fb, ft, fn, ff;
+                    if (info.GetFrustum(out fl, out fr, out fb, out ft, out fn, out ff) && fn > 0)
+                    {
+                        double tw = (fr - fl) / (2.0 * fn), th = (ft - fb) / (2.0 * fn);
+                        var pdir = info.CameraDirection; pdir.Unitize();
+                        var pup = info.CameraUp; pup.Unitize();
+                        var pright = Vector3d.CrossProduct(pdir, pup); pright.Unitize();
+                        double dist = Math.Max(radius * 0.05, 1e-6);
+                        foreach (var p in bb.GetCorners())
+                        {
+                            var w = p - center;
+                            double zc = w * pdir;
+                            if (tw > 1e-9) dist = Math.Max(dist, Math.Abs(w * pright) / (tw * 0.9) - zc);
+                            if (th > 1e-9) dist = Math.Max(dist, Math.Abs(w * pup) / (th * 0.9) - zc);
+                        }
+                        info.SetCameraLocation(center - pdir * dist);
+                    }
+                    info.SetFrustumNearFar(bb);
+                }
+                catch (Exception) { }
                 return info.IsValidCamera ? info : null;
             }
             var look = v.Look; look.Unitize();

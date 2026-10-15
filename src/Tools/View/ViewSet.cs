@@ -17,7 +17,7 @@ namespace RhinoMCP.Tools.View
             get
             {
                 return "Change the user's ACTIVE viewport (visible to the user; not undoable, document untouched). " +
-                       "Give any of: projection (Top|Bottom|Left|Right|Front|Back|Perspective), named_view, camera {location,target,lens?}, " +
+                       "Give any of: projection (Top|Bottom|Left|Right|Front|Back|Perspective), named_view, camera {location,target,lens?|fov_deg?,up?} (lens: 35 mm focal length on a 24 mm frame along the SHORT image side; fov_deg = short-side field of view; up = roll), " +
                        "display_mode (English name), zoom_to ('all' | target | {min,max}). Applied in that order. Returns the resulting view. " +
                        "Use view_capture instead to just look. Save the current view first with views_named if you want to return to it.";
             }
@@ -29,7 +29,7 @@ namespace RhinoMCP.Tools.View
                 return @"{""type"":""object"",""properties"":{
 ""projection"":{""type"":""string"",""enum"":[""Top"",""Bottom"",""Left"",""Right"",""Front"",""Back"",""Perspective""]},
 ""named_view"":{""type"":""string""},
-""camera"":{""type"":""object"",""properties"":{""location"":{""$ref"":""#/$defs/point""},""target"":{""$ref"":""#/$defs/point""},""lens"":{""type"":""number""}},""required"":[""location"",""target""]},
+""camera"":{""type"":""object"",""properties"":{""location"":{""$ref"":""#/$defs/point""},""target"":{""$ref"":""#/$defs/point""},""lens"":{""type"":""number""},""fov_deg"":{""type"":""number""},""up"":{""$ref"":""#/$defs/point""}},""required"":[""location"",""target""]},
 ""display_mode"":{""type"":""string""},
 ""zoom_to"":{""description"":""'all' | target | {min:[x,y,z],max:[x,y,z]}""}},""additionalProperties"":false}";
             }
@@ -56,7 +56,7 @@ namespace RhinoMCP.Tools.View
                 if (namedIdx < 0) a.Error("named view '" + named + "' not found (see views_named list)");
             }
             JObject cam = args["camera"] as JObject;
-            if (a.Has("camera") && cam == null) a.Error("'camera' must be {location,target,lens?}");
+            if (a.Has("camera") && cam == null) a.Error("'camera' must be {location,target,lens?|fov_deg?,up?}");
             DisplayModeDescription mode = null;
             string dm = a.String("display_mode");
             if (dm != null) { string e; mode = ViewCommon.FindDisplayMode(dm, out e); if (e != null) a.Error(e); }

@@ -206,3 +206,11 @@ Rhino 7.39 Mac runs x86_64 under Rosetta and is mostly single-threaded, so heavy
 - **line_blend:** `LineCurve` + `Curve.CreateBlendCurve(a, b, Tangency|Curvature, bulge, bulge)` + the curve through the points, appended into a `PolyCurve` so segment 0 stays an exact line.
 - **Extrusion direction:** `Extrusion.Create(curve, h, cap)` follows the curve plane normal, so the result is checked against the requested direction by bbox centre and flipped when needed; non-parallel directions use `Surface.CreateExtrusion`.
 - **Project/pull:** `Curve.ProjectToBrep(curve, breps, dir, tol)` and `Curve.PullToBrepFace` per face.
+
+## View capture: learned on Rhino 7.39 Mac (`src/Tools/View`)
+- **Redraws are asynchronous.** `-_ViewCaptureToFile` has no display-mode option; it renders what the viewport last drew. Setting `RhinoViewport.DisplayMode` and calling `Redraw()` (even with `RhinoApp.Wait()`) captured the *previous* call's mode, so modes looked ignored or flickered between calls. `ViewCommon.Settle` redraws twice with a 150 ms sleep before capturing; frames are then byte-identical per mode.
+- **Display mode names** come from `DisplayModeDescription.GetDisplayModes()` (English names; Rhino 7 spells it "Arctic"). Lookup is case-insensitive with aliases (Artic, XRay, Render, Wire, Ghost, Tech, Sketch); unknown names list the valid ones.
+- **Lens / fov.** The 35 mm lens is relative to a 24 mm frame on the SHORT side of the capture: `fov_short = 2*atan(12/lens)`. `fov_deg` in a camera object is converted with `lens = 12/tan(fov/2)`.
+- **Roll.** `SetCameraLocations` resets the up vector; `Framing.SetCamera` re-applies it through a `ViewportInfo`.
+- **Tight zoom.** `Framing.Zoom` replaces `ZoomBoundingBox` (which leaves large margins): for a capture of W x H, parallel views keep the SHORT side of the frustum, perspective views solve the camera distance from the lens frame. `margin` = fraction of the image left free per side. The reported `framing.fill_x/fill_y` matches the rendered pixels within about 1 %.
+- **Isolate / only_layers** use a `DisplayConduit` (`PreDrawObject` with `DrawObject = false`) enabled only during the capture: nothing in the document (visibility, layers, undo, change journal) is touched. The same conduit draws per-panel labels with `Draw2dText` in `DrawForeground`.
