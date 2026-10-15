@@ -6,7 +6,7 @@ Goal: let AI agents drive Rhino to help designers create shapes, develop archite
 
 ## Status
 
-Research complete — see [`docs/research/00-synthesis.md`](docs/research/00-synthesis.md). Next: Phase 0 spike on Rhino 7 / macOS.
+Research complete — see [`docs/research/00-synthesis.md`](docs/research/00-synthesis.md). Product direction: [`docs/DECISIONS.md`](docs/DECISIONS.md). Next: Phase 0 spike on Rhino 7 / macOS.
 
 | Doc | Topic |
 |---|---|
@@ -15,3 +15,7 @@ Research complete — see [`docs/research/00-synthesis.md`](docs/research/00-syn
 | [02](docs/research/02-rhino-control.md) | Controlling Rhino 7/8 programmatically |
 | [03](docs/research/03-mcp-design.md) | MCP design for large tool surfaces |
 | [04](docs/research/04-designer-workflows.md) | Designer/architect workflows & capability map |
+| [05](docs/research/05-clean-make2d.md) | Clean Make2D pipeline |
+| [06](docs/research/06-agent-skills.md) | Agent skills: standards & packaging |
+| [07](docs/research/07-rhinoai-reference.md) | McNeel RhinoAI teardown |
+| [08](docs/research/08-one-click-install.md) | One-click install & auto-start |
