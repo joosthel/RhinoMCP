@@ -135,7 +135,7 @@ namespace RhinoMCP.Tools.View
                        "Camera object: {location,target,lens?|fov_deg?,up?}. Lens is the 35 mm focal length relative to a 24 mm frame on the SHORT side of the image (50 mm = 27 deg across the short side); " +
                        "fov_deg is that same short-side field of view (lens = 12/tan(fov/2)); give one of them. up = roll: the image 'up' direction (default world Z). " +
                        "Standard views default to zoom_to all. display_mode: case-insensitive English name (Wireframe, Shaded, Rendered, Ghosted, X-Ray, Technical, Artistic, Pen, Arctic, Raytraced; aliases like Artic, XRay); unknown names list the valid ones. " +
-                       "zoom_to: 'all' | any target (handle, set, {query:{layer,include_sublayers,...}}) | {min,max}; framed tightly (parallel and perspective) leaving margin (fraction of the image per side, default 0.05); the result's framing.fill_x/fill_y give the fraction of the image width/height the box covers. " +
+                       "zoom_to: 'all' (with only_layers/isolate: everything drawn) | any target (handle, set, {query:{layer,include_sublayers,...}}) | {min,max}; framed tightly (parallel and perspective) leaving margin (fraction of the image per side, default 0.05); the result's framing.fill_x/fill_y give the fraction of the image width/height the box covers. " +
                        "only_layers: layer names (full path or leaf, sublayers included) and/or isolate: target; everything else is hidden during the capture only (nothing in the document changes); both = union. " +
                        "highlight: target to show selected. Returns an image block plus camera/scene metadata.";
             }
@@ -191,12 +191,12 @@ namespace RhinoMCP.Tools.View
                 string e; s.Mode = ViewCommon.FindDisplayMode(dm, out e);
                 if (e != null) a.Error(e);
             }
-            s.HasZoom = ViewCommon.ResolveZoom(a, args, ctx, out s.ZoomBox, out s.ZoomLabel);
             s.Margin = a.Double("margin", false, 0.05);
             if (s.Margin < 0 || s.Margin > 0.45) a.Error("'margin' must be in [0, 0.45]");
             if (a.Has("highlight")) s.Highlight = ObjectQuery.TargetOf(ctx, args, a, "highlight");
             string visDesc;
             s.Keep = ViewCommon.ResolveKeep(ctx, args, a, out visDesc);
+            s.HasZoom = ViewCommon.ResolveZoom(a, args, ctx, out s.ZoomBox, out s.ZoomLabel, s.Keep);
             if (a.HasErrors) return a.ErrorResult();
 
             var blocked = Resources.CheckRss("view_capture");
@@ -220,10 +220,20 @@ namespace RhinoMCP.Tools.View
             }
 
             string viewLabel, modeName; object camera;
-            byte[] bytes = Renderer.Render(ctx, view, s, a, s.Jpeg, out viewLabel, out camera, out modeName);
+            byte[] bytes;
+            bool windowRestored;
+            // A minimized Rhino window cannot draw or capture: restore it for the capture only and minimize it again afterwards.
+            using (var lease = RhinoMCP.Tools.Script.WindowLease.Acquire())
+            {
+                if (lease.Error != null)
+                    return ToolResult.Fail("WINDOW_UNAVAILABLE", "Cannot capture: " + lease.Error,
+                        "Restore or unhide the Rhino window (click its Dock icon) and retry. system_status shows the window state.", new { window = RhinoMCP.Tools.Script.MacWindow.State() });
+                windowRestored = lease.Restored;
+                bytes = Renderer.Render(ctx, view, s, a, s.Jpeg, out viewLabel, out camera, out modeName);
+            }
             if (a.HasErrors) return a.ErrorResult();
             if (bytes == null || bytes.Length == 0)
-                return ToolResult.Fail("CAPTURE_FAILED", "ViewCaptureToFile produced no file", "Make sure the Rhino window is not minimized and retry", new { log = ctx.Logs });
+                return ToolResult.Fail("CAPTURE_FAILED", "ViewCaptureToFile produced no file", "Rhino reported no error and the window looks usable; retry once, then check system_status (window state) and Rhino's command history", new { log = ctx.Logs, window = RhinoMCP.Tools.Script.MacWindow.State() });
             string mime = Png.IsPng(bytes) ? "image/png" : (Png.IsJpeg(bytes) ? "image/jpeg" : null);
             if (mime == null) return ToolResult.Fail("CAPTURE_FAILED", "Rhino wrote a file that is neither PNG nor JPEG");
             int iw, ih; Png.Size(bytes, out iw, out ih);
@@ -241,6 +251,7 @@ namespace RhinoMCP.Tools.View
                 note = "The active viewport was temporarily driven and has been restored."
             });
             foreach (var l in ctx.Logs) if (l.StartsWith("restore:")) res.Warn(l);
+            if (windowRestored) res.Warn("the Rhino window was minimized: it was restored for the capture and minimized again");
             if (wantedJpeg) res.Warn("jpeg is not available in this runtime; returned PNG");
             res.AddImage(mime, Convert.ToBase64String(bytes));
             return guard.Finish(res);

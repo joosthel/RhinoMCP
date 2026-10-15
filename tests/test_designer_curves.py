@@ -26,7 +26,7 @@ def ang(a, b):
     return math.degrees(math.acos(max(-1.0, min(1.0, d))))
 
 
-class DesignerCurveTests(unittest.TestCase):
+class DesignerCurveTests(c.IdleTestCase):
     def tearDown(self):
         c.call("run_command", {"command": '-_SelLayer "%s" _Enter' % LAYER})
         c.call("run_command", {"command": "_Delete"})

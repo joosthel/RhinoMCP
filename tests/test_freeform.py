@@ -23,7 +23,7 @@ def circle(cx, cy, z, r):
     return {"circle": {"center": [cx, cy, z], "radius": r}}
 
 
-class FreeformTests(unittest.TestCase):
+class FreeformTests(c.IdleTestCase):
     def tearDown(self):
         c.call("run_command", {"command": '-_SelLayer "%s" _Enter' % LAYER})
         c.call("run_command", {"command": "_Delete"})

@@ -46,9 +46,10 @@ def layer_paths():
     return {l["path"]: l for l in r["data"]["layers"]}
 
 
-class LayoutTests(unittest.TestCase):
+class LayoutTests(c.IdleTestCase):
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         names = [t["name"] for t in c.rpc("tools/list")["tools"]]
         for n in ("layout_create", "layouts_list", "layout_delete", "annotate", "export"):
             assert n in names, n

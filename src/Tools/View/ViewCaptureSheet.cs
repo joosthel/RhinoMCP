@@ -63,7 +63,7 @@ namespace RhinoMCP.Tools.View
             string visDesc;
             var keep = ViewCommon.ResolveKeep(ctx, args, a, out visDesc);
             Rhino.Geometry.BoundingBox bb; string zoomLabel;
-            if (!ViewCommon.ResolveZoom(a, args, ctx, out bb, out zoomLabel))
+            if (!ViewCommon.ResolveZoom(a, args, ctx, out bb, out zoomLabel, keep))
             {
                 if (a.HasErrors) return a.ErrorResult();
                 int cnt; bb = ViewCommon.VisibleBBox(doc, keep, out cnt);
@@ -75,6 +75,14 @@ namespace RhinoMCP.Tools.View
             var sheet = new Raster(W, H, 255);
             var panels = new List<object>();
             bool labelsFailed = false;
+            bool windowRestored;
+            var lease = RhinoMCP.Tools.Script.WindowLease.Acquire();
+            if (lease.Error != null)
+                return ToolResult.Fail("WINDOW_UNAVAILABLE", "Cannot capture: " + lease.Error,
+                    "Restore or unhide the Rhino window (click its Dock icon) and retry. system_status shows the window state.", new { window = RhinoMCP.Tools.Script.MacWindow.State() });
+            windowRestored = lease.Restored;
+            try
+            {
             for (int i = 0; i < 4; i++)
             {
                 var s = new RenderSpec { ViewName = Order[i], Mode = mode, Grid = grid, Axes = false, Width = w2, Height = h2, Highlight = hl, Margin = margin, Keep = keep, Label = labels ? Order[i] : null };
@@ -82,7 +90,7 @@ namespace RhinoMCP.Tools.View
                 string label, mn; object cam;
                 byte[] png = Renderer.Render(ctx, view, s, a, false, out label, out cam, out mn);
                 if (a.HasErrors) return a.ErrorResult();
-                if (png == null) return ToolResult.Fail("CAPTURE_FAILED", "ViewCaptureToFile produced no file for " + Order[i], null, new { log = ctx.Logs });
+                if (png == null) return ToolResult.Fail("CAPTURE_FAILED", "ViewCaptureToFile produced no file for " + Order[i], "Rhino reported no error and the window looks usable; retry once, then check system_status (window state)", new { log = ctx.Logs });
                 Raster r;
                 try { r = Png.Decode(png); }
                 catch (Exception ex) { return ToolResult.Fail("DECODE_FAILED", "Could not read Rhino's capture for " + Order[i] + ": " + ex.Message); }
@@ -93,6 +101,8 @@ namespace RhinoMCP.Tools.View
                 panels.Add(new { panel = Order[i], position = (i / 2 == 0 ? "top" : "bottom") + "-" + (i % 2 == 0 ? "left" : "right"), camera = cam,
                                  framing = s.Frame == null ? null : new { fill_x = s.Frame.FillX, fill_y = s.Frame.FillY } });
             }
+            }
+            finally { lease.Dispose(); }
             byte[] outPng = Png.Encode(sheet);
             var res = ToolResult.Ok(new
             {
@@ -106,6 +116,7 @@ namespace RhinoMCP.Tools.View
                 scene = ViewCommon.SceneInfo(doc, keep),
                 image = new { mime = "image/png", width = W, height = H, bytes = outPng.Length }
             });
+            if (windowRestored) res.Warn("the Rhino window was minimized: it was restored for the capture and minimized again");
             res.AddImage("image/png", Convert.ToBase64String(outPng));
             return res;
         }

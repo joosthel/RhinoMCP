@@ -23,7 +23,7 @@ def by_path(data):
     return {l["path"]: l for l in data["layers"]}
 
 
-class LayersTests(unittest.TestCase):
+class LayersTests(c.IdleTestCase):
     def setUp(self):
         self.prev_current = rows(limit=1)["current"]
         self.stored_scheme = None

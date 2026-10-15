@@ -62,9 +62,10 @@ DEL_LAYERS = ("import rhinoscriptsyntax as rs\n"
               "        except Exception: pass\n")
 
 
-class ModelTests(unittest.TestCase):
+class ModelTests(c.IdleTestCase):
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         delete_layer_content()
 
     def tearDown(self):
@@ -251,6 +252,17 @@ class ModelTests(unittest.TestCase):
         ok(c.call("objects_delete", {"target": h3}))
         r6 = ok(c.call("objects_near", {"point": [95, 5, 5], "limit": 1, "filters": flt}))
         self.assertEqual(r6["rows"][0]["handle"], h1)
+
+    def test_objects_near_filter_with_many_unrelated_neighbours(self):
+        # Regression: the nearest-k radius used to stop growing once `limit` unfiltered objects were inside it,
+        # then the filter removed them and fewer rows than requested came back.
+        h0, h1, h2 = box(0), box(100), box(200)
+        junk = [box(90 + i, 20, 0, size=1, layer="_mcp_test::model_other") for i in range(8)]
+        try:
+            r = ok(c.call("objects_near", {"point": [95, 5, 5], "limit": 3, "filters": {"layer": LAYER}}))
+            self.assertEqual([x["handle"] for x in r["rows"]], [h1, h0, h2])
+        finally:
+            ok(c.call("objects_delete", {"target": junk, "confirm_count": len(junk)}))
 
     def test_objects_near_arg_errors(self):
         self.assertFalse(c.call("objects_near", {})["ok"])

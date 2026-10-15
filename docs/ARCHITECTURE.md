@@ -128,11 +128,17 @@ docs/              research/ · ARCHITECTURE.md · PLAN.md · DEVELOPMENT.md · 
 
 ## Interactive commands (learned on Rhino 7.39 Mac)
 - **Commands waiting at a prompt** (GetPoint/GetOption) keep pumping UI callbacks. `run_command` arms a watchdog with `input_timeout_s` (default 10 s) that injects Escape (`!`). It returns `COMMAND_NEEDS_INPUT` with the exact `last_prompt` and its options, so the agent can retry with every input inline.
-- **Background cancel:** `RhinoApp.SendKeystrokes` does nothing while Rhino is not the frontmost app. The watchdog therefore posts a native Escape key event into Rhino's own AppKit queue (`[NSApp postEvent:]` via the Objective-C runtime), which works in the background. It retries every 2 s, up to 4 times.
+- **Background cancel:** `RhinoApp.SendKeystrokes` does nothing while Rhino is not the frontmost app. The watchdog therefore posts a native Escape key event into Rhino's own AppKit queue (`[NSApp postEvent:]` via the Objective-C runtime), which works in the background. It retries every 2 s, up to 4 times (from the 3rd attempt `SendKeystrokes` is sent as well).
+- **Finding the window:** `[NSApp mainWindow]` is nil while the Rhino window is minimized or the app is inactive, so the event used to go nowhere. `MacWindow` (Tools/Script/MacWindow.cs) walks `[NSApp windows]` and picks the titled, non-panel, main-capable window that is visible or miniaturized (ranked: `RhinoApp.MainWindowHandle()` match, document name in title, "Rhino" in title, main/key). A minimized window is deminiaturized first (accepted for cancelling a stuck command). `run_command` reports `cancel_method` (`main_window`, `found_window`, `found_window+deminiaturized`, ...) and `command_ended`. The `command_cancel` tool does the same on demand (no-op when idle); `tests/mcp_client.py::ensure_idle()` calls it before every test class.
 - **Modal windows** (`What`, `Options`, …, and non-dash `Export`/`Print`/`Hatch`/…) do *not* pump callbacks. They freeze Rhino until a person closes them. `run_command` refuses them up front with `COMMAND_BLOCKED`.
 - **`_Undo` via `RunScript` is a no-op.** Use `history_undo` / `history_redo`, which call `RhinoDoc.Undo()` / `Redo()`.
 - **A cancelled command can leave an undo record open.** While it is open, `Undo()` fails and later edits pile into it. The tools close a stray record (`CurrentUndoRecordSerialNumber`) when no command is running.
 - **`CapturedCommandWindowStrings` is empty on Mac.** `run_command` falls back to diffing `CommandHistoryWindowText`.
+
+## View capture and the window
+- A minimized or hidden Rhino window cannot draw, so `-_ViewCaptureToFile` wrote no file (reported as the misleading "produced no file"). `view_capture` / `view_capture_sheet` now take a `WindowLease`: a minimized window is deminiaturized for the capture and minimized again afterwards (a warning says so); a hidden app / no document window returns `WINDOW_UNAVAILABLE` with guidance. `system_status.window` shows the state (`visible|minimized|hidden|app_hidden|no_document_window`).
+- `ViewCommon.Settle` is adaptive: a display conduit counts real frames of the viewport and waits (bounded) for two after the last state change, then a 150 ms flush; falls back to fixed sleeps if no frame callbacks arrive.
+- `zoom_to:"all"` together with `only_layers`/`isolate` frames the drawn set, not the whole document (otherwise unrelated far-away objects shrink the subject to a speck and different display modes render identically).
 
 ## System.Drawing is unusable on Rhino 7 Mac
 - libgdiplus is not usable in-process: `new Bitmap(w,h)` throws `TypeInitializationException` (GDIPlus), and half-built GDI+ objects with throwing finalizers can take Rhino down (Mono exits on an unhandled finalizer exception).
