@@ -32,7 +32,23 @@ namespace RhinoMCP
             // Stay light: defer all real work to the first idle tick.
             RhinoApp.Idle += OnFirstIdle;
             RhinoApp.Closing += OnClosing;
+            AppDomain.CurrentDomain.UnhandledException += OnUnhandled;
             return LoadReturnCode.Success;
+        }
+
+        /// <summary>
+        /// Mono exits the process on an unhandled exception (e.g. thrown in a finalizer); we cannot stop that,
+        /// but we can leave a trace in ~/Library/Application Support/RhinoMCP/crash.log for diagnosis.
+        /// </summary>
+        static void OnUnhandled(object sender, UnhandledExceptionEventArgs e)
+        {
+            try
+            {
+                string dir = RhinoMCP.Config.DataDir;
+                System.IO.File.AppendAllText(System.IO.Path.Combine(dir, "crash.log"),
+                    DateTime.Now.ToString("o") + " terminating=" + e.IsTerminating + "\n" + e.ExceptionObject + "\n\n");
+            }
+            catch (Exception) { }
         }
 
         static void OnFirstIdle(object sender, EventArgs e)
