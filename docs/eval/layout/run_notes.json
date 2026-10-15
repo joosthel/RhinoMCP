@@ -1,0 +1,323 @@
+{
+  "ai": {
+    "bytes": 26503,
+    "check": {
+      "header": "%!PS-Adobe-3.0",
+      "valid_header": true
+    },
+    "command_output": [
+      "Command: -_Export",
+      "Save file name ( Version=7 SaveSmall=No GeometryOnly=No SaveTextures=Yes SaveNotes=No SavePlugInData=Yes Browse )\"/tmp/rhinomcp_test_exports/eval/plan.ai\"",
+      "Choose AI option ( ViewportBoundary=No Color=RGB HatchesAsSolidFills=Yes OrderLayers=No )_Enter",
+      "File successfully saved as /tmp/rhinomcp_test_exports/eval/plan.ai."
+    ],
+    "exists": true,
+    "format": "ai",
+    "method": "-_Export",
+    "objects": 6,
+    "path": "/tmp/rhinomcp_test_exports/eval/plan.ai"
+  },
+  "annotate": {
+    "created": 6,
+    "failed": 0,
+    "scale": "1:100",
+    "space": "model"
+  },
+  "annotate_results": [
+    {
+      "dim_style": "MCP 1:100 t3.5 tick",
+      "display_text": "12000",
+      "expected_length": 12000.0,
+      "handle": "o25251",
+      "i": 0,
+      "measured": 12000.0,
+      "ok": true,
+      "text_height_printed_mm": 3.5,
+      "text_height_units": 350.0,
+      "type": "linear"
+    },
+    {
+      "dim_style": "MCP 1:100 t3.5 tick",
+      "display_text": "12000",
+      "expected_length": 12000.0,
+      "handle": "o25252",
+      "i": 1,
+      "measured": 12000.0,
+      "ok": true,
+      "text_height_printed_mm": 3.5,
+      "text_height_units": 350.0,
+      "type": "linear"
+    },
+    {
+      "dim_style": "MCP 1:100 t5 tick",
+      "handle": "o25253",
+      "i": 2,
+      "ok": true,
+      "text": "GROUND FLOOR PLAN",
+      "text_height_printed_mm": 5.0,
+      "text_height_units": 500.0,
+      "type": "text"
+    },
+    {
+      "dim_style": "MCP 1:100 t3.5 tick",
+      "handle": "o25254",
+      "i": 3,
+      "ok": true,
+      "text": "Living room",
+      "text_height_printed_mm": 3.5,
+      "text_height_units": 350.0,
+      "type": "text"
+    },
+    {
+      "dim_style": "MCP 1:100 t3.5 tick",
+      "handle": "o25255",
+      "i": 4,
+      "ok": true,
+      "text": "Bedroom",
+      "text_height_printed_mm": 3.5,
+      "text_height_units": 350.0,
+      "type": "text"
+    },
+    {
+      "dim_style": "MCP 1:100 t3.5 tick",
+      "handle": "o25256",
+      "i": 5,
+      "ok": true,
+      "text": "Load-bearing wall",
+      "text_height_printed_mm": 3.5,
+      "text_height_units": 350.0,
+      "type": "leader"
+    }
+  ],
+  "dxf_annotation": {
+    "bytes": 174105,
+    "check": {
+      "acadver": "AC1021",
+      "curve_entities": 0,
+      "entities": {
+        "DIMENSION": 2,
+        "MTEXT": 3,
+        "MULTILEADER": 1
+      },
+      "exploded_nurbs_risk": false,
+      "spline_entities": 0,
+      "valid_header": true
+    },
+    "command_output": [
+      "Command: -_Export",
+      "Save file name ( Version=7 SaveSmall=No GeometryOnly=No SaveTextures=Yes SaveNotes=No SavePlugInData=Yes Browse )\"/tmp/rhinomcp_test_exports/eval/plan_annot.dxf\"",
+      "Write file using scheme \"Default\" ( Scheme FromIni )_Enter",
+      "Annotation:    6 written,   0 skipped",
+      "Layers:    1 written,   0 skipped",
+      "Dimstyles:    1 written,   0 skipped",
+      "Textstyles:    2 written,   0 skipped",
+      "File successfully saved as /tmp/rhinomcp_test_exports/eval/plan_annot.dxf."
+    ],
+    "exists": true,
+    "format": "dxf",
+    "method": "-_Export",
+    "objects": 6,
+    "path": "/tmp/rhinomcp_test_exports/eval/plan_annot.dxf"
+  },
+  "dxf_clean_layers": {
+    "elevation_east/as_is": {
+      "LINE": 9,
+      "POLYLINE": 9
+    },
+    "elevation_east/polylines": {
+      "LINE": 9,
+      "POLYLINE": 9
+    },
+    "elevation_south/as_is": {
+      "LINE": 10,
+      "POLYLINE": 4
+    },
+    "elevation_south/polylines": {
+      "LINE": 10,
+      "POLYLINE": 4
+    },
+    "elevation_south_hidden/as_is": {
+      "LINE": 29,
+      "POLYLINE": 19
+    },
+    "elevation_south_hidden/polylines": {
+      "LINE": 29,
+      "POLYLINE": 19
+    },
+    "plan_1200/as_is": {
+      "HATCH": 3,
+      "LINE": 8,
+      "POLYLINE": 4
+    },
+    "plan_1200/polylines": {
+      "HATCH": 3,
+      "LINE": 8,
+      "POLYLINE": 4
+    },
+    "section_y3000/as_is": {
+      "HATCH": 11,
+      "LINE": 6,
+      "POLYLINE": 13
+    },
+    "section_y3000/polylines": {
+      "HATCH": 11,
+      "LINE": 6,
+      "POLYLINE": 13
+    }
+  },
+  "dxf_default": {
+    "bytes": 363570,
+    "check": {
+      "acadver": "AC1021",
+      "curve_entities": 584,
+      "entities": {
+        "LINE": 195,
+        "SPLINE": 389
+      },
+      "exploded_nurbs_risk": true,
+      "spline_entities": 389,
+      "valid_header": true
+    },
+    "command_output": [
+      "Command: -_Export",
+      "Save file name ( Version=7 SaveSmall=No GeometryOnly=No SaveTextures=Yes SaveNotes=No SavePlugInData=Yes Browse )\"/tmp/rhinomcp_test_exports/eval/plan.dxf\"",
+      "Write file using scheme \"Default\" ( Scheme FromIni )_Enter",
+      "Breps:    4 written,   0 skipped",
+      "Extrusions:    2 written,   0 skipped",
+      "Layers:    3 written,   0 skipped",
+      "File successfully saved as /tmp/rhinomcp_test_exports/eval/plan.dxf."
+    ],
+    "exists": true,
+    "format": "dxf",
+    "method": "-_Export",
+    "objects": 6,
+    "path": "/tmp/rhinomcp_test_exports/eval/plan.dxf"
+  },
+  "dxf_polylines": {
+    "bytes": 363570,
+    "check": {
+      "acadver": "AC1021",
+      "curve_entities": 584,
+      "entities": {
+        "LINE": 195,
+        "SPLINE": 389
+      },
+      "exploded_nurbs_risk": true,
+      "spline_entities": 389,
+      "valid_header": true
+    },
+    "command_output": [
+      "Command: -_Export",
+      "Save file name ( Version=7 SaveSmall=No GeometryOnly=No SaveTextures=Yes SaveNotes=No SavePlugInData=Yes Browse )\"/tmp/rhinomcp_test_exports/eval/plan_poly.dxf\"",
+      "Write file using scheme \"Default\" ( Scheme FromIni )_Enter",
+      "Breps:    4 written,   0 skipped",
+      "Extrusions:    2 written,   0 skipped",
+      "Layers:    3 written,   0 skipped",
+      "File successfully saved as /tmp/rhinomcp_test_exports/eval/plan_poly.dxf."
+    ],
+    "exists": true,
+    "format": "dxf",
+    "method": "-_Export",
+    "objects": 6,
+    "path": "/tmp/rhinomcp_test_exports/eval/plan_poly.dxf"
+  },
+  "layout": {
+    "all_scales_ok": true,
+    "details": [
+      {
+        "achieved_denominator": 100.0,
+        "achieved_denominator_from_transform": 100.0,
+        "achieved_scale": "1:100",
+        "display_mode": "Wireframe",
+        "handle": "o25250",
+        "i": 0,
+        "layers_visible": 7,
+        "locked": true,
+        "parallel": true,
+        "rect_mm": [
+          20.0,
+          57.0,
+          584.0,
+          410.0
+        ],
+        "requested_denominator": 100.0,
+        "requested_scale": "1:100",
+        "title": "Plan",
+        "view": "Top",
+        "within_tolerance": true
+      }
+    ],
+    "layout": {
+      "height_mm": 420.0,
+      "id": "5ef3bbaf-19b5-49cb-a01e-4bc8c0cb4355",
+      "margins_mm": {
+        "bottom": 10.0,
+        "left": 20.0,
+        "right": 10.0,
+        "top": 10.0
+      },
+      "name": "EVAL-A2-Plan",
+      "orientation": "landscape",
+      "paper": "A2",
+      "width_mm": 594.0
+    },
+    "title_block": {
+      "layer": "Sheet::TitleBlock",
+      "objects": 27
+    }
+  },
+  "layout_warnings": [],
+  "pdf": {
+    "bytes": 569119,
+    "check": {
+      "first_page_mm": [
+        594.0,
+        420.0
+      ],
+      "pages": 1,
+      "raster_images": 1,
+      "valid_header": true
+    },
+    "exists": true,
+    "format": "pdf",
+    "layouts": 1,
+    "method": "FilePdf",
+    "path": "/tmp/rhinomcp_test_exports/eval/sheet.pdf"
+  },
+  "pdf_bytes": 569119,
+  "png_bytes": 83547,
+  "scale": "1:100",
+  "source": "full-size model sublayers of existing _mcp_eval::drawing (plan view, Top)",
+  "source_bbox": [
+    [
+      0.0,
+      0.0,
+      -300.0
+    ],
+    [
+      12000.0,
+      12000.0,
+      6600.0
+    ]
+  ],
+  "source_objects": 6,
+  "svg": {
+    "bytes": 54864,
+    "check": {
+      "line_elements": 0,
+      "path_elements": 449,
+      "text_elements": 0,
+      "valid_header": true
+    },
+    "command_output": [
+      "Command: -_Export",
+      "Save file name ( Version=7 SaveSmall=No GeometryOnly=No SaveTextures=Yes SaveNotes=No SavePlugInData=Yes Browse )\"/tmp/rhinomcp_test_exports/eval/plan.svg\"",
+      "File successfully saved as /tmp/rhinomcp_test_exports/eval/plan.svg."
+    ],
+    "exists": true,
+    "format": "svg",
+    "method": "-_Export",
+    "objects": 6,
+    "path": "/tmp/rhinomcp_test_exports/eval/plan.svg"
+  }
+}

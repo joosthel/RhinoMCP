@@ -22,7 +22,7 @@ Content follows ISO 7200 in spirit (data fields in technical product documentati
 ## Layout
 - Bottom-right strip or right-hand column, 180 mm wide is common on A1/A0 (verify the office template).
 - Fixed text height: titles 5 to 7 mm, labels 3.5 mm, notes 2.5 mm printed (see text-dims.md).
-- Put the title block on the layout, not the model, on a layer `Layout::TitleBlock` set to plot.
+- Put the title block on the layout, not the model, on a layer `Sheet::TitleBlock` set to plot (`layout_create` does this).
 - Use a block with text fields from user text so fields can be updated in one place.
 
 ## Process
