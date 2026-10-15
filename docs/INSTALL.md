@@ -62,6 +62,6 @@ If Rhino is closed, the bridge still starts and exposes a single tool, `rhino_st
 - **Plugin did not load at startup.** Rhino honours `AtStartup` only after the first manual load: run `_PlugInManager` and load RhinoMCP once.
 - **Logs.** The bridge writes diagnostics to stderr only; stdout carries nothing but JSON-RPC lines. Crashes inside Rhino are logged to `~/Library/Application Support/RhinoMCP/crash.log`.
 
-## Core change request (tools DLL location)
+## Tools DLL location
 
-Core's `ToolsLoader` only searches `~/Library/Application Support/RhinoMCP/tools`. The Yak package ships the tools DLL next to the `.rhp`, but Core does not look there yet, so a Yak-only install has no tools until Core also scans the directory of its own assembly (`Path.GetDirectoryName(typeof(ToolsLoader).Assembly.Location)`) as a fallback. `scripts/install.sh` does not depend on this.
+Core (0.2.0+) loads the newest `RhinoMCP.Tools.*.dll` from `~/Library/Application Support/RhinoMCP/tools/`, falling back to the plugin's own folder, so Yak installs that ship the DLL next to the `.rhp` work too.
