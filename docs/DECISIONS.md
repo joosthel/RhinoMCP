@@ -11,3 +11,4 @@ Owner direction, 2026-10-15.
 7. **Skills for agents:** researched guidance on tolerances, units, drawing standards and efficient MCP use, shipped alongside the server.
 
 8. **Research scope (2026-10-15):** personal research prototype. No signing, installers or Windows needed. Use extra tools only when they add insight.
+9. **Language (2026-10-15):** English always — code, docs, tool output, and everything written into Rhino models (layers, names, user text, annotations).
