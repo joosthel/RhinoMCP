@@ -14,7 +14,7 @@ namespace RhinoMCP.Tools.Layers
             get
             {
                 return "Layer tree (depth-first, full paths with '::'). Counts come first, then per layer: objects (direct) and objects_total (incl. sublayers), " +
-                       "color hex, linetype, print_width_mm (0 = default), plot (false = not printed), print_color, visible, locked, current. " +
+                       "color hex, linetype, print_width_mm (0 = default), plot (false = not printed), visible, locked, current. " +
                        "Use 'under' to list only the descendants of a layer path, 'max_depth' (1 = only the first level below the root/'under'), limit/cursor to page. " +
                        "Hidden/locked objects are counted. Fails with NOT_FOUND if 'under' does not exist.";
             }
@@ -87,7 +87,6 @@ namespace RhinoMCP.Tools.Layers
         static object Row(Rhino.RhinoDoc doc, LayerTree tree, Layer l, int cur)
         {
             double w = l.PlotWeight;
-            var pc = l.PlotColor;
             return new
             {
                 path = l.FullPath,
@@ -95,11 +94,10 @@ namespace RhinoMCP.Tools.Layers
                 objects = tree.Direct[l.Id],
                 objects_total = tree.Total[l.Id],
                 sublayers = tree.Children(l).Count,
-                color = LayerUtil.Hex(l.Color),
+                color = LayerUtil.Hex(LayerUtil.GetRgb(l)),
                 linetype = LayerUtil.LinetypeName(doc, l),
                 print_width_mm = w < 0 ? 0.0 : w,
                 plot = w >= 0,
-                print_color = pc.A == 0 ? null : LayerUtil.Hex(pc),
                 visible = l.IsVisible,
                 locked = l.IsLocked,
                 current = l.Index == cur

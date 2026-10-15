@@ -14,7 +14,7 @@ namespace RhinoMCP.Tools.Layers
         {
             get
             {
-                return "Batch layer operations in ONE undo step. ops: [{op: create|rename|move|set|delete|set_current, path, ...}]. " +
+                return "Batch layer operations. NOTE: Rhino 7 Mac does not record layer-table edits in undo (history_undo cannot revert them); layers_audit/layers_list first, and use confirm_objects for deletes. ops: [{op: create|rename|move|set|delete|set_current, path, ...}]. " +
                        "create: builds the parent chain, idempotent (updates settings if the layer exists). rename: new_name (leaf only). " +
                        "move: parent (layer path, '' = top level; created if missing), sublayers follow. set / create accept color '#rrggbb', linetype (name; unknown -> Continuous + warning), " +
                        "print_width_mm, plot (false = do not print), visible, locked. " +
@@ -73,7 +73,7 @@ namespace RhinoMCP.Tools.Layers
             }
             var res = ToolResult.Ok(new { ops = ops.List.Count, succeeded = okCount, failed = ops.List.Count - okCount, results = results });
             foreach (var w in warnings) res.Warn(w);
-            if (okCount < ops.List.Count) res.Warn(string.Format("{0} of {1} operations failed; successful ones were applied (history_undo reverts the whole batch).", ops.List.Count - okCount, ops.List.Count));
+            if (okCount < ops.List.Count) res.Warn(string.Format("{0} of {1} operations failed; successful ones were applied (layer edits cannot be reverted with history_undo).", ops.List.Count - okCount, ops.List.Count));
             return res;
         }
 

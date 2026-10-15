@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Drawing;
+using System.Reflection;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
@@ -96,7 +96,7 @@ namespace RhinoMCP.Tools.Layers
     /// <summary>Settings that can be applied to a layer. Null members are left untouched.</summary>
     internal sealed class LayerProps
     {
-        public Color? Color;
+        public int? Color; // 0xRRGGBB
         public string Linetype;
         public double? Width;
         public bool? Plot, Visible, Locked;
@@ -107,7 +107,7 @@ namespace RhinoMCP.Tools.Layers
             JToken t;
             if (o.TryGetValue("color", out t) && t.Type != JTokenType.Null)
             {
-                Color c;
+                int c;
                 if (t.Type == JTokenType.String && LayerUtil.TryHex((string)t, out c)) p.Color = c;
                 else errs.Add(where + "color must be \"#rrggbb\"");
             }
@@ -138,7 +138,7 @@ namespace RhinoMCP.Tools.Layers
         public List<string> Apply(RhinoDoc doc, Layer l, List<string> warnings, List<string> errors, bool commit = true)
         {
             var changes = new List<string>();
-            if (Color.HasValue && l.Color.ToArgb() != Color.Value.ToArgb()) { if (commit) l.Color = Color.Value; changes.Add("color"); }
+            if (Color.HasValue && LayerUtil.GetRgb(l) != Color.Value) { if (commit) LayerUtil.SetRgb(l, Color.Value); changes.Add("color"); }
             if (Linetype != null)
             {
                 bool found;
@@ -179,13 +179,30 @@ namespace RhinoMCP.Tools.Layers
         public const string SchemeJsonKey = "rhino-mcp.layer-scheme-json";
         static readonly Regex HexRx = new Regex("^#[0-9a-fA-F]{6}$");
 
-        public static string Hex(Color c) { return "#" + c.R.ToString("x2") + c.G.ToString("x2") + c.B.ToString("x2"); }
-        public static bool TryHex(string s, out Color c)
+        public static string Hex(int rgb) { return "#" + (rgb & 0xFFFFFF).ToString("x6"); }
+        public static bool TryHex(string s, out int rgb)
         {
-            c = Color.Black;
+            rgb = 0;
             if (s == null || !HexRx.IsMatch(s)) return false;
-            c = Color.FromArgb(Convert.ToInt32(s.Substring(1, 2), 16), Convert.ToInt32(s.Substring(3, 2), 16), Convert.ToInt32(s.Substring(5, 2), 16));
+            rgb = Convert.ToInt32(s.Substring(1), 16);
             return true;
+        }
+
+        // Layer.Color is a System.Drawing.Color. The tools DLL is loaded from bytes and binds a different System.Drawing
+        // identity than RhinoCommon on Mac (MissingMethodException on get_Color), so colours go through reflection.
+        static readonly PropertyInfo ColorProp = typeof(Layer).GetProperty("Color");
+        public static int GetRgb(Layer l)
+        {
+            object c = ColorProp.GetValue(l, null);
+            int argb = (int)c.GetType().GetMethod("ToArgb").Invoke(c, null);
+            return argb & 0xFFFFFF;
+        }
+        public static void SetRgb(Layer l, int rgb)
+        {
+            Type ct = ColorProp.PropertyType;
+            object c = ct.GetMethod("FromArgb", new[] { typeof(int), typeof(int), typeof(int) })
+                .Invoke(null, new object[] { (rgb >> 16) & 255, (rgb >> 8) & 255, rgb & 255 });
+            ColorProp.SetValue(l, c, null);
         }
 
         public static string[] Split(string path) { return path.Split(new[] { Sep }, StringSplitOptions.None); }

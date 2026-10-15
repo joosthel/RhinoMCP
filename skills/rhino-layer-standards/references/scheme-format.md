@@ -27,6 +27,7 @@
 | `layers[].color` | string | no | `#rrggbb`. Default: keep existing or Rhino default. |
 | `layers[].linetype` | string | no | Name of a linetype in the document, for example `Continuous`, `Hidden`, `Dashdot`. Unknown names produce a warning and fall back to `Continuous`. |
 | `layers[].print_width_mm` | number | no | Plot width in millimetres. `0` means default/hairline. Use ISO 128 steps: 0.13, 0.18, 0.25, 0.35, 0.5, 0.7, 1.0, 1.4, 2.0. |
+| `layers[].required` | boolean | no | If true, `layers_audit` reports the layer as missing when it does not exist. Default false. |
 | `layers[].plot` | boolean | no | Whether the layer plots. Default true. |
 
 ## Behaviour

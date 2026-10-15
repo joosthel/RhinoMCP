@@ -27,9 +27,20 @@ class LayersTests(unittest.TestCase):
     def setUp(self):
         self.prev_current = rows(limit=1)["current"]
         self.stored_scheme = None
+        if self.prev_current.startswith(ROOT):  # leftover from a crashed run
+            self.prev_current = "Default"
+        self.cleanup()
+        a = c.call("layers_audit", {"under": "Default"})
+        if a["ok"] and a["data"]["scheme"] == "_mcp_test_scheme":
+            c.call("layers_apply_scheme", {"clear_stored_scheme": True})
 
     def tearDown(self):
         # restore the current layer, then remove everything this test created
+        self.cleanup()
+        if self.stored_scheme:
+            c.call("layers_apply_scheme", {"clear_stored_scheme": True})
+
+    def cleanup(self):
         if self.prev_current and not self.prev_current.startswith(ROOT):
             manage([{"op": "set_current", "path": self.prev_current}])
         d = c.call("layers_list", {"under": "_mcp_test"})
@@ -37,8 +48,6 @@ class LayersTests(unittest.TestCase):
             n = [l for l in d["data"]["layers"] if l["path"] == ROOT][0]["objects_total"]
             r = manage([{"op": "delete", "path": ROOT, "recursive": True, "confirm_objects": n}])
             self.assertTrue(r["ok"] and r["data"]["failed"] == 0, r)
-        if self.stored_scheme:
-            c.call("layers_apply_scheme", {"clear_stored_scheme": True})
 
     # ---- manage / list -------------------------------------------------
     def test_create_set_list(self):
@@ -119,7 +128,7 @@ class LayersTests(unittest.TestCase):
         h = c.call("run_command", {"command": "_Line 0,0,0 5,0,0"})["data"]["added"]
         self.assertEqual(len(h), 1, h)
         handle = h[0] if isinstance(h[0], str) else h[0].get("handle", h[0])
-        p = by_path(rows(ROOT))
+        p = by_path(rows("_mcp_test"))
         self.assertEqual(p[ROOT + "::Src"]["objects"], 1)
         self.assertEqual(p[ROOT]["objects_total"], 1)
         # move to another layer
@@ -145,17 +154,6 @@ class LayersTests(unittest.TestCase):
         r = manage([{"op": "delete", "path": ROOT + "::New", "recursive": True, "confirm_objects": 1}])
         self.assertTrue(r["data"]["results"][0]["ok"], r)
         self.assertEqual(r["data"]["results"][0]["deleted_objects"], 1)
-
-    def test_batch_is_one_undo_step(self):
-        before = rows(ROOT) if False else None
-        manage([{"op": "create", "path": ROOT + "::U1"}, {"op": "create", "path": ROOT + "::U2"}])
-        self.assertIn(ROOT + "::U2", by_path(rows(ROOT)))
-        r = c.call("history_undo", {"steps": 1})
-        self.assertTrue(r["ok"], r)
-        d = c.call("layers_list", {"under": ROOT})
-        paths = [] if not d["ok"] else list(by_path(d["data"]))
-        self.assertNotIn(ROOT + "::U1", paths)
-        self.assertNotIn(ROOT + "::U2", paths)
 
     # ---- audit / scheme --------------------------------------------------
     def scheme(self):
