@@ -8,8 +8,9 @@
 ## Build
 ```sh
 scripts/build.sh            # → dist/RhinoMCP.rhp  +  dist/RhinoMCP.Tools.<stamp>.dll
+DEBUG_SYMBOLS=1 scripts/build.sh   # also emit portable .pdb files (loaded with the tools DLL)
 ```
-`build.sh` runs Rhino's bundled `mono csc.exe`. It references `RhinoCommon.dll`, `Rhino.UI.dll`, `Eto.dll` and `Newtonsoft.Json.dll` from the Rhino bundle. Nothing from McNeel is copied into `dist/`.
+`build.sh` runs Rhino's bundled `mono csc.exe`. It references `RhinoCommon.dll` and `Newtonsoft.Json.dll` (add `Rhino.UI.dll` / `Eto.dll` to `compile` in `build.sh` when a tool needs them) from the Rhino bundle. Nothing from McNeel is copied into `dist/`.
 
 ## Install (once)
 1. In Rhino, run `_PlugInManager` → Install… → choose `dist/RhinoMCP.rhp`, or drag the file onto the Rhino window.
@@ -20,7 +21,7 @@ scripts/build.sh            # → dist/RhinoMCP.rhp  +  dist/RhinoMCP.Tools.<sta
    ```
 
 ## Dev loop
-- **Tools change** → `scripts/build.sh`, then `scripts/mcp.sh dev_reload`. The new tools DLL is loaded from bytes, so no restart is needed.
+- **Tools change** → `scripts/build.sh` (it also copies the tools DLL to `~/Library/Application Support/RhinoMCP/tools/`, keeping the newest 3), then `scripts/mcp.sh call dev_reload '{}'`. The new tools DLL is loaded from bytes, so no restart is needed.
 - **Core change** → `scripts/build.sh`, then restart Rhino.
 - **Integration tests** → `scripts/dev-test.sh tests/test_<family>.py`. It takes a lock (`/tmp/rhinomcp-test.lock`), builds, reloads and runs the tests.
 - **Calling a tool by hand:**
@@ -48,7 +49,8 @@ namespace RhinoMCP.Tools.Measure {
   }
 }
 ```
-- Shared schema fragments (`target`, `point`, `plane`) live in `Core/Schemas.cs` and are referenced by name.
+- Shared schema fragments (`target`, `point`, `plane`) live in `Core/Schemas.cs`. Just write `{"$ref":"#/$defs/target"}`; the registry injects the `$defs` block when listing tools.
+- A tool that runs Rhino commands which manage their own undo records (like `run_command`) also implements the marker interface `IManagesOwnUndo`, so the registry does not open an outer undo record.
 - Keep descriptions short. State what the tool does, when to use it, and how it fails.
 
 ## Troubleshooting
