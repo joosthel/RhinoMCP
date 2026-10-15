@@ -152,6 +152,7 @@ namespace RhinoMCP.Tools.Script
             {
                 RhinoApp.CommandWindowCaptureEnabled = true;
                 RhinoApp.CapturedCommandWindowStrings(true); // clear
+                UndoScope.CloseStray(ctx.Doc); // keep the command's undo record separate from Rhino's idle record
                 watchdog.Start(inputTimeout);
                 success = RhinoApp.RunScript(cmd, true);
                 lines = RhinoApp.CapturedCommandWindowStrings(true) ?? new string[0];

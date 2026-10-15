@@ -20,22 +20,41 @@ namespace RhinoMCP.Tools.History
             if (a.HasErrors) return a.ErrorResult();
             bool healed = CloseStrayRecord(ctx.Doc);
             int done = 0;
+            int skippedEmpty = 0;
             for (int i = 0; i < steps; i++)
             {
-                bool ok = undo ? ctx.Doc.Undo() : ctx.Doc.Redo();
-                if (!ok) break;
-                done++;
+                // Rhino may hold a near-empty record (selection/redraw) on top of the real one; an undo that
+                // leaves the document unchanged does not count, so take one more step (bounded).
+                for (int tries = 0; tries < 3; tries++)
+                {
+                    long before = Fingerprint(ctx.Doc);
+                    bool ok = undo ? ctx.Doc.Undo() : ctx.Doc.Redo();
+                    if (!ok) { tries = 99; break; }
+                    if (Fingerprint(ctx.Doc) != before) { done++; break; }
+                    skippedEmpty++;
+                }
+                if (done <= i) break;
             }
             ctx.Doc.Views.Redraw();
             if (done == 0)
                 return ToolResult.Fail("NOT_FOUND", undo ? "Nothing to undo" : "Nothing to redo", null);
-            return ToolResult.Ok(new { requested = steps, done = done, closed_stray_record = healed });
+            return ToolResult.Ok(new { requested = steps, done = done, closed_stray_record = healed, skipped_empty_records = skippedEmpty });
         }
 
         /// <summary>
         /// A cancelled scripted command can leave an undo record open; while it is open Undo() fails and later
         /// edits pile into it. Close it when no command is running.
         /// </summary>
+        /// <summary>Cheap document-state hash: object count, layer count and the newest object runtime serial.</summary>
+        static long Fingerprint(RhinoDoc doc)
+        {
+            long h = doc.Objects.Count * 1000003L + doc.Layers.Count * 7919L;
+            uint maxSerial = 0;
+            foreach (var o in doc.Objects.GetObjectList(new Rhino.DocObjects.ObjectEnumeratorSettings { IncludeLights = true, HiddenObjects = true, LockedObjects = true }))
+                if (o.RuntimeSerialNumber > maxSerial) maxSerial = o.RuntimeSerialNumber;
+            return h ^ ((long)maxSerial << 20);
+        }
+
         internal static bool CloseStrayRecord(RhinoDoc doc) { return UndoScope.CloseStray(doc); }
     }
 
