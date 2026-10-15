@@ -96,3 +96,42 @@
 {"t": 1792072025.6, "phase": "final", "tool": "view_set", "purpose": "restore user display mode", "ok": true, "ms": 6}
 {"t": 1792072025.6, "phase": "final", "tool": "views_named", "purpose": "delete temp named view", "ok": true, "ms": 131}
 {"t": 1792072025.8, "phase": "final", "tool": "system_status", "purpose": "end", "ok": true, "ms": 137}
+{"t": 1792072191.7, "phase": "explore", "tool": "objects_query", "purpose": "check final still present (post-coordinator)", "ok": true, "ms": 8}
+{"t": 1792072249.1, "phase": "explore", "tool": "objects_delete", "purpose": "owner fix: remove curved-front base + final", "ok": true, "ms": 15}
+{"t": 1792072250.2, "phase": "explore", "tool": "geometry_create", "purpose": "v2 plan: straight front lines + control-point curves", "ok": true, "ms": 10}
+{"t": 1792072250.2, "phase": "explore", "tool": "geometry_edit", "purpose": "join outer line + curve", "ok": true, "ms": 27}
+{"t": 1792072250.3, "phase": "explore", "tool": "geometry_edit", "purpose": "join inner line + curve", "ok": true, "ms": 3}
+{"t": 1792072250.5, "phase": "explore", "tool": "geometry_validate", "purpose": "v2 outline check", "ok": true, "ms": 13}
+{"t": 1792072254.9, "phase": "explore", "tool": "geometry_create", "purpose": "extrude outer + inner cutter", "ok": true, "ms": 58}
+{"t": 1792072254.9, "phase": "explore", "tool": "geometry_transform", "purpose": "plate to z 0..t", "ok": true, "ms": 18}
+{"t": 1792072254.9, "phase": "explore", "tool": "geometry_transform", "purpose": "cutter to z -1..t+1", "ok": true, "ms": 4}
+{"t": 1792072255.0, "phase": "explore", "tool": "geometry_boolean", "purpose": "plate minus opening", "ok": true, "ms": 63}
+{"t": 1792072255.1, "phase": "explore", "tool": "analyze_surface", "purpose": "v2 solid edges", "ok": true, "ms": 38}
+{"t": 1792072260.4, "phase": "explore", "tool": "geometry_transform", "purpose": "copy basic solid", "ok": true, "ms": 12}
+{"t": 1792072260.4, "phase": "explore", "tool": "objects_set_props", "purpose": "copy to ::detail", "ok": true, "ms": 27}
+{"t": 1792072260.4, "phase": "explore", "tool": "geometry_edit", "purpose": "fillet horizontal loop edges [0, 2, 4, 5, 6, 7, 8, 9] r=2.0", "ok": true, "ms": 662}
+{"t": 1792072266.3, "phase": "explore", "tool": "geometry_create", "purpose": "gate slots + notch cutters", "ok": true, "ms": 91}
+{"t": 1792072266.4, "phase": "explore", "tool": "geometry_boolean", "purpose": "cut gate split + notches", "ok": true, "ms": 2012}
+{"t": 1792072271.5, "phase": "explore", "tool": "measure", "purpose": "v2 body vs gate", "ok": true, "ms": 611}
+{"t": 1792072274.8, "phase": "explore", "tool": "geometry_create", "purpose": "letter cutters (extrude 13 curves)", "ok": true, "ms": 132}
+{"t": 1792072274.9, "phase": "explore", "tool": "geometry_transform", "purpose": "cutters extruded +Z: down 0.3", "ok": true, "ms": 43}
+{"t": 1792072274.9, "phase": "explore", "tool": "geometry_transform", "purpose": "cutters extruded -Z: up", "ok": true, "ms": 24}
+{"t": 1792072275.0, "phase": "explore", "tool": "geometry_boolean", "purpose": "letter O: outer minus counter", "ok": true, "ms": 52}
+{"t": 1792072275.0, "phase": "explore", "tool": "geometry_boolean", "purpose": "engrave 12 letters", "ok": true, "ms": 2162}
+{"t": 1792072284.8, "phase": "fix_straight", "tool": "objects_set_props", "purpose": "v2 final body", "ok": true, "ms": 18}
+{"t": 1792072284.9, "phase": "fix_straight", "tool": "objects_set_props", "purpose": "v2 final gate", "ok": true, "ms": 7}
+{"t": 1792072284.9, "phase": "fix_straight", "tool": "geometry_validate", "purpose": "v2 final validate", "ok": true, "ms": 1284}
+{"t": 1792072286.3, "phase": "fix_straight", "tool": "measure", "purpose": "v2 final measure", "ok": true, "ms": 1226}
+{"t": 1792072287.6, "phase": "fix_straight", "tool": "analyze_surface", "purpose": "v2 surface sanity o32754", "ok": true, "ms": 151}
+{"t": 1792072287.8, "phase": "fix_straight", "tool": "analyze_surface", "purpose": "v2 surface sanity o32769", "ok": true, "ms": 542}
+{"t": 1792072288.4, "phase": "fix_straight", "tool": "system_status", "purpose": "v2 status", "ok": true, "ms": 147}
+{"t": 1792072300.5, "phase": "fix_straight", "tool": "views_named", "purpose": "save user view", "ok": true, "ms": 13}
+{"t": 1792072300.5, "phase": "fix_straight", "tool": "view_set", "purpose": "Rendered for captures (restored)", "ok": true, "ms": 9}
+{"t": 1792072300.6, "phase": "fix_straight", "tool": "view_capture", "purpose": "photo camera capture", "ok": true, "ms": 208}
+{"t": 1792072301.2, "phase": "fix_straight", "tool": "view_capture", "purpose": "v2 final top", "ok": true, "ms": 217}
+{"t": 1792072301.5, "phase": "fix_straight", "tool": "view_capture", "purpose": "v2 final oblique", "ok": true, "ms": 134}
+{"t": 1792072301.7, "phase": "fix_straight", "tool": "view_capture", "purpose": "v2 details close-up", "ok": true, "ms": 156}
+{"t": 1792072301.9, "phase": "fix_straight", "tool": "view_capture", "purpose": "v2 straight front + engraving", "ok": true, "ms": 148}
+{"t": 1792072302.2, "phase": "fix_straight", "tool": "views_named", "purpose": "restore user view", "ok": true, "ms": 27}
+{"t": 1792072302.2, "phase": "fix_straight", "tool": "view_set", "purpose": "restore Technical", "ok": true, "ms": 6}
+{"t": 1792072302.3, "phase": "fix_straight", "tool": "views_named", "purpose": "delete temp view", "ok": true, "ms": 6}

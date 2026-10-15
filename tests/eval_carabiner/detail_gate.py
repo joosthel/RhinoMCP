@@ -14,8 +14,9 @@ t = plan.THICK_MM
 GAP = float(os.environ.get("GAP", 0.4))
 
 O, I = plan.to_plan(T.OUTER), plan.to_plan(T.INNER)
-SEL_IN = [0, 3, 6, 7, 11, 12, 14, 16, 20, 21, 24, 25]
-inner_dense = sp.closed_spline(I[SEL_IN], 3000)
+import build_base_v2 as v2   # v2 inner outline (straight front + control-point curve)
+_, (_, _Di, _) = v2.curves()
+inner_dense = np.vstack([_Di, np.linspace(_Di[-1], _Di[0], 200)[1:-1]])
 
 
 def slot(P, ext=3.0, n=12):
