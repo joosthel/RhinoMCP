@@ -84,6 +84,7 @@ namespace RhinoMCP.Tools.View
             {
                 sel.Restore();
                 state.Restore();
+                foreach (var p in state.Problems) ctx.Log("restore: " + p);
             }
         }
     }
@@ -129,7 +130,7 @@ namespace RhinoMCP.Tools.View
 ""display_mode"":{""type"":""string"",""description"":""English display mode name, e.g. Wireframe, Shaded, Rendered, Ghosted, X-Ray, Technical, Artic, Pen""},
 ""width"":{""type"":""integer"",""minimum"":16,""maximum"":1600,""default"":768},
 ""height"":{""type"":""integer"",""minimum"":16,""maximum"":1600,""default"":512},
-""format"":{""type"":""string"",""enum"":[""png"",""jpeg""],""default"":""jpeg""},
+""format"":{""type"":""string"",""enum"":[""png""],""default"":""png"",""description"":""Only PNG is produced (no JPEG encoder without GDI+); jpeg is accepted and answered with PNG plus a warning""},
 ""zoom_to"":{""description"":""'all' | target | {min:[x,y,z],max:[x,y,z]}""},
 ""highlight"":{""description"":""target to show selected during the capture (selection is restored afterwards)""},
 ""show_grid"":{""type"":""boolean"",""default"":false},
@@ -157,9 +158,9 @@ namespace RhinoMCP.Tools.View
             }
             s.Width = a.Int("width", false, 768, 16, 1600);
             s.Height = a.Int("height", false, 512, 16, 1600);
-            string fmt = (a.String("format", false, "jpeg") ?? "jpeg").ToLowerInvariant();
+            string fmt = (a.String("format", false, "png") ?? "png").ToLowerInvariant();
             if (fmt != "png" && fmt != "jpeg" && fmt != "jpg") a.Error("'format' must be png or jpeg");
-            s.Jpeg = fmt != "png";
+            bool wantedJpeg = fmt != "png"; s.Jpeg = false;
             s.Grid = a.Bool("show_grid", false);
             s.Axes = a.Bool("show_axes", false);
             string dm = a.String("display_mode");
@@ -183,7 +184,7 @@ namespace RhinoMCP.Tools.View
             byte[] bytes = Renderer.Render(ctx, view, s, a, s.Jpeg, out viewLabel, out camera, out modeName);
             if (a.HasErrors) return a.ErrorResult();
             if (bytes == null || bytes.Length == 0)
-                return ToolResult.Fail("CAPTURE_FAILED", "ViewCaptureToFile produced no file", "Make sure the Rhino window is not minimized and retry; try format=png.", new { log = ctx.Logs });
+                return ToolResult.Fail("CAPTURE_FAILED", "ViewCaptureToFile produced no file", "Make sure the Rhino window is not minimized and retry", new { log = ctx.Logs });
             string mime = Png.IsPng(bytes) ? "image/png" : (Png.IsJpeg(bytes) ? "image/jpeg" : null);
             if (mime == null) return ToolResult.Fail("CAPTURE_FAILED", "Rhino wrote a file that is neither PNG nor JPEG");
             int iw, ih; Png.Size(bytes, out iw, out ih);
@@ -198,6 +199,8 @@ namespace RhinoMCP.Tools.View
                 highlighted = s.Highlight == null ? 0 : s.Highlight.Count,
                 note = "The active viewport was temporarily driven and has been restored."
             });
+            foreach (var l in ctx.Logs) if (l.StartsWith("restore:")) res.Warn(l);
+            if (wantedJpeg) res.Warn("jpeg is not available in this runtime; returned PNG");
             res.AddImage(mime, Convert.ToBase64String(bytes));
             return res;
         }

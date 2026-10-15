@@ -43,12 +43,12 @@ class ViewTests(unittest.TestCase):
         d = r["data"]
         return d["camera"], d["display_mode"], d["view"]
 
-    def test_capture_jpeg_default_size(self):
+    def test_capture_default_size(self):
         r = c.call("view_capture", {})
         self.assertTrue(r["ok"], r)
         self.assertEqual(len(r["_images"]), 1)
         mime, w, h = image_info(r["_images"][0])
-        self.assertEqual(mime, "image/jpeg")
+        self.assertEqual(mime, "image/png")
         self.assertEqual((w, h), (768, 512))
         self.assertIn("camera", r["data"])
         self.assertIn("scene", r["data"])
@@ -102,8 +102,10 @@ class ViewTests(unittest.TestCase):
         saved = self.active()
         c.call("view_set", {"projection": "Top", "zoom_to": "all"})
         self.assertNotEqual(self.active()[0], saved[0])
+        name_before = c.call("context_get")["data"]["active_view"]
         r = c.call("views_named", {"action": "restore", "name": TEST_VIEW})
         self.assertTrue(r["ok"], r)
+        self.assertEqual(c.call("context_get")["data"]["active_view"], name_before)
         self.assertEqual(self.active()[0]["location"], saved[0]["location"])
         self.assertEqual(self.active()[0]["projection"], saved[0]["projection"])
         # capture by named view name

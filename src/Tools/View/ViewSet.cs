@@ -68,7 +68,7 @@ namespace RhinoMCP.Tools.View
 
             var vp = view.ActiveViewport;
             if (canon != null) vp.SetProjection(dp, null, false);
-            if (namedIdx >= 0) doc.NamedViews.Restore(namedIdx, vp);
+            if (namedIdx >= 0) { string keep = vp.Name; doc.NamedViews.Restore(namedIdx, vp); if (vp.Name != keep) vp.Name = keep; }
             if (cam != null && !ViewCommon.ApplyCamera(vp, cam, a, "camera")) return a.ErrorResult();
             if (mode != null) vp.DisplayMode = mode;
             if (zoom) vp.ZoomBoundingBox(zb);

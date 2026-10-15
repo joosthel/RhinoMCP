@@ -129,3 +129,8 @@ docs/              research/ · ARCHITECTURE.md · PLAN.md · DEVELOPMENT.md · 
 - **`_Undo` via `RunScript` is a no-op.** Use `history_undo` / `history_redo`, which call `RhinoDoc.Undo()` / `Redo()`.
 - **A cancelled command can leave an undo record open.** While it is open, `Undo()` fails and later edits pile into it. The tools close a stray record (`CurrentUndoRecordSerialNumber`) when no command is running.
 - **`CapturedCommandWindowStrings` is empty on Mac.** `run_command` falls back to diffing `CommandHistoryWindowText`.
+
+## System.Drawing is unusable on Rhino 7 Mac
+- libgdiplus is not usable in-process: `new Bitmap(w,h)` throws `TypeInitializationException` (GDIPlus), and half-built GDI+ objects with throwing finalizers can take Rhino down (Mono exits on an unhandled finalizer exception).
+- `RhinoView.CaptureToBitmap`, `ViewCapture` and `ViewCaptureSettings` throw `MissingMethodException` from a hot-loaded tools DLL, and `ImageCodecInfo`/`EncoderParameters` do not exist, so there is no JPEG quality control. Do not reference `System.Drawing` types in tools.
+- View tools instead drive the active viewport briefly (try/finally restore), run `-_ViewCaptureToFile` (options go **before** the quoted file name, otherwise it saves at once with the sticky defaults) to a temp PNG and read the bytes. `src/Tools/View/Png.cs` is a small managed PNG codec used to compose the 2x2 sheet. Output is PNG only.

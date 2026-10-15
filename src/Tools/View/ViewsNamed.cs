@@ -65,7 +65,10 @@ namespace RhinoMCP.Tools.View
                 var view = doc.Views.ActiveView;
                 if (view == null || view is RhinoPageView)
                     return ToolResult.Fail("NO_VIEW", "The active view is not a model view", "Click a model viewport in Rhino and retry.");
-                if (!nv.Restore(i, view.ActiveViewport))
+                var rvp = view.ActiveViewport; string keepName = rvp.Name;
+                bool restored = nv.Restore(i, rvp);
+                if (rvp.Name != keepName) rvp.Name = keepName; // Rhino renames the viewport to the named view: keep the user's name
+                if (!restored)
                     return ToolResult.Fail("RESTORE_FAILED", "Rhino could not restore '" + name + "'");
                 view.Redraw();
                 return ToolResult.Ok(new { restored = name, camera = ViewCommon.CameraInfo(view.ActiveViewport) });

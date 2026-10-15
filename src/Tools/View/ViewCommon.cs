@@ -168,9 +168,10 @@ namespace RhinoMCP.Tools.View
             string path = Path.Combine(Path.GetTempPath(), "rhinomcp_view_" + Guid.NewGuid().ToString("N") + (jpeg ? ".jpg" : ".png"));
             try
             {
-                string cmd = "-_ViewCaptureToFile \"" + path + "\" _Width=" + w + " _Height=" + h +
+                // Options must come BEFORE the file name: giving the name first saves immediately with the sticky defaults.
+                string cmd = "-_ViewCaptureToFile _LockAspectRatio=No _Width=" + w + " _Height=" + h +
                              " _DrawGrid=" + (grid ? "Yes" : "No") + " _DrawWorldAxes=" + (axes ? "Yes" : "No") +
-                             " _DrawCPlaneAxes=No _TransparentBackground=No _Enter";
+                             " _DrawCPlaneAxes=No _TransparentBackground=No \"" + path + "\"";
                 bool ok = RhinoApp.RunScript(cmd, false);
                 ctx.Log("capture cmd ok=" + ok);
                 if (!File.Exists(path)) return null;
@@ -188,18 +189,23 @@ namespace RhinoMCP.Tools.View
     {
         readonly RhinoView _view;
         readonly ViewportInfo _info;
-        readonly DisplayModeDescription _mode;
+        readonly Guid _modeId;
+        readonly Point3d _target;
+        readonly string _name;
         readonly bool _grid, _axes;
         readonly Guid[] _selected;
         readonly RhinoDoc _doc;
         bool _selTouched;
+        public readonly List<string> Problems = new List<string>();
 
         public ViewState(RhinoDoc doc, RhinoView view)
         {
             _doc = doc; _view = view;
             var vp = view.ActiveViewport;
             _info = new ViewportInfo(vp);
-            _mode = vp.DisplayMode;
+            _target = vp.CameraTarget;
+            _name = vp.Name;
+            _modeId = vp.DisplayMode == null ? Guid.Empty : vp.DisplayMode.Id;
             _grid = vp.ConstructionGridVisible;
             _axes = vp.WorldAxesVisible;
             _selected = doc.Objects.GetSelectedObjects(false, false).Select(o => o.Id).ToArray();
@@ -210,12 +216,22 @@ namespace RhinoMCP.Tools.View
         public void Restore()
         {
             var vp = _view.ActiveViewport;
-            try { vp.SetViewProjection(_info, true); } catch (Exception) { }
-            try { if (_mode != null) vp.DisplayMode = _mode; } catch (Exception) { }
-            try { vp.ConstructionGridVisible = _grid; vp.WorldAxesVisible = _axes; } catch (Exception) { }
+            try { vp.SetViewProjection(_info, false); vp.SetCameraTarget(_target, false); } catch (Exception ex) { Problems.Add("camera: " + ex.Message); }
+            try { if (vp.Name != _name) vp.Name = _name; } catch (Exception ex) { Problems.Add("name: " + ex.Message); }
+            try
+            {
+                if (_modeId != Guid.Empty && (vp.DisplayMode == null || vp.DisplayMode.Id != _modeId))
+                {
+                    var d = DisplayModeDescription.GetDisplayModes().FirstOrDefault(m => m.Id == _modeId);
+                    if (d != null) vp.DisplayMode = d;
+                    if (vp.DisplayMode == null || vp.DisplayMode.Id != _modeId) Problems.Add("display mode not restored");
+                }
+            }
+            catch (Exception ex) { Problems.Add("display mode: " + ex.Message); }
+            try { vp.ConstructionGridVisible = _grid; vp.WorldAxesVisible = _axes; } catch (Exception ex) { Problems.Add("grid: " + ex.Message); }
             if (_selTouched)
             {
-                try { _doc.Objects.UnselectAll(false); if (_selected.Length > 0) _doc.Objects.Select(_selected, true); } catch (Exception) { }
+                try { _doc.Objects.UnselectAll(false); if (_selected.Length > 0) _doc.Objects.Select(_selected, true); } catch (Exception ex) { Problems.Add("selection: " + ex.Message); }
             }
             try { _view.Redraw(); } catch (Exception) { }
         }
