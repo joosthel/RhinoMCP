@@ -289,9 +289,9 @@ namespace RhinoMCP.Tools.Measure
                 {
                     var ma = a.AsMesh(); var mb = b.AsMesh();
                     if (ma == null || mb == null) return false;
-                    var lines = Rhino.Geometry.Intersect.Intersection.MeshMeshFast(ma, mb);
+                    var lines = Rhino.Geometry.Intersect.Intersection.MeshMeshAccurate(ma, mb, tol);
                     if (lines == null || lines.Length == 0) return false;
-                    hit = lines[0].From; return true;
+                    hit = lines[0][0]; return true;
                 }
                 else return false;
                 if (cs != null && cs.Length > 0) { hit = cs[0].PointAtStart; return true; }

@@ -15,7 +15,7 @@ namespace RhinoMCP.Tools.Measure
             get
             {
                 return "Finds clashes between set A and set B (or within A when b is omitted). Broad phase: RTree over bboxes (inflated by clearance). " +
-                       "Narrow phase: Intersection.BrepBrep (breps/extrusions), MeshMeshFast (meshes, breps vs meshes), CurveBrep/CurveCurve; solids fully inside another solid count as 'containment'. " +
+                       "Narrow phase: Intersection.BrepBrep (breps/extrusions), MeshMeshAccurate (meshes, breps vs meshes), CurveBrep/CurveCurve; solids fully inside another solid count as 'containment'. " +
                        "Optional clearance reports pairs closer than that distance (kind 'clearance'). compute_volume:true adds overlap volume for solid brep pairs via boolean intersection on duplicates (slow). " +
                        "Output: totals, clash matrix by layer pair, top_k worst pairs with handles and intersection curve length. " +
                        "Safety: max_pairs caps candidate pairs and budget_ms (default 20000) time-boxes the run; both return partial results with a warning.";
@@ -194,7 +194,7 @@ namespace RhinoMCP.Tools.Measure
                 var ma = ga.AsMesh(); var mb = gb.AsMesh();
                 if (ma != null && mb != null)
                 {
-                    var lines = Rhino.Geometry.Intersect.Intersection.MeshMeshFast(ma, mb);
+                    var lines = Rhino.Geometry.Intersect.Intersection.MeshMeshAccurate(ma, mb, tol);
                     if (lines != null && lines.Length > 0) { clash = true; foreach (var l in lines) len += l.Length; }
                 }
             }

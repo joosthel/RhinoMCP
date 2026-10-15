@@ -21,41 +21,37 @@ class MeasureTests(unittest.TestCase):
     created = []
 
     def box(self, x0, y0, z0, x1, y1, z1, h):
-        """Creates a box from base corners and height, moves it to the test layer, returns its handle."""
         return self.place("-_Box %s,%s,%s %s,%s,%s %s" % (x0, y0, z0, x1, y1, z1, h))
 
     def place(self, cmd):
         d = run(cmd)
         self.assertEqual(len(d["added"]), 1, d)
-        handle = d["added"][0]
-        self.created.append(handle)
-        run("_SelNone")
-        run("-_SelId %s" % guid_of(handle))
-        run("-_ChangeLayer %s" % LAYER)
-        run("_SelNone")
-        return handle
+        self.created.append(d["added"][0])
+        return d["added"][0]
 
     @classmethod
     def setUpClass(cls):
         run("-_Layer _New %s _Enter" % LAYER)
+        run("-_Layer _Current %s _Enter" % LAYER)
 
     def setUp(self):
         self.created = []
 
     def tearDown(self):
-        # delete only what this test created
-        run("_SelNone")
-        for h in self.created:
-            try:
-                run("-_SelId %s" % guid_of(h))
-            except AssertionError:
-                pass
+        # delete only what this test created (all of it lives on the test layer)
         if self.created:
+            run("_SelNone")
+            for h in self.created:
+                run("-_SelId %s" % guid_of(h))
             run("_Delete")
-        run("_SelNone")
+            run("_SelNone")
 
     @classmethod
     def tearDownClass(cls):
+        r = c.call("measure", {"target": {"query": {"layer": LAYER}}})
+        if r["ok"]:
+            raise AssertionError("leftover objects on test layer: %s" % r["data"]["count"])
+        run("-_Layer _Current Default _Enter")
         run("-_Layer _Delete %s _Enter" % LAYER)
 
     # ---------------------------------------------------------------- measure
