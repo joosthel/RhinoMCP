@@ -56,8 +56,8 @@ Intent to tool, abbreviated. Full table in [references/tool-map.md](references/t
 
 - Orient: `context_get`, `layers_list`, `objects_query`, `model_overview` (M3).
 - Select / group: `objects_select`, `sets_save`, `sets_list`, `sets_delete`.
-- Create / edit: `geometry_create`, `geometry_transform`, `geometry_boolean`, `geometry_edit`, `objects_set_props`, `objects_delete`.
-- Measure / check: `measure`, `measure_distance`, `clash_check`, `geometry_validate`, `verify_audit` (M3).
+- Create / edit: `geometry_create`, `geometry_transform`, `geometry_boolean`, `geometry_edit`, `freeform_surface`, `subd`, `objects_set_props`, `objects_delete`.
+- Measure / check: `measure`, `measure_distance`, `clash_check`, `geometry_validate`, `analyze_continuity`, `analyze_surface`, `verify_audit` (M3).
 - Look: `view_capture`, `view_set`, `views_named`.
 - Escape hatches: `run_python`, `run_csharp`, `run_command`, `commands_search`.
 - Undo: `history_undo`, `history_redo`.

@@ -30,6 +30,8 @@ Source of truth: `docs/PLAN.md`. Milestone tags: M1 core, M2 drawings, M3 scale 
 | Move, copy, rotate, scale, mirror, orient, arrays | `geometry_transform` |
 | Union, difference, intersection | `geometry_boolean` (pre-flight and retry ladder built in) |
 | Join, explode, offset, fillet, shell, cap, split, trim | `geometry_edit` |
+| Freeform NURBS: control-point / through-point grids, loft (rebuild/refit), sweep2, network, patch, edge surface, G1/G2 blend, curve blend | `freeform_surface` |
+| SubD: from box/cylinder/mesh/loft/surface, subdivide, crease, offset, to NURBS brep | `subd` |
 | Rename, relayer, colour, user text | `objects_set_props` |
 | Delete | `objects_delete` (destructive) |
 | Layers: create, rename, colour, linetype, weight, lock | `layers_manage` |
@@ -44,6 +46,8 @@ Source of truth: `docs/PLAN.md`. Milestone tags: M1 core, M2 drawings, M3 scale 
 | Distances between objects | `measure_distance` |
 | Interference | `clash_check` |
 | Is it valid / closed / manifold | `geometry_validate` |
+| G0/G1/G2 between two surfaces or curves (gap, normal angle, curvature difference) | `analyze_continuity` |
+| Curvature extremes, degree, control points, kinks, edge list of a surface | `analyze_surface` |
 | Whole-model audit after edits | `verify_audit` (M3, if available) |
 | Layer conformance | `layers_audit` |
 | Area schedule, GFA | `area_schedule` (M3, if available) |
