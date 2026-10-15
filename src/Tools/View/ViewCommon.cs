@@ -180,7 +180,8 @@ namespace RhinoMCP.Tools.View
             {
                 // 'all' under only_layers/isolate means everything that is drawn, not the whole document (else the subject is a speck).
                 int c; bb = VisibleBBox(ctx.Doc, keep, out c); label = keep == null ? "all" : "all (isolated)";
-                if (!bb.IsValid) a.Error("zoom_to 'all': the document has no visible objects");
+                // An empty document is not an error: capture/set the view without zooming.
+                if (!bb.IsValid) label = keep == null ? "all (empty document, view not zoomed)" : "all (nothing visible, view not zoomed)";
                 return bb.IsValid;
             }
             if (z is JObject && ((JObject)z)["min"] != null)
