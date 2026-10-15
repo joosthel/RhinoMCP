@@ -17,7 +17,7 @@ Proposals from general knowledge. **Verify against local code and the project br
 | Balustrade height | 0.9 to 1.1 m (higher above 12 m: verify) | 36 to 42 in |
 
 ## Area definitions (verify)
-- DE: DIN 277 (BGF gross, NRF net room area, NUF usable area); WoFlV living area (balconies at typically 25 to 50 percent: verify).
+- Germany: DIN 277 (gross floor area, net room area, usable area); WoFlV living area (balconies at typically 25 to 50 percent: verify).
 - US: gross square feet (outer faces), rentable/usable per BOMA: ask the project definition.
 
 ## Conversion

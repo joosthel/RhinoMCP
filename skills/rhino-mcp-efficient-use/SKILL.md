@@ -71,3 +71,7 @@ Intent to tool, abbreviated. Full table in [references/tool-map.md](references/t
 - Buildings: `rhino-architectural-massing`. Products: `rhino-product-design`.
 
 Prefer a dedicated tool over `run_python`. Use scripts only when no tool fits, and keep snippets short, with a numeric `result`.
+
+## Language
+
+English, always. Every name and text the agent writes into the model is English and ASCII: layers, objects, user text, sets, annotations, sheet titles and file names. This holds even when the user writes in another language.
