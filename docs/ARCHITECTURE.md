@@ -198,7 +198,7 @@ Rhino 7.39 Mac runs x86_64 under Rosetta and is mostly single-threaded, so heavy
 - **`system_status` counts live objects only.** `document.objects` excludes deleted objects; `document.undo_held_deleted` reports how many deleted objects the undo history still holds in memory (`doc.Objects.Count` includes them). A large number comes with a recommendation to save and reopen the file.
 - **Tools:** `system_status` (Read; process, system, document, top-5 heaviest with handles, limits, recommendations) and `performance_mode` (Mutate; `on` sets `RhinoDoc.MeshingParameterStyle` to `Fast` and the active model viewport to Shaded unless already light; the previous style and display mode are stored in `doc.Strings["rhinomcp.perfmode"]`, `off` restores them; a previous `Custom` style is remembered in AppDomain data only, lost on a tools reload).
 - **Desired Core hooks** (not implemented, Core needs a Rhino restart): a per-call watchdog in `UiDispatcher` that aborts or warns on calls beyond `warn_call_ms`, `limits` exposed through `Config`, (`server_info` now carries `rss_mb` and `rosetta`, Core 0.2.0).
-=======
+
 - **Desired Core hooks** (not implemented, Core needs a Rhino restart): a per-call watchdog in `UiDispatcher` that aborts or warns on calls beyond `warn_call_ms`, `limits` exposed through `Config`, and `server_info` carrying the RSS and Rosetta flag.
 
 ## Designer curves, text and engraving (learned on Rhino 7.39 Mac)
@@ -208,4 +208,3 @@ Rhino 7.39 Mac runs x86_64 under Rosetta and is mostly single-threaded, so heavy
 - **line_blend:** `LineCurve` + `Curve.CreateBlendCurve(a, b, Tangency|Curvature, bulge, bulge)` + the curve through the points, appended into a `PolyCurve` so segment 0 stays an exact line.
 - **Extrusion direction:** `Extrusion.Create(curve, h, cap)` follows the curve plane normal, so the result is checked against the requested direction by bbox centre and flipped when needed; non-parallel directions use `Surface.CreateExtrusion`.
 - **Project/pull:** `Curve.ProjectToBrep(curve, breps, dir, tol)` and `Curve.PullToBrepFace` per face.
->>>>>>> d75fa02 (feat: designer curves (periodic/tangent curves, line_blend, fillet_corners, text as curves, engrave/emboss, extrusion direction, split keep, project/pull, fillet budget))
