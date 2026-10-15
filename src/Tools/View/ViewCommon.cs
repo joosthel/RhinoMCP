@@ -8,6 +8,7 @@ using Rhino;
 using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Geometry;
+using RhinoMCP.Tools.Shared;
 
 namespace RhinoMCP.Tools.View
 {
@@ -35,26 +36,77 @@ namespace RhinoMCP.Tools.View
 
         static string Norm(string s) { return new string((s ?? "").Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant(); }
 
+        /// <summary>English names of all display modes installed in this Rhino.</summary>
+        public static string[] DisplayModeNames()
+        {
+            var all = DisplayModeDescription.GetDisplayModes() ?? new DisplayModeDescription[0];
+            return all.Select(d => d.EnglishName).ToArray();
+        }
+
+        // Alias (normalized) -> normalized candidate English names, tried in order. Rhino 7 spells the mode "Arctic" (older builds "Artic").
+        static readonly Dictionary<string, string[]> ModeAliases = new Dictionary<string, string[]>
+        {
+            { "arctic", new[] { "arctic", "artic" } }, { "artic", new[] { "arctic", "artic" } },
+            { "xray", new[] { "xray" } }, { "xray2", new[] { "xray" } },
+            { "render", new[] { "rendered" } }, { "rendered", new[] { "rendered" } },
+            { "raytrace", new[] { "raytraced" } }, { "raytraced", new[] { "raytraced" } },
+            { "tech", new[] { "technical" } }, { "technical", new[] { "technical" } },
+            { "ghost", new[] { "ghosted" } }, { "ghosted", new[] { "ghosted" } },
+            { "wire", new[] { "wireframe" } }, { "wireframe", new[] { "wireframe" } },
+            { "shade", new[] { "shaded" } }, { "shaded", new[] { "shaded" } },
+            { "pen", new[] { "pen" } }, { "sketch", new[] { "pen" } },
+            { "artistic", new[] { "artistic" } }
+        };
+
+        /// <summary>Case-insensitive display mode lookup by English (or local) name, with common aliases. Unknown names list the valid ones.</summary>
         public static DisplayModeDescription FindDisplayMode(string name, out string error)
         {
             error = null;
             var all = DisplayModeDescription.GetDisplayModes() ?? new DisplayModeDescription[0];
             string n = Norm(name);
-            if (n == "arctic") n = "artic"; // Rhino 7 spells it "Artic"
-            var hit = all.FirstOrDefault(d => Norm(d.EnglishName) == n) ?? all.FirstOrDefault(d => Norm(d.LocalName) == n);
+            var cands = new List<string> { n };
+            string[] extra;
+            if (ModeAliases.TryGetValue(n, out extra)) cands.AddRange(extra);
+            DisplayModeDescription hit = null;
+            foreach (var cn in cands)
+            {
+                hit = all.FirstOrDefault(d => Norm(d.EnglishName) == cn) ?? all.FirstOrDefault(d => Norm(d.LocalName) == cn);
+                if (hit != null) break;
+            }
             if (hit == null)
-                error = "unknown display_mode '" + name + "'. Available: " + string.Join(", ", all.Select(d => d.EnglishName));
+                error = "unknown display_mode '" + name + "'. Valid (case-insensitive): " + string.Join(", ", all.Select(d => d.EnglishName)) +
+                        ". Aliases: Artic=Arctic, XRay=X-Ray, Render=Rendered, Wire=Wireframe, Ghost=Ghosted, Tech=Technical, Sketch=Pen";
             return hit;
         }
 
+        /// <summary>
+        /// Makes the view really draw its current state before a capture reads it. Root cause of the "display_mode is ignored" bug:
+        /// on Rhino 7 Mac a viewport redraw is asynchronous, and -_ViewCaptureToFile (which has no display-mode option of its own)
+        /// renders whatever the viewport last drew, so the captured frame showed the previous call's mode. RhinoApp.Wait() alone is not
+        /// enough; a short sleep between redraws lets the draw finish (verified: byte-identical frames per mode over repeated calls).
+        /// </summary>
+        public static void Settle(RhinoView view)
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                try { view.Redraw(); } catch (Exception) { }
+                try { RhinoApp.Wait(); } catch (Exception) { }
+                System.Threading.Thread.Sleep(150);
+            }
+        }
+
         /// <summary>Bounding box of visible, normal/locked objects (what a user sees).</summary>
-        public static BoundingBox VisibleBBox(RhinoDoc doc, out int count)
+        public static BoundingBox VisibleBBox(RhinoDoc doc, out int count) { return VisibleBBox(doc, null, out count); }
+
+        /// <summary>Same, restricted to the keep-set when given.</summary>
+        public static BoundingBox VisibleBBox(RhinoDoc doc, HashSet<Guid> keep, out int count)
         {
             var bb = BoundingBox.Empty;
             count = 0;
             var s = new ObjectEnumeratorSettings { NormalObjects = true, LockedObjects = true, HiddenObjects = false, VisibleFilter = true };
             foreach (var o in doc.Objects.GetObjectList(s))
             {
+                if (keep != null && !keep.Contains(o.Id)) continue;
                 count++;
                 var b = o.Geometry.GetBoundingBox(true);
                 if (b.IsValid) bb.Union(b);
@@ -113,26 +165,53 @@ namespace RhinoMCP.Tools.View
             }
             catch (Exception) { a.Error("'" + argName + "' location/target must be numbers"); return false; }
             if (l.DistanceTo(t) < 1e-9) { a.Error("'" + argName + "' location and target coincide"); return false; }
-            JToken lensTok = cam["lens"];
+            JToken lensTok = cam["lens"], fovTok = cam["fov_deg"];
             double lens = 0;
-            if (lensTok != null && lensTok.Type != JTokenType.Null)
+            bool hasLens = lensTok != null && lensTok.Type != JTokenType.Null, hasFov = fovTok != null && fovTok.Type != JTokenType.Null;
+            if (hasLens && hasFov) { a.Error("'" + argName + "': give lens OR fov_deg, not both"); return false; }
+            if (hasLens)
             {
                 if ((lensTok.Type != JTokenType.Integer && lensTok.Type != JTokenType.Float) || (double)lensTok < 5 || (double)lensTok > 1000)
                 { a.Error("'" + argName + ".lens' must be a 35mm focal length in [5..1000]"); return false; }
                 lens = (double)lensTok;
             }
-            if (vp.IsParallelProjection) vp.ChangeToPerspectiveProjection(true, lens > 0 ? lens : 50.0);
+            if (hasFov)
+            {
+                if (fovTok.Type != JTokenType.Integer && fovTok.Type != JTokenType.Float)
+                { a.Error("'" + argName + ".fov_deg' must be a number"); return false; }
+                lens = LensFromFov((double)fovTok);
+                if (lens < 5 || lens > 1000)
+                { a.Error("'" + argName + ".fov_deg' must be between " + Math.Round(FovFromLens(1000), 2) + " and " + Math.Round(FovFromLens(5), 1) + " degrees"); return false; }
+            }
             var dir = t - l;
             dir.Unitize();
-            var up = Vector3d.ZAxis;
-            if (Math.Abs(dir * up) > 0.9999) up = Vector3d.YAxis;
-            var info = new ViewportInfo(vp);
-            info.SetCameraUp(up);
-            vp.SetViewProjection(info, true);
-            vp.SetCameraLocations(t, l);
+            Vector3d up = Vector3d.ZAxis;
+            JToken upTok = cam["up"];
+            bool userUp = upTok != null && upTok.Type != JTokenType.Null;
+            if (userUp)
+            {
+                var ua = upTok as JArray;
+                try { up = new Vector3d((double)ua[0], (double)ua[1], (double)ua[2]); }
+                catch (Exception) { a.Error("'" + argName + ".up' must be [x,y,z]"); return false; }
+                if (ua.Count != 3 || up.Length < 1e-9) { a.Error("'" + argName + ".up' must be a non-zero [x,y,z]"); return false; }
+            }
+            else if (Math.Abs(dir * up) > 0.9999) up = Vector3d.YAxis;
+            up.Unitize();
+            up = up - (up * dir) * dir;                 // roll: the component of 'up' perpendicular to the view direction
+            if (up.Length < 1e-6) { a.Error("'" + argName + ".up' must not be parallel to the view direction"); return false; }
+            up.Unitize();
+            if (vp.IsParallelProjection) vp.ChangeToPerspectiveProjection(true, lens > 0 ? lens : 50.0);
+            Framing.SetCamera(vp, t, l, up);
             if (lens > 0) vp.Camera35mmLensLength = lens;
             return true;
         }
+
+        /// <summary>
+        /// Rhino's 35 mm lens length is relative to a 24 mm frame laid on the SHORT side of the image
+        /// (verified in view_capture), so the field of view across the short side is 2*atan(12/lens).
+        /// </summary>
+        public static double LensFromFov(double fovDeg) { return 12.0 / Math.Tan(fovDeg * Math.PI / 360.0); }
+        public static double FovFromLens(double lens) { return 2.0 * Math.Atan(12.0 / lens) * 180.0 / Math.PI; }
 
         public static object CameraInfo(RhinoViewport vp)
         {
@@ -143,14 +222,68 @@ namespace RhinoMCP.Tools.View
                 target = Pt(vp.CameraTarget),
                 direction = Vec(vp.CameraDirection),
                 up = Vec(vp.CameraUp),
-                lens_mm = vp.IsParallelProjection ? (double?)null : Math.Round(vp.Camera35mmLensLength, 2)
+                lens_mm = vp.IsParallelProjection ? (double?)null : Math.Round(vp.Camera35mmLensLength, 2),
+                fov_deg = vp.IsParallelProjection ? (double?)null : Math.Round(FovFromLens(vp.Camera35mmLensLength), 2)
             };
         }
 
-        public static object SceneInfo(RhinoDoc doc)
+        /// <summary>
+        /// only_layers / isolate -> set of object ids to draw (null = everything). Both given = union.
+        /// </summary>
+        public static HashSet<Guid> ResolveKeep(ToolContext ctx, JObject args, ArgReader a, out string desc)
+        {
+            desc = null;
+            JToken ol, iso;
+            bool hasL = args.TryGetValue("only_layers", out ol) && ol.Type != JTokenType.Null;
+            bool hasI = args.TryGetValue("isolate", out iso) && iso.Type != JTokenType.Null;
+            if (!hasL && !hasI) return null;
+            var doc = ctx.Doc;
+            var keep = new HashSet<Guid>();
+            var parts = new List<string>();
+            if (hasL)
+            {
+                var names = new List<string>();
+                if (ol.Type == JTokenType.String) names.Add((string)ol);
+                else if (ol is JArray) { foreach (var x in (JArray)ol) { if (x.Type != JTokenType.String) { a.Error("'only_layers' entries must be strings"); break; } names.Add((string)x); } }
+                else a.Error("'only_layers' must be a layer name or an array of names");
+                var filters = new List<ObjectFilter>();
+                foreach (var n in names)
+                {
+                    bool exists = false;
+                    for (int i = 0; i < doc.Layers.Count && !exists; i++)
+                    {
+                        var l = doc.Layers[i];
+                        if (!l.IsDeleted && (string.Equals(l.FullPath, n, StringComparison.OrdinalIgnoreCase) || string.Equals(l.Name, n, StringComparison.OrdinalIgnoreCase))) exists = true;
+                    }
+                    if (!exists) a.Error("'only_layers': no layer '" + n + "'. Use the full path (Parent::Child) or a leaf name; see layers_list.");
+                    filters.Add(new ObjectFilter { Layer = n, IncludeSublayers = true });
+                }
+                if (!a.HasErrors)
+                {
+                    var st = new ObjectEnumeratorSettings { NormalObjects = true, LockedObjects = true, HiddenObjects = false, VisibleFilter = true };
+                    foreach (var o in doc.Objects.GetObjectList(st))
+                        if (filters.Any(f => f.Matches(doc, o))) keep.Add(o.Id);
+                }
+                parts.Add("layers " + string.Join(", ", names));
+            }
+            if (hasI)
+            {
+                var objs = ObjectQuery.TargetOf(ctx, args, a, "isolate");
+                foreach (var o in objs) keep.Add(o.Id);
+                parts.Add("isolate(" + objs.Count + ")");
+            }
+            if (!a.HasErrors && keep.Count == 0)
+                a.Error("only_layers/isolate matched no visible objects; nothing would be drawn");
+            desc = string.Join(" + ", parts) + " -> " + keep.Count + " object(s)";
+            return keep;
+        }
+
+        public static object SceneInfo(RhinoDoc doc) { return SceneInfo(doc, null); }
+
+        public static object SceneInfo(RhinoDoc doc, HashSet<Guid> keep)
         {
             int count;
-            var bb = VisibleBBox(doc, out count);
+            var bb = VisibleBBox(doc, keep, out count);
             return new { bbox = bb.IsValid ? new { min = Pt(bb.Min), max = Pt(bb.Max) } : null, visible_objects = count };
         }
 
