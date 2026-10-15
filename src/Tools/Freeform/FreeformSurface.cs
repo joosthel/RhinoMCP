@@ -42,6 +42,7 @@ namespace RhinoMCP.Tools.Freeform
                 return Schemas.Object(
                     "\"items\":{\"type\":\"array\",\"maxItems\":50,\"minItems\":1,\"items\":{\"type\":\"object\",\"properties\":{\"kind\":{\"type\":\"string\",\"enum\":[\"nurbs_points\",\"through_points\",\"loft\",\"sweep2\",\"network\",\"patch\",\"edge_surface\",\"blend_surface\",\"rebuild_surface\",\"curve_blend\",\"revolve_rail\"]},\"plane\":{\"$ref\":\"#/$defs/plane\"},\"layer\":{\"type\":\"string\"},\"name\":{\"type\":\"string\"},\"user_text\":{\"type\":\"object\",\"additionalProperties\":{\"type\":\"string\"}}},\"required\":[\"kind\"]}}," +
                     "\"plane\":{\"$ref\":\"#/$defs/plane\"}," +
+                    "\"force\":{\"type\":\"boolean\",\"default\":false,\"description\":\"override the control-point limits (max_surface_control_points, max_batch_control_points); never overrides block_rss_mb\"}," +
                     "\"layer\":{\"type\":\"string\",\"description\":\"default layer for items without one, e.g. A::B\"}",
                     "\"items\"");
             }
@@ -61,7 +62,14 @@ namespace RhinoMCP.Tools.Freeform
                 defFrame = GeoUtil.ParsePlane(top.Tok("plane"), ctx, null, out perr);
                 if (defFrame == null) top.Err("'plane': " + perr);
             }
+            bool force = top.Bool("force");
             if (top.Errors.Count > 0) return FF.ArgFail(top.Errors);
+
+            var blocked = Resources.CheckRss("freeform_surface");
+            if (blocked != null) return blocked;
+            var guard = Resources.Begin("freeform_surface");
+            var pre = Preflight(itemsTok, force);
+            if (pre != null) return pre;
 
             var doc = ctx.Doc;
             var results = new List<object>();
@@ -116,7 +124,96 @@ namespace RhinoMCP.Tools.Freeform
                     "See details.items for the reason per item. Check kind names and parameters in the tool description.", new { items = results });
             var res = ToolResult.Ok(data);
             if (failed > 0) res.Warn(failed + " of " + itemsTok.Count + " items failed; see items[].error");
-            return res;
+            foreach (var ri in results)
+            {
+                var rd = ri as Dictionary<string, object>;
+                object cu, cv;
+                if (rd != null && rd.TryGetValue("cp_u", out cu) && rd.TryGetValue("cp_v", out cv) && cu is int && cv is int && (int)cu * (int)cv > Resources.Limits.MaxSurfaceControlPoints)
+                    res.Warn("item " + rd["i"] + " has " + (int)cu + "x" + (int)cv + " = " + ((int)cu * (int)cv) + " control points (limit " + Resources.Limits.MaxSurfaceControlPoints + "). Rebuild it with rebuild_surface to about 20x20 before booleans, offsets or Make2D.");
+            }
+            return guard.Finish(res);
+        }
+
+        // ------------------------------------------------------------------ resource pre-flight
+
+        /// <summary>Estimated control points of one item from its inputs (0 = unknown).</summary>
+        static long EstimateCp(string kind, JObject o, out string how)
+        {
+            how = null;
+            Func<string, int> cnt = f => { var g = o[f] as JArray; return g == null ? 0 : g.Count; };
+            switch (kind)
+            {
+                case "nurbs_points":
+                case "through_points":
+                    {
+                        var g = o["points"] as JArray;
+                        if (g == null || g.Count < 2) return 0;
+                        var first = g[0] as JArray;
+                        if (first == null) return 0;
+                        long rows = g.Count, cols = first.Count;
+                        JToken t;
+                        if (kind == "nurbs_points")
+                        {
+                            int du = 3, dv = 3;
+                            if (o.TryGetValue("degree_u", out t) && t.Type == JTokenType.Integer) du = (int)t;
+                            if (o.TryGetValue("degree_v", out t) && t.Type == JTokenType.Integer) dv = (int)t;
+                            if (o.TryGetValue("closed_u", out t) && t.Type == JTokenType.Boolean && (bool)t) rows += du;
+                            if (o.TryGetValue("closed_v", out t) && t.Type == JTokenType.Boolean && (bool)t) cols += dv;
+                        }
+                        how = rows + "x" + cols + " point grid";
+                        return rows * cols;
+                    }
+                case "rebuild_surface":
+                    {
+                        JToken u, v;
+                        if (o.TryGetValue("points_u", out u) && o.TryGetValue("points_v", out v) && u.Type == JTokenType.Integer && v.Type == JTokenType.Integer)
+                        { how = (long)u + "x" + (long)v + " rebuild"; return (long)u * (long)v; }
+                        return 0;
+                    }
+                case "patch":
+                    {
+                        long us = 10, vs = 10; JToken t;
+                        if (o.TryGetValue("u_spans", out t) && t.Type == JTokenType.Integer) us = (long)t;
+                        if (o.TryGetValue("v_spans", out t) && t.Type == JTokenType.Integer) vs = (long)t;
+                        how = us + "x" + vs + " spans";
+                        return (us + 3) * (vs + 3);
+                    }
+                case "loft":
+                    {
+                        JToken t; long rb = 0;
+                        if (o.TryGetValue("rebuild", out t) && t.Type == JTokenType.Integer) rb = (long)t;
+                        if (rb >= 2) { how = cnt("curves") + " curves x rebuild " + rb; return cnt("curves") * rb; }
+                        return 0;
+                    }
+            }
+            return 0;
+        }
+
+        /// <summary>Fails the whole call (nothing is created) when an item or the batch exceeds the control-point limits.</summary>
+        static ToolResult Preflight(JArray items, bool force)
+        {
+            var lim = Resources.Limits;
+            long total = 0;
+            for (int i = 0; i < items.Count; i++)
+            {
+                var o = items[i] as JObject;
+                if (o == null) continue;
+                string how;
+                long cp = EstimateCp((string)o["kind"] ?? "", o, out how);
+                total += cp;
+                if (cp > lim.MaxSurfaceControlPoints && !force)
+                {
+                    int side = (int)Math.Round(Math.Sqrt(lim.MaxSurfaceControlPoints));
+                    return Resources.LimitFail("max_surface_control_points", cp, lim.MaxSurfaceControlPoints,
+                        "items[" + i + "] (" + o["kind"] + ", " + how + ") would have ~" + cp + " control points; the limit is " + lim.MaxSurfaceControlPoints + " (" + side + "x" + side + "). Nothing was created.",
+                        "Use fewer points: a smooth surface rarely needs more than 20x20 (degree 3). Build with a coarse grid, then refine locally, or split into several patches. For an existing dense surface call rebuild_surface to 20x20.", true);
+                }
+            }
+            if (total > lim.MaxBatchControlPoints && !force)
+                return Resources.LimitFail("max_batch_control_points", total, lim.MaxBatchControlPoints,
+                    "the batch would create ~" + total + " control points in total; the limit is " + lim.MaxBatchControlPoints + ". Nothing was created.",
+                    "Split the batch over several calls with fewer points per surface (about 20x20 each), or lower the point counts.", true);
+            return null;
         }
 
         // ------------------------------------------------------------------ builders

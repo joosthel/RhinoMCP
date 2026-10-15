@@ -77,7 +77,7 @@ namespace RhinoMCP.Tools.Drawing
                     "\"hatch\":{\"description\":\"'none' | pattern name | {pattern,scale,rotation_deg}. Default Solid. Pattern scale is in output (post-scale) units\"}," +
                     "\"group_by\":{\"enum\":[\"source_object\",\"none\"],\"default\":\"source_object\"}," +
                     "\"keep_source_layer_sublayers\":{\"type\":\"boolean\",\"default\":false,\"description\":\"put output on <root>::<category>::<source layer>\"}," +
-                    "\"compare_native\":{\"type\":\"boolean\",\"default\":false}," +
+                    "\"force\":{\"type\":\"boolean\",\"default\":false,\"description\":\"override make2d_max_input_faces (never block_rss_mb)\"},\"compare_native\":{\"type\":\"boolean\",\"default\":false}," +
                     "\"keep_engine_duplicates\":{\"type\":\"boolean\",\"default\":false,\"description\":\"diagnostic: keep the segments Rhino flags Duplicate so the overlap pass has to remove them\"}");
             }
         }
@@ -130,6 +130,10 @@ namespace RhinoMCP.Tools.Drawing
             var clipPlanes = ResolveClipping(args["clipping_planes"], ctx, a);
             if (a.HasErrors) return a.ErrorResult();
             if (view == null) return ToolResult.Fail("INVALID_ARGS", "view could not be resolved");
+            var rssBlock = Resources.CheckRss("drawing_make2d");
+            if (rssBlock != null) return rssBlock;
+            var resGuard = Resources.Begin("drawing_make2d");
+            bool forceRes = a.Bool("force", false);
             if (objs.Count == 0) return ToolResult.Fail("NOT_FOUND", "The target resolved to no objects", "Check the target with objects_query.");
 
             double angTol = Math.Max(ctx.AngleTolDeg * Math.PI / 180.0, 1e-4);
@@ -163,6 +167,16 @@ namespace RhinoMCP.Tools.Drawing
                 if (added.Count == 0)
                     return ToolResult.Fail("NO_GEOMETRY", "None of the " + objs.Count + " target objects can be drawn (" + DescribeSkipped(skipped) + ")",
                         "Select breps, extrusions, surfaces, meshes, SubDs, curves or blocks of those.");
+                long inFaces = 0;
+                foreach (var kv in added)
+                {
+                    var gb = kv.G; var bg = gb as Brep; var mg = gb as Mesh; var sg = gb as SubD;
+                    inFaces += bg != null ? bg.Faces.Count : mg != null ? mg.Faces.Count : sg != null ? sg.Faces.Count : gb is Extrusion ? 6 : 1;
+                }
+                if (inFaces > Resources.Limits.Make2dMaxInputFaces && !forceRes)
+                    return Resources.LimitFail("make2d_max_input_faces", inFaces, Resources.Limits.Make2dMaxInputFaces,
+                        "Make2D input has " + inFaces + " faces (" + added.Count + " geometries); the limit is " + Resources.Limits.Make2dMaxInputFaces + ". Nothing was computed.",
+                        "Split the drawing: run Make2D per layer or per set (layers:[...] or a {set} target) and combine the outputs, drop objects that are not visible in this view, or use a clipping plane to cut the model first.", true);
                 if (skipped.Count > 0) warnings.Add("skipped non-drawable objects: " + DescribeSkipped(skipped));
                 if (meshSources > 0) warnings.Add(meshSources + " mesh source(s): outlines follow the mesh facets and will look jagged. Prefer brep/SubD sources.");
                 if (view.Perspective) warnings.Add("perspective view: the drawing is not dimensionally true and scale does not apply to real distances. Use a parallel view for plans, sections and elevations.");
@@ -446,7 +460,7 @@ namespace RhinoMCP.Tools.Drawing
                 if (nativeReport != null) data["native"] = nativeReport;
                 var res = ToolResult.Ok(data);
                 foreach (var w in warnings) res.Warn(w);
-                return res;
+                return resGuard.Finish(res);
             }
             finally
             {

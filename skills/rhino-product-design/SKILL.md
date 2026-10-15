@@ -29,6 +29,8 @@ Interpretation: G0 gap above tolerance means not joined; G1 angle above 1 degree
 
 Fix suggestions: `-_MatchSrf` (tangency or curvature), `-_BlendSrf`, rebuild to matching degree.
 
+Keep surfaces light: 20x20 control points is usually enough, rebuild dense surfaces before shelling, filleting or booleans, and keep SubD at 1 to 2 levels (see "Keep Rhino light" in `rhino-mcp-efficient-use`; `system_status` shows the heaviest objects).
+
 ## 4. Wall thickness
 
 `product_thickness`: sampled minimum and distribution. Typical minimums (verify with the process owner): injection moulding 1.0 to 3.0 mm (uniform walls, ribs at 50 to 60 percent of wall), FDM 1.2 mm (3 nozzle widths), SLA 0.8 mm, sheet metal per material gauge, CNC aluminium 0.8 to 1.5 mm. Report min, max, and the count of samples below the limit.

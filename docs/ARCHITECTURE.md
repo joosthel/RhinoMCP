@@ -75,7 +75,7 @@ public interface ITool {
 ```
 - The payload is serialized compactly as a single `text` content block. Images are added as `image` blocks (PNG or JPEG, base64).
 - `isError: true` is set whenever `ok` is false. JSON-RPC errors are used only for protocol faults.
-- Common codes: `INVALID_ARGS`, `NOT_FOUND`, `NO_DOCUMENT`, `TIMEOUT`, `GEOMETRY_FAILED`, `BOOLEAN_FAILED`, `SCRIPT_ERROR`, `UNSUPPORTED`, `INTERNAL`.
+- Common codes: `INVALID_ARGS`, `RESOURCE_LIMIT`, `NOT_FOUND`, `NO_DOCUMENT`, `TIMEOUT`, `GEOMETRY_FAILED`, `BOOLEAN_FAILED`, `SCRIPT_ERROR`, `UNSUPPORTED`, `INTERNAL`.
 
 ### Conventions every tool follows
 1. **Addressing.**
@@ -162,3 +162,34 @@ docs/              research/ · ARCHITECTURE.md · PLAN.md · DEVELOPMENT.md · 
 - **Tool DLLs are reloaded without unloading**, so event subscriptions of older DLLs stay alive. The journal therefore keeps its ring buffer (primitive arrays) and an "uninstall" `Action` in `AppDomain` data. A newer DLL adopts the buffer (tokens keep counting), runs the stored uninstall (unsubscribes the old delegates) and subscribes its own. Each handler also carries a generation number and returns at once if it is no longer the current one. Result: exactly one journal records each event.
 - **Actor (agent vs user):** Core exposes no "agent call in progress" flag. Handlers run synchronously on the UI thread, so a `ToolRegistry` frame on the stack means an MCP tool (including `run_command` / `run_python`) caused the event. A Core hook (a static flag set around `tool.Execute`) would replace this stack walk.
 - `objects_near` keeps an RTree over object bboxes, rebuilt when the journal epoch (bumped by add/delete/undelete/replace) or `Objects.Count` changes.
+
+## Resource guard (`src/Tools/Shared/Resources.cs`)
+Rhino 7.39 Mac runs x86_64 under Rosetta and is mostly single-threaded, so heavy or high-resolution geometry makes it sluggish or crash. Heavy tools estimate cost **before** computing and return `RESOURCE_LIMIT` (`ok=false`, numbers in `details`, concrete `guidance`) instead of working past the limits.
+
+- **Limits** are read by the tools from the optional `limits` object in `~/Library/Application Support/RhinoMCP/config.json` (re-read when the file changes; Core `Config` is untouched, unknown keys are ignored). Defaults:
+
+| Key | Default | Guards |
+|---|---|---|
+| `max_surface_control_points` | 2500 (50x50) | `freeform_surface` per item (grid size, `rebuild_surface` counts, patch spans, loft rebuild) |
+| `max_batch_control_points` | 20000 | `freeform_surface` per call, summed over items |
+| `max_subd_levels` | 2 | `subd` `subdivide` levels |
+| `max_subd_faces` | 50000 | `subd` subdivide result, `to_brep`, `offset`, `create_from_mesh` input |
+| `max_mesh_faces` | 500000 | `system_status` recommendation for mesh objects |
+| `max_capture_pixels` | 1600x1200 (number = pixels, or `[w,h]`) | `view_capture` width x height |
+| `make2d_max_input_faces` | 20000 | `drawing_make2d` source faces |
+| `boolean_max_face_count` | 5000 | `geometry_boolean` total input faces (the retry ladder multiplies the cost) |
+| `clash_max_pairs` | 5000 | `clash_check` `max_pairs` argument |
+| `boolean_budget_ms` | 30000 | `geometry_boolean` `budget_ms`: checked between retry-ladder steps, structured `TIMEOUT` with step reached and diagnosis hints (a single kernel call cannot be interrupted) |
+| `clash_budget_ms` | 30000 | `clash_check` `budget_ms` default; on expiry partial results plus `data.timeout {pairs_tested, pairs_total, hints}` |
+| `warn_rss_mb` | 4000 | warning + `resources` block in results |
+| `block_rss_mb` | min(12000, 40% of RAM) | all guarded heavy tools refuse; **never** forceable |
+| `warn_call_ms` | 10000 | warning + `resources` block when a call is slower |
+
+- **`geometry_edit` `max_cp`** (`offset_surface`, `shell`; default `max_surface_control_points`): reports face control-point counts (`items[].cp`) and rebuilds a result that is one untrimmed face above it; joined or trimmed results only get a warning.
+- **`force: true`** (tool argument) overrides the count limits of that tool only. It never overrides `block_rss_mb`.
+- **`view_capture`** over the pixel limit is refused (RESOURCE_LIMIT with a suggested smaller size), not silently clamped, so the caller knows what it gets. Default capture sizes are unchanged (768x512; sheet 1024x768).
+- **Post-call accounting.** Guarded tools end with `Resources.Begin(tool)` ... `guard.Finish(result)`. `data.resources = {rss_mb, rss_delta_mb, call_ms, doc_cp_total?}` and a warning are attached only when notable (RSS growth > 200 MB, call > `warn_call_ms`, or RSS > `warn_rss_mb`), to keep tokens low.
+- **Process stats.** RSS and private bytes come from `Process.GetCurrentProcess()` (`WorkingSet64`, `PrivateMemorySize64`; verified under Rhino's Mono 6.12), with `ps -o rss=` as fallback, cached 2 s. Free system memory is parsed from `vm_stat` (free + inactive + speculative + purgeable pages), cached 10 s. Rosetta is `sysctl sysctl.proc_translated`; RAM `hw.memsize`; cores `hw.physicalcpu` / `Environment.ProcessorCount`.
+- **Document complexity.** `Resources.DocComplexity` totals NURBS control points (per `Brep.Surfaces`, so shared surfaces count once), brep faces, mesh vertices/faces, SubD faces and cached render-mesh faces (`RhinoObject.GetMeshes(MeshType.Render)`, which never creates meshes). The scan is time-boxed (2 s, `partial` flag) and cached per `ChangeJournal.Epoch` + object count (5 s without a journal).
+- **Tools:** `system_status` (Read; process, system, document, top-5 heaviest with handles, limits, recommendations) and `performance_mode` (Mutate; `on` sets `RhinoDoc.MeshingParameterStyle` to `Fast` and the active model viewport to Shaded unless already light; the previous style and display mode are stored in `doc.Strings["rhinomcp.perfmode"]`, `off` restores them; a previous `Custom` style is remembered in AppDomain data only, lost on a tools reload).
+- **Desired Core hooks** (not implemented, Core needs a Rhino restart): a per-call watchdog in `UiDispatcher` that aborts or warns on calls beyond `warn_call_ms`, `limits` exposed through `Config`, and `server_info` carrying the RSS and Rosetta flag.

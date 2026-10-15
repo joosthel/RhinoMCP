@@ -6,6 +6,7 @@ using Rhino;
 using Rhino.Display;
 using Rhino.DocObjects;
 using Rhino.Geometry;
+using RhinoMCP.Tools.Shared;
 
 namespace RhinoMCP.Tools.View
 {
@@ -128,8 +129,8 @@ namespace RhinoMCP.Tools.View
                 return @"{""type"":""object"",""properties"":{
 ""view"":{""description"":""active | Top|Bottom|Left|Right|Front|Back|Perspective | named view name | {location:[x,y,z],target:[x,y,z],lens?:mm}"",""oneOf"":[{""type"":""string""},{""type"":""object"",""properties"":{""location"":{""$ref"":""#/$defs/point""},""target"":{""$ref"":""#/$defs/point""},""lens"":{""type"":""number""}},""required"":[""location"",""target""]}]},
 ""display_mode"":{""type"":""string"",""description"":""English display mode name, e.g. Wireframe, Shaded, Rendered, Ghosted, X-Ray, Technical, Artic, Pen""},
-""width"":{""type"":""integer"",""minimum"":16,""maximum"":1600,""default"":768},
-""height"":{""type"":""integer"",""minimum"":16,""maximum"":1600,""default"":512},
+""width"":{""type"":""integer"",""minimum"":16,""default"":768,""description"":""width*height must stay within limits.max_capture_pixels (default 1600x1200 = 1.92 MP); larger requests fail with RESOURCE_LIMIT""},
+""height"":{""type"":""integer"",""minimum"":16,""default"":512},
 ""format"":{""type"":""string"",""enum"":[""png""],""default"":""png"",""description"":""Only PNG is produced (no JPEG encoder without GDI+); jpeg is accepted and answered with PNG plus a warning""},
 ""zoom_to"":{""description"":""'all' | target | {min:[x,y,z],max:[x,y,z]}""},
 ""highlight"":{""description"":""target to show selected during the capture (selection is restored afterwards)""},
@@ -156,8 +157,8 @@ namespace RhinoMCP.Tools.View
                 else if (vt is JObject) s.Camera = (JObject)vt;
                 else a.Error("'view' must be a string or a camera object");
             }
-            s.Width = a.Int("width", false, 768, 16, 1600);
-            s.Height = a.Int("height", false, 512, 16, 1600);
+            s.Width = a.Int("width", false, 768, 16, 100000);
+            s.Height = a.Int("height", false, 512, 16, 100000);
             string fmt = (a.String("format", false, "png") ?? "png").ToLowerInvariant();
             if (fmt != "png" && fmt != "jpeg" && fmt != "jpg") a.Error("'format' must be png or jpeg");
             bool wantedJpeg = fmt != "png"; s.Jpeg = false;
@@ -172,6 +173,19 @@ namespace RhinoMCP.Tools.View
             s.HasZoom = ViewCommon.ResolveZoom(a, args, ctx, out s.ZoomBox, out s.ZoomLabel);
             if (a.Has("highlight")) s.Highlight = a.Target("highlight", ctx);
             if (a.HasErrors) return a.ErrorResult();
+
+            var blocked = Resources.CheckRss("view_capture");
+            if (blocked != null) return blocked;
+            long px = (long)s.Width * s.Height, maxPx = Resources.Limits.MaxCapturePixels;
+            if (px > maxPx)
+            {
+                double f = Math.Sqrt((double)maxPx / px);
+                int sw = Math.Max(16, (int)(s.Width * f)), sh = Math.Max(16, (int)(s.Height * f));
+                return Resources.LimitFail("max_capture_pixels", px, maxPx,
+                    "capture " + s.Width + "x" + s.Height + " = " + px + " px exceeds max_capture_pixels (" + maxPx + "). Nothing was rendered.",
+                    "Capture at about " + sw + "x" + sh + " (same aspect) or smaller; 1024 px wide is plenty to judge a model. Use zoom_to for detail instead of more pixels.", false);
+            }
+            var guard = Resources.Begin("view_capture");
 
             DefinedViewportProjection p; string c;
             if (!s.HasZoom && s.Camera == null && ViewCommon.TryStdProjection(s.ViewName, out p, out c))
@@ -202,7 +216,7 @@ namespace RhinoMCP.Tools.View
             foreach (var l in ctx.Logs) if (l.StartsWith("restore:")) res.Warn(l);
             if (wantedJpeg) res.Warn("jpeg is not available in this runtime; returned PNG");
             res.AddImage(mime, Convert.ToBase64String(bytes));
-            return res;
+            return guard.Finish(res);
         }
     }
 }
