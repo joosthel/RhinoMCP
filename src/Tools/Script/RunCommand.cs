@@ -23,6 +23,7 @@ namespace RhinoMCP.Tools.Script
         System.Threading.Timer _timer;
         public volatile bool Fired;
         public string Prompt;
+        public string Method;      // how the last Escape was delivered (cancel_method)
         int _attempts;
         public void Start(int seconds)
         {
@@ -43,7 +44,12 @@ namespace RhinoMCP.Tools.Script
                             Fired = true;
                             // SendKeystrokes only works while Rhino has keyboard focus; posting a native
                             // Escape key event into Rhino's own AppKit queue works in the background too.
-                            if (!MacEscape.Post()) RhinoApp.SendKeystrokes("!", true);
+                            // Attempts 1-2: native event into the document window (found via [NSApp windows], deminiaturized
+                            // if needed). Later attempts also send the keystroke path, in case the first did not land.
+                            string m;
+                            bool posted = MacEscape.Post(out m);
+                            if (!posted || _attempts >= 3) { RhinoApp.SendKeystrokes("!", true); m = posted ? m + "+sendkeystrokes" : "sendkeystrokes"; }
+                            Method = m;
                         }
                         catch (Exception) { }
                     }));
@@ -75,21 +81,45 @@ namespace RhinoMCP.Tools.Script
         static extern IntPtr SendKeyEvent(IntPtr r, IntPtr s, ulong type, NSPoint loc, ulong flags, double time, long windowNumber,
             IntPtr context, IntPtr chars, IntPtr charsIgnoring, [MarshalAs(UnmanagedType.I1)] bool isRepeat, ushort keyCode);
 
-        public static bool Post()
+        public static bool Post() { string m; return Post(out m); }
+
+        /// <summary>
+        /// method: "main_window" ([NSApp mainWindow] was usable), "found_window" (located via [NSApp windows]),
+        /// "found_window+deminiaturized" (it was minimized and has been restored), "no_window" (event without a window number).
+        /// </summary>
+        public static bool Post(out string method)
         {
+            method = null;
             try
             {
                 if (!Rhino.Runtime.HostUtils.RunningOnOSX) return false;
                 IntPtr app = Send(objc_getClass("NSApplication"), sel_registerName("sharedApplication"));
                 if (app == IntPtr.Zero) return false;
-                IntPtr win = Send(app, sel_registerName("mainWindow"));
-                if (win == IntPtr.Zero)
+                long winNum = 0;
+                IntPtr main = Send(app, sel_registerName("mainWindow"));
+                if (main != IntPtr.Zero)
                 {
-                    IntPtr wins = Send(app, sel_registerName("orderedWindows"));
-                    if (wins != IntPtr.Zero && SendULong(wins, sel_registerName("count")) > 0)
-                        win = SendIdx(wins, sel_registerName("objectAtIndex:"), 0);
+                    winNum = SendLong(main, sel_registerName("windowNumber"));
+                    method = "main_window";
                 }
-                long winNum = win == IntPtr.Zero ? 0 : SendLong(win, sel_registerName("windowNumber"));
+                else
+                {
+                    // mainWindow is nil when the window is minimized or the app is inactive: locate the document window ourselves.
+                    var w = MacWindow.Find();
+                    if (w != null)
+                    {
+                        method = "found_window";
+                        if (w.Miniaturized && MacWindow.Deminiaturize(w, 2000)) method = "found_window+deminiaturized";
+                        winNum = w.Number;
+                    }
+                    else
+                    {
+                        IntPtr wins = Send(app, sel_registerName("orderedWindows"));
+                        if (wins != IntPtr.Zero && SendULong(wins, sel_registerName("count")) > 0)
+                            winNum = SendLong(SendIdx(wins, sel_registerName("objectAtIndex:"), 0), sel_registerName("windowNumber"));
+                        method = "no_window";
+                    }
+                }
                 IntPtr esc = Marshal.StringToHGlobalAnsi("\u001b");
                 IntPtr str;
                 try { str = SendPtr(objc_getClass("NSString"), sel_registerName("stringWithUTF8String:"), esc); }
@@ -181,7 +211,8 @@ namespace RhinoMCP.Tools.Script
             var handles = live.Take(200).Select(id => ctx.Handles.For(id)).ToList();
 
             var data = new { success = success, output = output, added = handles, added_total = live.Count,
-                             cancelled_waiting_for_input = watchdog.Fired, last_prompt = watchdog.Prompt };
+                             cancelled_waiting_for_input = watchdog.Fired, last_prompt = watchdog.Prompt,
+                             cancel_method = watchdog.Fired ? watchdog.Method : null, command_ended = !Rhino.Commands.Command.InCommand() };
             if (watchdog.Fired)
                 return ToolResult.Fail("COMMAND_NEEDS_INPUT",
                     "The command stopped to wait for input and was cancelled after " + inputTimeout + " s" +

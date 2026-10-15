@@ -17,7 +17,7 @@ def guid_of(handle):
     return r["data"]["objects"][0]["guid"]
 
 
-class MeasureTests(unittest.TestCase):
+class MeasureTests(c.IdleTestCase):
     created = []
 
     def box(self, x0, y0, z0, x1, y1, z1, h):
@@ -31,6 +31,7 @@ class MeasureTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         run("-_Layer _New %s _Enter" % LAYER)
         run("-_Layer _Current %s _Enter" % LAYER)
 

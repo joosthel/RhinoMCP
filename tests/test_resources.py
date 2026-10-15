@@ -22,9 +22,10 @@ def count_layer():
     return ok(r)["result"]
 
 
-class ResourceTests(unittest.TestCase):
+class ResourceTests(c.IdleTestCase):
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         names = [t["name"] for t in c.rpc("tools/list")["tools"]]
         for n in ("system_status", "performance_mode", "freeform_surface", "subd", "view_capture"):
             assert n in names, n

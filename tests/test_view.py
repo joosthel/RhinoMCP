@@ -79,9 +79,10 @@ def image_info(img):
     raise AssertionError("not a PNG/JPEG: %r" % raw[:8])
 
 
-class ViewTests(unittest.TestCase):
+class ViewTests(c.IdleTestCase):
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         cls.names = [t["name"] for t in c.rpc("tools/list")["tools"]]
         for n in ("view_capture", "view_capture_sheet", "view_set", "views_named"):
             assert n in cls.names, n
@@ -180,11 +181,12 @@ class ViewTests(unittest.TestCase):
         self.assertFalse(r["ok"])
 
 
-class ViewFixTests(unittest.TestCase):
+class ViewFixTests(c.IdleTestCase):
     """Display modes, camera, tight zoom, isolate and restore. Scene: box A (layer a) and sphere B (layer b::deep)."""
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         cls.wipe()
         r = c.call("geometry_create", {"items": [{"kind": "box", "min": [0, 0, 0], "max": [100, 40, 10]}], "layer": LA})
         assert r["ok"], r

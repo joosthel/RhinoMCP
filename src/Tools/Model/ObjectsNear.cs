@@ -136,7 +136,14 @@ namespace RhinoMCP.Tools.Model
                 {
                     hits.Clear();
                     SearchPoint(tree, boxes, pt, r, hits);
-                    if (hits.Count >= limit || r > diag * 2) break;
+                    // Count only candidates that pass the filters: otherwise unrelated nearby objects satisfy the
+                    // limit, the radius stops growing, and the filter then removes them (returning too few rows).
+                    int passing = filter == null ? hits.Count : hits.Count(h2 =>
+                    {
+                        var o2 = doc.Objects.FindId(ids[h2.Index]);
+                        return o2 != null && !o2.IsDeleted && filter.Matches(doc, o2);
+                    });
+                    if (passing >= limit || r > diag * 2) break;
                     r *= 2;
                 }
                 radius = r;
