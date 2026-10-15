@@ -4,7 +4,7 @@ import unittest
 import mcp_client as c
 
 
-class CoreTests(unittest.TestCase):
+class CoreTests(c.IdleTestCase):
     def test_health_needs_no_auth(self):
         status, _, text = c.http("GET", "/health", auth=False)
         self.assertEqual(status, 200)
@@ -90,11 +90,19 @@ class CoreTests(unittest.TestCase):
         self.assertTrue(r["ok"], r)
         self.assertEqual(c.call("context_get")["data"]["objects"]["total"], before)
 
+    def test_system_status_reports_window_state(self):
+        w = c.call("system_status")["data"]["window"]
+        self.assertIn("state", w)
+        self.assertIn(w["state"], ("visible", "minimized", "hidden", "app_hidden", "no_document_window", "non-mac", "unknown"), w)
+
     def test_command_waiting_for_input_is_cancelled(self):
         r = c.call("run_command", {"command": "_Line", "input_timeout_s": 2})
         self.assertFalse(r["ok"])
         self.assertEqual(r["error"]["code"], "COMMAND_NEEDS_INPUT")
         self.assertIn("Start of line", r["error"]["details"]["last_prompt"])
+        d = r["error"]["details"]
+        self.assertTrue(d["command_ended"], d)
+        self.assertIn(d["cancel_method"].split("+")[0], ("main_window", "found_window", "no_window", "sendkeystrokes"), d)
         # Rhino is responsive again afterwards
         self.assertTrue(c.call("context_get")["ok"])
 

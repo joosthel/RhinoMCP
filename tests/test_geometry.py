@@ -11,7 +11,7 @@ def ok(r):
     return r["data"]
 
 
-class GeometryTests(unittest.TestCase):
+class GeometryTests(c.IdleTestCase):
     def tearDown(self):
         # Everything created by these tests lives on LAYER: select it and delete it.
         c.call("run_command", {"command": '-_SelLayer "%s" _Enter' % LAYER})

@@ -35,7 +35,7 @@ def hid(x):
     return x if isinstance(x, str) else x["handle"]
 
 
-class Base(unittest.TestCase):
+class Base(c.IdleTestCase):
     def setUp(self):
         self.created = []
         for l in (LA, LSUB, LB):
@@ -170,7 +170,7 @@ class SystemStatus(Base):
 
 
 @needs_core
-class CoreStrictness(unittest.TestCase):
+class CoreStrictness(c.IdleTestCase):
     def test_unknown_argument_rejected_and_nothing_executed(self):
         r = c.call("history_undo", {"count": 2})
         self.assertFalse(r["ok"], r)

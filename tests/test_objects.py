@@ -12,7 +12,7 @@ def cmd(text):
     return r["data"]["added"]
 
 
-class ObjectsTests(unittest.TestCase):
+class ObjectsTests(c.IdleTestCase):
     def setUp(self):
         self.created = []
         self.sets = []

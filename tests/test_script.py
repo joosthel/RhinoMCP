@@ -20,12 +20,18 @@ def cleanup():
     ).replace("LAYER", repr(LAYER))})
 
 
-class ScriptTests(unittest.TestCase):
+class ScriptTests(c.IdleTestCase):
     def setUp(self):
         cleanup()
 
     def tearDown(self):
         cleanup()
+
+    def test_command_cancel_idle_is_noop(self):
+        r = c.call("command_cancel")
+        self.assertTrue(r["ok"], r)
+        self.assertFalse(r["data"]["was_in_command"])
+        self.assertTrue(c.ensure_idle()["ok"])
 
     def test_run_python_creates_line(self):
         r = c.call("run_python", {"code": (

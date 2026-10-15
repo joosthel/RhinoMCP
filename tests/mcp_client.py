@@ -3,6 +3,8 @@ import glob
 import json
 import os
 import urllib.error
+import time
+import unittest
 import urllib.request
 
 BASE = os.path.expanduser("~/Library/Application Support/RhinoMCP")
@@ -20,7 +22,8 @@ def instance():
     """Newest live instance from the discovery files: dict(pid, port, ...)."""
     for f in sorted(glob.glob(os.path.join(BASE, "instances", "*.json")), key=os.path.getmtime, reverse=True):
         try:
-            info = json.load(open(f))
+            with open(f) as fh:
+                info = json.load(fh)
             os.kill(int(info["pid"]), 0)
             return info
         except (OSError, ValueError, KeyError):
@@ -29,7 +32,8 @@ def instance():
 
 
 def token():
-    return json.load(open(os.path.join(BASE, "config.json")))["token"]
+    with open(os.path.join(BASE, "config.json")) as f:
+        return json.load(f)["token"]
 
 
 def base_url():
@@ -78,3 +82,29 @@ def call(tool, args=None):
     if imgs:
         payload["_images"] = imgs
     return payload
+
+
+def ensure_idle(attempts=10):
+    """Cancel any command left waiting for input so one stuck command cannot cascade into the whole run.
+
+    Calls the command_cancel tool (Escape into the Rhino document window, restoring it if minimized) until Rhino
+    reports it is idle. Returns the last tool payload. Never raises; unknown tool (old DLL) just returns None.
+    """
+    last = None
+    for _ in range(attempts):
+        try:
+            last = call("command_cancel")
+        except Exception:
+            return last
+        if not last.get("ok") or not last["data"].get("was_in_command"):
+            return last
+        time.sleep(1.0)
+    raise RuntimeError("Rhino is still stuck in a command after %d cancel attempts: %s" % (attempts, last))
+
+
+class IdleTestCase(unittest.TestCase):
+    """TestCase whose setUpClass first makes sure Rhino is not stuck in an interactive command."""
+
+    @classmethod
+    def setUpClass(cls):
+        ensure_idle()

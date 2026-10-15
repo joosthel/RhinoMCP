@@ -100,6 +100,7 @@ namespace RhinoMCP.Tools.Context
             {
                 process = new { pid = System.Diagnostics.Process.GetCurrentProcess().Id, rss_mb = Math.Round(rss), private_mb = Math.Round(Resources.PrivateMb()), rosetta = rosetta, arch = IntPtr.Size == 8 ? "x64" : "x86" },
                 system = new { ram_total_mb = ram, ram_free_mb = free < 0 ? (double?)null : free, cores_physical = Resources.PhysicalCores(), cores_logical = Resources.LogicalCores() },
+                window = RhinoMCP.Tools.Script.MacWindow.State(),
                 document = doc,
                 limits = lim.ToJson(),
                 recommendations = rec

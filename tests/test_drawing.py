@@ -21,7 +21,7 @@ def box(x0, y0, z0, x1, y1, z1):
     return {"kind": "box", "min": [x0, y0, z0], "max": [x1, y1, z1]}
 
 
-class DrawingTests(unittest.TestCase):
+class DrawingTests(c.IdleTestCase):
     def setUp(self):
         self.clips = []
         self.cleanup()

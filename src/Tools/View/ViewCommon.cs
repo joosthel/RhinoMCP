@@ -87,11 +87,54 @@ namespace RhinoMCP.Tools.View
         /// </summary>
         public static void Settle(RhinoView view)
         {
-            for (int i = 0; i < 2; i++)
+            // Adaptive: count real frames of this viewport through a display conduit and wait (bounded) for them, instead of fixed
+            // sleeps that were too short under load. Needs two consecutive completed frames after the last state change.
+            var counter = new FrameCounter { ViewportId = view.ActiveViewportID };
+            int drawn = 0;
+            try
             {
-                try { view.Redraw(); } catch (Exception) { }
+                counter.Enabled = true;
+                for (int pass = 0; pass < 5 && drawn < 2; pass++)
+                {
+                    long before = counter.Count;
+                    try { view.Redraw(); } catch (Exception) { }
+                    var sw = System.Diagnostics.Stopwatch.StartNew();
+                    while (counter.Count == before && sw.ElapsedMilliseconds < 2000)
+                    {
+                        try { RhinoApp.Wait(); } catch (Exception) { }
+                        System.Threading.Thread.Sleep(10);
+                    }
+                    if (counter.Count > before) drawn++;
+                }
+            }
+            catch (Exception) { }
+            finally { try { counter.Enabled = false; } catch (Exception) { } }
+            if (drawn < 2)
+            {
+                // no frame callbacks seen (window not drawing?): fall back to the fixed schedule
+                for (int i = 0; i < 2; i++)
+                {
+                    try { view.Redraw(); } catch (Exception) { }
+                    try { RhinoApp.Wait(); } catch (Exception) { }
+                    System.Threading.Thread.Sleep(150);
+                }
+            }
+            else
+            {
                 try { RhinoApp.Wait(); } catch (Exception) { }
-                System.Threading.Thread.Sleep(150);
+                System.Threading.Thread.Sleep(150);  // the callback fires before the frame is presented; give the flush time
+            }
+        }
+
+        sealed class FrameCounter : DisplayConduit
+        {
+            public Guid ViewportId;
+            long _count;
+            public long Count { get { return System.Threading.Interlocked.Read(ref _count); } }
+            protected override void DrawForeground(DrawEventArgs e)
+            {
+                try { if (e.Viewport != null && e.Viewport.Id == ViewportId) System.Threading.Interlocked.Increment(ref _count); }
+                catch (Exception) { }
             }
         }
 
@@ -128,14 +171,15 @@ namespace RhinoMCP.Tools.View
         }
 
         /// <summary>Resolves zoom_to ("all" | target | {min,max}) to a box. False when not requested or on error.</summary>
-        public static bool ResolveZoom(ArgReader a, JObject args, ToolContext ctx, out BoundingBox bb, out string label)
+        public static bool ResolveZoom(ArgReader a, JObject args, ToolContext ctx, out BoundingBox bb, out string label, HashSet<Guid> keep = null)
         {
             bb = BoundingBox.Empty; label = null;
             JToken z;
             if (!args.TryGetValue("zoom_to", out z) || z.Type == JTokenType.Null) return false;
             if (z.Type == JTokenType.String && string.Equals((string)z, "all", StringComparison.OrdinalIgnoreCase))
             {
-                int c; bb = VisibleBBox(ctx.Doc, out c); label = "all";
+                // 'all' under only_layers/isolate means everything that is drawn, not the whole document (else the subject is a speck).
+                int c; bb = VisibleBBox(ctx.Doc, keep, out c); label = keep == null ? "all" : "all (isolated)";
                 if (!bb.IsValid) a.Error("zoom_to 'all': the document has no visible objects");
                 return bb.IsValid;
             }
