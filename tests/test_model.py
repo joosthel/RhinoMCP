@@ -242,7 +242,7 @@ class ModelTests(unittest.TestCase):
         self.assertEqual([x["handle"] for x in r3["rows"]], [h0])
         # the cache is invalidated by changes: a new box must be found
         h3 = box(96)
-        r4 = ok(c.call("objects_near", {"point": [95, 5, 5], "limit": 1}))
+        r4 = ok(c.call("objects_near", {"point": [95, 5, 5], "limit": 1, "filters": flt}))
         self.assertEqual(r4["rows"][0]["handle"], h3)
         self.assertAlmostEqual(r4["rows"][0]["distance"], 1.0, places=3)
         r5 = ok(c.call("objects_near", {"point": [95, 5, 5], "radius": 20, "exact": True, "filters": flt}))

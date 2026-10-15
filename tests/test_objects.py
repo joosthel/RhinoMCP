@@ -164,9 +164,11 @@ class ObjectsTests(unittest.TestCase):
         self.assertIn("bogus", msg)
 
     def test_unknown_layer_lists_layers(self):
-        r = c.call("objects_query", {"filters": {"layer": "no_such_layer"}})
+        # a typo must surface the intended layer among the first suggestions, whatever else is in the doc
+        r = c.call("objects_query", {"filters": {"layer": LAYER[:-1] + "z"}})
         self.assertFalse(r["ok"])
-        self.assertIn(LAYER, r["error"]["message"])
+        msg = r["error"]["message"]
+        self.assertIn(LAYER, msg.split("Closest existing layers: ")[1].split(", ")[:3])
 
     # --- objects_get ---
 
@@ -225,7 +227,7 @@ class ObjectsTests(unittest.TestCase):
         r = c.call("objects_set_props", {"target": self.point, "layer": "no_such_layer", "color": "red"})
         self.assertFalse(r["ok"])
         self.assertEqual(r["error"]["code"], "INVALID_ARGS")
-        self.assertIn("Existing layers", r["error"]["message"])
+        self.assertIn("existing layers", r["error"]["message"])
         self.assertIn("color", r["error"]["message"])      # all errors collected
         r = c.call("objects_set_props", {"target": self.point})
         self.assertFalse(r["ok"])

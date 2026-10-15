@@ -149,10 +149,10 @@ namespace RhinoMCP.Tools.Objects
                     for (int i = 0; i < doc.Layers.Count; i++)
                         if (!doc.Layers[i].IsDeleted && string.Equals(doc.Layers[i].Name, layerName, StringComparison.OrdinalIgnoreCase)) leaf.Add(i);
                     if (leaf.Count == 1) layerIndex = leaf[0];
-                    else if (leaf.Count > 1) a.Error("'layer': '" + layerName + "' is ambiguous; use the full path. Existing layers: " + ObjectsQuery.LayerList(doc));
+                    else if (leaf.Count > 1) a.Error("'layer': '" + layerName + "' is ambiguous; use the full path. Closest existing layers: " + ObjectsQuery.LayerList(doc, layerName));
                 }
                 if (layerIndex < 0 && !a.HasErrors)
-                    a.Error("'layer': no layer '" + layerName + "'. Layers are not created implicitly. Existing layers: " + ObjectsQuery.LayerList(doc));
+                    a.Error("'layer': no layer '" + layerName + "'. Layers are not created implicitly. Closest existing layers: " + ObjectsQuery.LayerList(doc, layerName));
             }
 
             int rgb = -1; bool byLayer = false;

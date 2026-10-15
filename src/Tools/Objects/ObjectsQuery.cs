@@ -82,7 +82,7 @@ namespace RhinoMCP.Tools.Objects
                 else filter = ObjectFilter.Parse((JObject)fl, e => a.Error(e), "'filters': ");
             }
             if (filter.Layer != null && !a.HasErrors && FindLayers(doc, filter.Layer) == 0)
-                a.Error("'filters.layer': no layer '" + filter.Layer + "'. Existing layers: " + LayerList(doc));
+                a.Error("'filters.layer': no layer '" + filter.Layer + "'. Closest existing layers: " + LayerList(doc, filter.Layer));
             if (a.HasErrors) return a.ErrorResult();
 
             var matches = ObjectQuery.Run(doc, filter);
@@ -176,12 +176,49 @@ namespace RhinoMCP.Tools.Objects
             return n;
         }
 
-        internal static string LayerList(RhinoDoc doc)
+        /// <summary>Existing layer paths, closest to <paramref name="wanted"/> first (so typos surface the right layer).</summary>
+        internal static string LayerList(RhinoDoc doc, string wanted = null)
         {
             var names = new List<string>();
             for (int i = 0; i < doc.Layers.Count; i++) { var l = doc.Layers[i]; if (!l.IsDeleted) names.Add(l.FullPath); }
-            names.Sort(StringComparer.Ordinal);
-            return string.Join(", ", names.Take(40)) + (names.Count > 40 ? ", ... (" + names.Count + " total)" : "");
+            const int Max = 25;
+            if (string.IsNullOrEmpty(wanted)) names.Sort(StringComparer.Ordinal);
+            else
+            {
+                string w = wanted.ToLowerInvariant();
+                string wLeaf = Leaf(w);
+                names = names.OrderBy(n =>
+                {
+                    string ln = n.ToLowerInvariant();
+                    string leaf = Leaf(ln);
+                    int d = Math.Min(Lev(w, ln), Lev(wLeaf, leaf));
+                    if (ln.Contains(wLeaf) || wLeaf.Contains(leaf)) d -= 3;
+                    return d;
+                }).ThenBy(n => n, StringComparer.Ordinal).ToList();
+            }
+            return string.Join(", ", names.Take(Max)) + (names.Count > Max ? ", ... (" + names.Count + " total; use layers_list)" : "");
+        }
+
+        static string Leaf(string path)
+        {
+            int i = path.LastIndexOf("::", StringComparison.Ordinal);
+            return i < 0 ? path : path.Substring(i + 2);
+        }
+
+        static int Lev(string a, string b)
+        {
+            if (a.Length > 64) a = a.Substring(0, 64);
+            if (b.Length > 64) b = b.Substring(0, 64);
+            var prev = new int[b.Length + 1]; var cur = new int[b.Length + 1];
+            for (int j = 0; j <= b.Length; j++) prev[j] = j;
+            for (int i = 1; i <= a.Length; i++)
+            {
+                cur[0] = i;
+                for (int j = 1; j <= b.Length; j++)
+                    cur[j] = Math.Min(Math.Min(cur[j - 1] + 1, prev[j] + 1), prev[j - 1] + (a[i - 1] == b[j - 1] ? 0 : 1));
+                var t = prev; prev = cur; cur = t;
+            }
+            return prev[b.Length];
         }
     }
 }
