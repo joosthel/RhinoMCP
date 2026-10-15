@@ -7,7 +7,7 @@ Agent skills in the Anthropic Agent Skills format: each `skills/<name>/SKILL.md`
 | [rhino-mcp-efficient-use](rhino-mcp-efficient-use/SKILL.md) | Hub: session start, overview-query-act-verify loop, token rules, undo, failure playbook, tool map |
 | [rhino-units-tolerances](rhino-units-tolerances/SKILL.md) | Units, absolute tolerance, imports, why operations fail |
 | [rhino-geometry-hygiene](rhino-geometry-hygiene/SKILL.md) | Diagnosing and repairing bad geometry, degree, mesh export presets |
-| [rhino-layer-standards](rhino-layer-standards/SKILL.md) | AIA/NCS, ISO 13567, UK ISO 19650, German conventions, custom JSON schemes |
+| [rhino-layer-standards](rhino-layer-standards/SKILL.md) | AIA/NCS, ISO 13567, UK ISO 19650, custom JSON schemes (English names only) |
 | [rhino-drawing-production](rhino-drawing-production/SKILL.md) | Clean Make2D, line weights, hatches, layouts, title blocks, export |
 | [rhino-architectural-massing](rhino-architectural-massing/SKILL.md) | Levels, grids, walls, slabs, stairs, area schedules, region-aware defaults |
 | [rhino-product-design](rhino-product-design/SKILL.md) | Draft, continuity, wall thickness, fillets, STEP export checks |

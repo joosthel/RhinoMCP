@@ -14,7 +14,7 @@ Content follows ISO 7200 in spirit (data fields in technical product documentati
 | Date | ISO format `YYYY-MM-DD` unless the office differs |
 | Revision | Letter or number, with a revision table |
 | Drawn by / checked by | Initials |
-| Phase | In Germany the HOAI Leistungsphase (LPH 1 to 9) or a name such as Entwurf, Genehmigung, Ausfuehrung |
+| Phase | Project phase in English, e.g. Concept, Schematic Design, Design Development, Permit, Construction Documents (map local phase systems such as HOAI LPH 1–9 to English labels) |
 | Office name and contact | |
 | File name | |
 | North arrow | On plans and site plans |

@@ -48,7 +48,7 @@ Total run = (n - 1) x g. Report rise, going, n, run, headroom (at least about 2.
 
 `area_schedule` (M3) groups `AreaMassProperties` by `ai.space` (and by `ai.level`). Without it, tag rooms as closed planar curves or surfaces on a `Areas` layer, then `measure` area grouped by user text.
 
-- **GFA (Bruttogeschossflaeche, gross floor area):** sum of the areas enclosed by outer wall faces per level. DE uses DIN 277 (BGF, NUF, NRF) and WoFlV for residential: ask which; definitions differ by country: verify.
+- **GFA (gross floor area):** sum of the areas enclosed by outer wall faces per level. Germany uses DIN 277 (gross, usable and net room area) and WoFlV for residential: ask which; definitions differ by country: verify.
 - **FAR / GFZ / GRZ:** FAR = GFA / site area. State which GFA definition you used.
 - Report as a small table: space, level, area m2, count, target, delta. Do not list all rooms if there are more than 30: group by use.
 
