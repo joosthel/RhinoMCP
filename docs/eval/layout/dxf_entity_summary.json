@@ -1,0 +1,86 @@
+{
+  "bytes": {
+    "plan.dxf": 363570,
+    "plan_poly.dxf": 363570
+  },
+  "clean_make2d_layers": {
+    "elevation_east/as_is": {
+      "LINE": 9,
+      "POLYLINE": 9
+    },
+    "elevation_east/polylines": {
+      "LINE": 9,
+      "POLYLINE": 9
+    },
+    "elevation_south/as_is": {
+      "LINE": 10,
+      "POLYLINE": 4
+    },
+    "elevation_south/polylines": {
+      "LINE": 10,
+      "POLYLINE": 4
+    },
+    "elevation_south_hidden/as_is": {
+      "LINE": 29,
+      "POLYLINE": 19
+    },
+    "elevation_south_hidden/polylines": {
+      "LINE": 29,
+      "POLYLINE": 19
+    },
+    "plan_1200/as_is": {
+      "HATCH": 3,
+      "LINE": 8,
+      "POLYLINE": 4
+    },
+    "plan_1200/polylines": {
+      "HATCH": 3,
+      "LINE": 8,
+      "POLYLINE": 4
+    },
+    "section_y3000/as_is": {
+      "HATCH": 11,
+      "LINE": 6,
+      "POLYLINE": 13
+    },
+    "section_y3000/polylines": {
+      "HATCH": 11,
+      "LINE": 6,
+      "POLYLINE": 13
+    }
+  },
+  "dxf_annotation_layer": {
+    "acadver": "AC1021",
+    "curve_entities": 0,
+    "entities": {
+      "DIMENSION": 2,
+      "MTEXT": 3,
+      "MULTILEADER": 1
+    },
+    "exploded_nurbs_risk": false,
+    "spline_entities": 0,
+    "valid_header": true
+  },
+  "dxf_default": {
+    "acadver": "AC1021",
+    "curve_entities": 584,
+    "entities": {
+      "LINE": 195,
+      "SPLINE": 389
+    },
+    "exploded_nurbs_risk": true,
+    "spline_entities": 389,
+    "valid_header": true
+  },
+  "dxf_polylines": {
+    "acadver": "AC1021",
+    "curve_entities": 584,
+    "entities": {
+      "LINE": 195,
+      "SPLINE": 389
+    },
+    "exploded_nurbs_risk": true,
+    "spline_entities": 389,
+    "valid_header": true
+  }
+}
