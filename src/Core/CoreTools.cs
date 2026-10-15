@@ -41,12 +41,15 @@ namespace RhinoMCP
     sealed class DevReloadTool : ITool
     {
         public string Name { get { return "dev_reload"; } }
-        public string Description { get { return "Development only: reload the newest tools DLL from ~/Library/Application Support/RhinoMCP/tools without restarting Rhino. Returns tool count and names. On failure the previous tool set stays active."; } }
-        public string InputSchema { get { return "{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}"; } }
+        public string Description { get { return "Development only: reload a tools DLL without restarting Rhino: the given 'dll' path, else the newest in ~/Library/Application Support/RhinoMCP/tools. Returns tool count and names. On failure the previous tool set stays active."; } }
+        public string InputSchema { get { return "{\"type\":\"object\",\"properties\":{\"dll\":{\"type\":\"string\",\"description\":\"Absolute path of a RhinoMCP.Tools.*.dll to load\"}},\"additionalProperties\":false}"; } }
         public ToolKind Kind { get { return ToolKind.Read; } }
         public ToolResult Execute(ToolContext ctx, JObject args)
         {
-            var r = ToolRegistry.Reload();
+            var a = new ArgReader(args);
+            string dll = a.String("dll", false);
+            if (a.HasErrors) return a.ErrorResult();
+            var r = ToolRegistry.Reload(string.IsNullOrEmpty(dll) ? null : dll);
             if (!r.Ok)
                 return ToolResult.Fail("INTERNAL", "Reload failed: " + r.Error,
                     "Previous tools stay active. Fix the problem (duplicate names, load errors) and rebuild.", new { active_tools = r.Names });
