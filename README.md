@@ -6,4 +6,12 @@ Goal: let AI agents drive Rhino to help designers create shapes, develop archite
 
 ## Status
 
-Research phase. See [`docs/research/`](docs/research/).
+Research complete — see [`docs/research/00-synthesis.md`](docs/research/00-synthesis.md). Next: Phase 0 spike on Rhino 7 / macOS.
+
+| Doc | Topic |
+|---|---|
+| [00](docs/research/00-synthesis.md) | Synthesis & recommended architecture |
+| [01](docs/research/01-existing-mcp-servers.md) | Existing MCP servers (Rhino, Blender, Revit, Unity…) |
+| [02](docs/research/02-rhino-control.md) | Controlling Rhino 7/8 programmatically |
+| [03](docs/research/03-mcp-design.md) | MCP design for large tool surfaces |
+| [04](docs/research/04-designer-workflows.md) | Designer/architect workflows & capability map |
