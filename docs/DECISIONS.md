@@ -9,3 +9,5 @@ Owner direction, 2026-10-15.
 5. **One-click install, auto-start with Rhino.** Users take no extra steps.
 6. **Clean Make2D output:** plans that are easy to edit after export. This is a core differentiator.
 7. **Skills for agents:** researched guidance on tolerances, units, drawing standards and efficient MCP use, shipped alongside the server.
+
+8. **Research scope (2026-10-15):** personal research prototype. No signing, installers or Windows needed. Use extra tools only when they add insight.
