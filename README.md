@@ -1,12 +1,12 @@
 # RhinoMCP
 
-A broad, non-opinionated [Model Context Protocol](https://modelcontextprotocol.io) server for **Rhino 7 and Rhino 8** (macOS and Windows).
+A personal research project: a broad, non-opinionated [Model Context Protocol](https://modelcontextprotocol.io) server for **Rhino 7 and Rhino 8** (macOS and Windows).
 
 Goal: let AI agents drive Rhino to help designers create shapes, develop architectural designs, and produce/export drawings from their models.
 
 ## Status
 
-Research complete — see [`docs/research/00-synthesis.md`](docs/research/00-synthesis.md). Product direction: [`docs/DECISIONS.md`](docs/DECISIONS.md). Next: Phase 0 spike on Rhino 7 / macOS.
+Research complete — see [`docs/research/00-synthesis.md`](docs/research/00-synthesis.md). Building. See [`docs/PLAN.md`](docs/PLAN.md), [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md). Direction: [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
 | Doc | Topic |
 |---|---|
