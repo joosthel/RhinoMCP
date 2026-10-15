@@ -72,6 +72,13 @@ Intent to tool, abbreviated. Full table in [references/tool-map.md](references/t
 
 Prefer a dedicated tool over `run_python`. Use scripts only when no tool fits, and keep snippets short, with a numeric `result`.
 
+## Rhino commands via run_command
+
+- Use the scripted dash form and pass every input inline in one string, ending with `_Enter`: `-_Box 0,0,0 10,10,0 5`, `-_Layer _New Walls _Enter`.
+- If the result is `COMMAND_NEEDS_INPUT`, read `last_prompt`. It lists the prompt and its options. Retry with the missing inputs; don't loop blindly.
+- `COMMAND_BLOCKED` means the command opens a modal window that would freeze Rhino. Use the dash form or a dedicated tool.
+- Never run `_Undo` as a command. Use `history_undo`.
+
 ## Language
 
 English, always. Every name and text the agent writes into the model is English and ASCII: layers, objects, user text, sets, annotations, sheet titles and file names. This holds even when the user writes in another language.
