@@ -183,6 +183,7 @@ Rhino 7.39 Mac runs x86_64 under Rosetta and is mostly single-threaded, so heavy
 | `boolean_max_face_count` | 5000 | `geometry_boolean` total input faces (the retry ladder multiplies the cost) |
 | `clash_max_pairs` | 5000 | `clash_check` `max_pairs` argument |
 | `boolean_budget_ms` | 30000 | `geometry_boolean` `budget_ms`: checked between retry-ladder steps, structured `TIMEOUT` with step reached and diagnosis hints (a single kernel call cannot be interrupted) |
+| `fillet_budget_ms` | 30000 | `geometry_edit` `fillet_edges` `budget_ms` default: checked between the two retry steps (DistanceFromEdge, RollingBall); structured `TIMEOUT` with `tried[]` (one kernel call cannot be interrupted) |
 | `clash_budget_ms` | 30000 | `clash_check` `budget_ms` default; on expiry partial results plus `data.timeout {pairs_tested, pairs_total, hints}` |
 | `warn_rss_mb` | 4000 | warning + `resources` block in results |
 | `block_rss_mb` | min(12000, 40% of RAM) | all guarded heavy tools refuse; **never** forceable |
@@ -197,3 +198,14 @@ Rhino 7.39 Mac runs x86_64 under Rosetta and is mostly single-threaded, so heavy
 - **`system_status` counts live objects only.** `document.objects` excludes deleted objects; `document.undo_held_deleted` reports how many deleted objects the undo history still holds in memory (`doc.Objects.Count` includes them). A large number comes with a recommendation to save and reopen the file.
 - **Tools:** `system_status` (Read; process, system, document, top-5 heaviest with handles, limits, recommendations) and `performance_mode` (Mutate; `on` sets `RhinoDoc.MeshingParameterStyle` to `Fast` and the active model viewport to Shaded unless already light; the previous style and display mode are stored in `doc.Strings["rhinomcp.perfmode"]`, `off` restores them; a previous `Custom` style is remembered in AppDomain data only, lost on a tools reload).
 - **Desired Core hooks** (not implemented, Core needs a Rhino restart): a per-call watchdog in `UiDispatcher` that aborts or warns on calls beyond `warn_call_ms`, `limits` exposed through `Config`, (`server_info` now carries `rss_mb` and `rosetta`, Core 0.2.0).
+=======
+- **Desired Core hooks** (not implemented, Core needs a Rhino restart): a per-call watchdog in `UiDispatcher` that aborts or warns on calls beyond `warn_call_ms`, `limits` exposed through `Config`, and `server_info` carrying the RSS and Rosetta flag.
+
+## Designer curves, text and engraving (learned on Rhino 7.39 Mac)
+- **Text to curves:** `Curve.CreateTextOutlines(text, font, height, style, closeLoops, plane, smallCaps, tol)` works in the hot-loaded DLL (no System.Drawing involved) and returns a flat array of closed loops. There is no per-glyph grouping, so `DesignerCurves.GroupGlyphs` nests loops by containment (even depth = outer, odd = counter of the smallest container; islands inside counters become their own glyph).
+- **Engrave/emboss:** each glyph becomes a planar brep (`Brep.CreatePlanarBreps` handles counters), extruded with `BrepFace.CreateExtrusion(path, cap)` starting a margin outside (engrave) or inside (emboss) the face, then one `CreateBooleanDifference`/`CreateBooleanUnion`. The outward direction is confirmed with `IsPointInside` on both sides of the face point, so face orientation never matters.
+- **Periodic control-point curves:** `NurbsCurve.Create(true, degree, points)` (do not repeat the first point). **End tangents:** `Curve.CreateInterpolatedCurve(pts, degree, Chord, t0, t1)` needs both ends; a missing one is taken from the free interpolation. Tangents are unit-normalized (Chord parametrization keeps unit speed).
+- **line_blend:** `LineCurve` + `Curve.CreateBlendCurve(a, b, Tangency|Curvature, bulge, bulge)` + the curve through the points, appended into a `PolyCurve` so segment 0 stays an exact line.
+- **Extrusion direction:** `Extrusion.Create(curve, h, cap)` follows the curve plane normal, so the result is checked against the requested direction by bbox centre and flipped when needed; non-parallel directions use `Surface.CreateExtrusion`.
+- **Project/pull:** `Curve.ProjectToBrep(curve, breps, dir, tol)` and `Curve.PullToBrepFace` per face.
+>>>>>>> d75fa02 (feat: designer curves (periodic/tangent curves, line_blend, fillet_corners, text as curves, engrave/emboss, extrusion direction, split keep, project/pull, fillet budget))

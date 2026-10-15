@@ -32,6 +32,8 @@ namespace RhinoMCP.Tools.Shared
         public readonly ToolContext Ctx;
         public Frame Frame;
         public readonly List<string> Errors = new List<string>();
+        /// <summary>Extra facts a builder wants echoed in the item result (e.g. the extrusion direction actually used).</summary>
+        public readonly Dictionary<string, object> Info = new Dictionary<string, object>();
 
         public P(JObject o, ToolContext ctx, Frame frame) { O = o ?? new JObject(); Ctx = ctx; Frame = frame; }
 
@@ -300,7 +302,7 @@ namespace RhinoMCP.Tools.Shared
             try
             {
                 var c = g as Curve;
-                if (c != null) { d["length"] = R(c.GetLength()); d["closed"] = c.IsClosed; return d; }
+                if (c != null) { d["length"] = R(c.GetLength()); d["closed"] = c.IsClosed; RhinoMCP.Tools.Geometry.DesignerCurves.CurveFacts(c, d); return d; }
                 var b = AsBrep(g);
                 if (b != null)
                 {
