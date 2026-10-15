@@ -30,6 +30,15 @@ Source of truth: `docs/PLAN.md`. Milestone tags: M1 core, M2 drawings, M3 scale 
 | Move, copy, rotate, scale, mirror, orient, arrays | `geometry_transform` |
 | Union, difference, intersection | `geometry_boolean` (pre-flight and retry ladder built in) |
 | Join, explode, offset, fillet, shell, cap, split, trim | `geometry_edit` |
+| Closed smooth curve through control points | `geometry_create` curve `{mode: control_points, closed: true}` (periodic) |
+| Curve with end tangents | `geometry_create` curve `{start_tangent, end_tangent}` (interpolate) |
+| Straight span + G1/G2 blend + smooth curve | `geometry_create` `line_blend {from, to, points, continuity}` (exact LineCurve first segment) |
+| Round the corners of a polyline | `geometry_edit` `fillet_corners {radius}` (reports arc radii, kinks) |
+| Text as closed outline curves (letters, counters grouped) | `geometry_create` text `{as: "curves", center?}` -> `glyphs[{outer, holes}]`, `area_total` |
+| Engrave / emboss text or closed curves into a solid | `geometry_edit` `engrave` / `emboss {text, text_height, depth, face?/at?/plane?}` (counters of O/A/R kept; reports removed/added volume) |
+| Extrude in a stated direction | `geometry_create` extrusion `{direction (default +Z), both_sides, start_offset}`; the used direction is reported |
+| Split/trim and keep one piece | `geometry_edit` split/trim `{keep: inside\|outside\|largest\|smallest\|containing_point\|nearest_point, point}` |
+| Project / pull a curve onto a surface | `geometry_edit` `project_curve {onto, direction}` / `pull_curve {onto}` (reports max_deviation) |
 | Freeform NURBS: control-point / through-point grids, loft (rebuild/refit), sweep2, network, patch, edge surface, G1/G2 blend, curve blend | `freeform_surface` |
 | SubD: from box/cylinder/mesh/loft/surface, subdivide, crease, offset, to NURBS brep | `subd` |
 | Rename, relayer, colour, user text | `objects_set_props` |

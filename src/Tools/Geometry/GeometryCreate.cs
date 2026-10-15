@@ -19,14 +19,16 @@ namespace RhinoMCP.Tools.Geometry
                 return "Create geometry in batch (items <= 200). Each item: {kind, ...params, layer?, name?, user_text?{k:v}}. " +
                        "All points/vectors are in the 'plane' frame (default world_xy; item.plane overrides); the server converts to world and echoes the world bbox. " +
                        "Missing layers (incl. parent chain 'A::B::C') are created. One bad item does not stop the others; each result has ok/handle(s)/bbox and length/area/volume. " +
-                       "Kinds and params: point{point} | line{from,to} | polyline{points,closed?} | curve{points,degree?=3,mode?=interpolate|control_points,closed?} | " +
+                       "Kinds and params: point{point} | line{from,to} | polyline{points,closed?} | curve{points,degree?=3,mode?=interpolate|control_points,closed?,start_tangent?,end_tangent?} (closed+control_points = periodic curve; tangents are unit-normalized, interpolate only) | " +
+                       "line_blend{from,to,points,continuity?=G1|G2,degree?=3,mode?=interpolate|control_points,bulge?=1,join?=true} (exact straight span from->to, a G1/G2 blend, then a smooth curve through 'points'; join:false returns the 3 pieces) | " +
                        "arc{start,through,end} or {center,radius,start_angle_deg?=0,end_angle_deg?=90} | circle{center,radius|diameter} | rectangle{corner,width,height | corner,corner2} | " +
                        "polygon{center,radius,sides,circumscribed?,rotation_deg?} | box{corner,size[dx,dy,dz] | min,max} | sphere{center,radius} | cylinder{base,radius,height,cap?=true} | " +
                        "cone{base,radius,height,cap?=true} (base circle at 'base', apex above) | plane_surface{corner,width,height | corner,corner2} | " +
-                       "extrusion{profile(handle) | points, height | vector, cap?=true} | loft{curves[handles],loft_type?=normal|loose|tight|straight|uniform,closed?,cap?} | " +
+                       "extrusion{profile(handle) | points, height | vector, direction?, both_sides?, start_offset?, cap?=true} | loft{curves[handles],loft_type?=normal|loose|tight|straight|uniform,closed?,cap?} | " +
                        "sweep1{rail,profiles[],closed?,cap?} | revolve{profile(handle)|points, axis:'x'|'y'|'z'|{from,to}, angle_deg?=360, cap?} | " +
-                       "pipe{curve,radius,cap?=flat|round|none} | text{text,at?,height?=1,as?=text|dot,font?}. " +
-                       "Extrusion with 'points' extrudes along the frame Z by 'height' (negative = down); closed profiles are capped. " +
+                       "pipe{curve,radius,cap?=flat|round|none} | text{text,at?,height?=1,as?=text|dot|curves,font?,bold?,italic?,center?=false} (as:curves = closed outline curves; result glyphs[{outer,holes,area}] and area_total; 'at' is the left baseline start, or the center with center:true). " +
+                       "Extrusion goes along 'direction' (default +Z of the frame, independent of the profile's orientation; negative height reverses it); both_sides extrudes 'height' each way; start_offset moves the start along the direction; the direction used is reported. Closed profiles are capped. " +
+                       "Curve results report degree, cp, periodic, closed, kinks (G1 breaks). " +
                        "Fails per item with a reason (e.g. non-planar profile, invalid result).";
             }
         }
@@ -35,7 +37,7 @@ namespace RhinoMCP.Tools.Geometry
             get
             {
                 return Schemas.Object(
-                    "\"items\":{\"type\":\"array\",\"maxItems\":200,\"minItems\":1,\"items\":{\"type\":\"object\",\"properties\":{\"kind\":{\"type\":\"string\",\"enum\":[\"point\",\"line\",\"polyline\",\"curve\",\"arc\",\"circle\",\"rectangle\",\"polygon\",\"box\",\"sphere\",\"cylinder\",\"cone\",\"plane_surface\",\"extrusion\",\"loft\",\"sweep1\",\"revolve\",\"pipe\",\"text\"]},\"plane\":{\"$ref\":\"#/$defs/plane\"},\"layer\":{\"type\":\"string\"},\"name\":{\"type\":\"string\"},\"user_text\":{\"type\":\"object\",\"additionalProperties\":{\"type\":\"string\"}}},\"required\":[\"kind\"]}}," +
+                    "\"items\":{\"type\":\"array\",\"maxItems\":200,\"minItems\":1,\"items\":{\"type\":\"object\",\"properties\":{\"kind\":{\"type\":\"string\",\"enum\":[\"point\",\"line\",\"polyline\",\"curve\",\"arc\",\"circle\",\"rectangle\",\"polygon\",\"box\",\"sphere\",\"cylinder\",\"cone\",\"plane_surface\",\"extrusion\",\"loft\",\"sweep1\",\"revolve\",\"pipe\",\"text\",\"line_blend\"]},\"plane\":{\"$ref\":\"#/$defs/plane\"},\"layer\":{\"type\":\"string\"},\"name\":{\"type\":\"string\"},\"user_text\":{\"type\":\"object\",\"additionalProperties\":{\"type\":\"string\"}}},\"required\":[\"kind\"]}}," +
                     "\"plane\":{\"$ref\":\"#/$defs/plane\"}," +
                     "\"layer\":{\"type\":\"string\",\"description\":\"default layer for items without one, e.g. A::B\"}," +
                     "\"include_guids\":{\"type\":\"boolean\"}",
@@ -127,6 +129,7 @@ namespace RhinoMCP.Tools.Geometry
                             if (guids) r["guids"] = ids.Select(x => x.ToString()).ToList();
                             r["bbox"] = GeoUtil.BBox(bb);
                             foreach (var kv in extra) r[kv.Key] = kv.Value;
+                            foreach (var kv in p.Info) r[kv.Key] = kv.Value;
                             results.Add(r);
                             continue;
                         }
@@ -154,6 +157,7 @@ namespace RhinoMCP.Tools.Geometry
             double h = p.Num("height", false, 1.0);
             string how = p.Str("as", false, "text");
             string font = p.Str("font", false, "Arial");
+            bool bold = p.Bool("bold"), italic = p.Bool("italic"), center = p.Bool("center");
             if (p.Errors.Count > 0) return;
             if (h <= 0) { p.Err("'height' must be > 0"); return; }
             if (how == "dot")
@@ -164,10 +168,29 @@ namespace RhinoMCP.Tools.Geometry
             else if (how == "text")
             {
                 var pl = p.Frame.Plane; pl.Origin = at;
-                var id = doc.Objects.AddText(text, pl, h, font, false, false, attr);
+                var id = doc.Objects.AddText(text, pl, h, font, bold, italic, attr);
                 if (id == Guid.Empty) p.Err("could not add text (empty string?)"); else ids.Add(id);
             }
-            else p.Err("'as' must be 'text' or 'dot'");
+            else if (how == "curves")
+            {
+                if (text.Length > DesignerCurves.MaxTextChars) { p.Err("text longer than " + DesignerCurves.MaxTextChars + " characters; split it into several items"); return; }
+                var pl = p.Frame.Plane; pl.Origin = at;
+                var curves = DesignerCurves.TextOutlines(text, font, h, pl, ctx.Tol, bold, italic, center);
+                if (curves.Count == 0) { p.Err("no outline curves for this text/font (empty string, only spaces, or the font '" + font + "' is not installed)"); return; }
+                var glyphs = DesignerCurves.GroupGlyphs(curves, pl, ctx.Tol);
+                var handleOf = new Dictionary<Curve, string>();
+                foreach (var c in curves)
+                {
+                    var id = doc.Objects.AddCurve(c, attr);
+                    if (id == Guid.Empty) { foreach (var x in ids) doc.Objects.Delete(x, true); ids.Clear(); p.Err("Rhino rejected an outline curve"); return; }
+                    ids.Add(id); handleOf[c] = ctx.Handles.For(id);
+                }
+                p.Info["glyphs"] = glyphs.Select(g => new { outer = handleOf[g.Outer], holes = g.Holes.Select(x => handleOf[x]).ToList(), area = GeoUtil.R(g.Area) }).ToList();
+                p.Info["area_total"] = GeoUtil.R(glyphs.Sum(g => g.Area));
+                p.Info["curves"] = curves.Count;
+                p.Info["font"] = font;
+            }
+            else p.Err("'as' must be 'text', 'dot' or 'curves'");
         }
 
         static List<GeometryBase> One(GeometryBase g) { return new List<GeometryBase> { g }; }
@@ -214,8 +237,11 @@ namespace RhinoMCP.Tools.Geometry
                         int degree = p.Int("degree", false, 3);
                         string mode = p.Str("mode", false, "interpolate");
                         bool closed = p.Bool("closed");
+                        bool hasS = p.Has("start_tangent"), hasE = p.Has("end_tangent");
+                        var st = p.Vec("start_tangent"); var et = p.Vec("end_tangent");
                         if (p.Errors.Count > 0) return null;
                         if (degree < 1 || degree > 11) { p.Err("'degree' must be 1..11"); return null; }
+                        if ((hasS || hasE) && (mode != "interpolate" || closed)) { p.Err("'start_tangent'/'end_tangent' need mode 'interpolate' and an open curve"); return null; }
                         Curve c;
                         if (mode == "interpolate")
                         {
@@ -224,16 +250,67 @@ namespace RhinoMCP.Tools.Geometry
                                 if (pts[0].DistanceTo(pts[pts.Count - 1]) > tol) pts.Add(pts[0]);
                                 c = Curve.CreateInterpolatedCurve(pts, degree, CurveKnotStyle.ChordPeriodic);
                             }
+                            else if (hasS || hasE)
+                            {
+                                if ((hasS && st.Length <= 1e-12) || (hasE && et.Length <= 1e-12)) { p.Err("tangent vectors must be non-zero"); return null; }
+                                if (!hasS || !hasE)
+                                {
+                                    // Rhino needs both ends: take the missing one from the free interpolation.
+                                    var free = Curve.CreateInterpolatedCurve(pts, degree);
+                                    if (free == null) return null;
+                                    if (!hasS) st = free.TangentAtStart;
+                                    if (!hasE) et = free.TangentAtEnd;
+                                }
+                                st.Unitize(); et.Unitize();
+                                c = Curve.CreateInterpolatedCurve(pts, degree, CurveKnotStyle.Chord, st, et);
+                                p.Info["start_tangent"] = GeoUtil.Arr(st); p.Info["end_tangent"] = GeoUtil.Arr(et);
+                            }
                             else c = Curve.CreateInterpolatedCurve(pts, degree);
                         }
                         else if (mode == "control_points")
                         {
-                            if (closed) { p.Err("'closed' is only supported with mode 'interpolate'; repeat the first control point instead"); return null; }
-                            if (pts.Count < degree + 1) { p.Err("degree " + degree + " needs at least " + (degree + 1) + " control points"); return null; }
-                            c = Curve.CreateControlPointCurve(pts, degree);
+                            if (closed)
+                            {
+                                if (pts.Count > 1 && pts[0].DistanceTo(pts[pts.Count - 1]) <= tol) pts.RemoveAt(pts.Count - 1);
+                                if (pts.Count < degree + 1) { p.Err("a closed (periodic) degree " + degree + " curve needs at least " + (degree + 1) + " distinct control points (do not repeat the first point)"); return null; }
+                                c = NurbsCurve.Create(true, degree, pts);
+                                if (c == null || !c.IsClosed) { p.Err("could not build a periodic curve from these control points"); return null; }
+                            }
+                            else
+                            {
+                                if (pts.Count < degree + 1) { p.Err("degree " + degree + " needs at least " + (degree + 1) + " control points"); return null; }
+                                c = Curve.CreateControlPointCurve(pts, degree);
+                            }
                         }
                         else { p.Err("'mode' must be 'interpolate' or 'control_points'"); return null; }
                         return One(c);
+                    }
+                case "line_blend":
+                    {
+                        var a = p.Pt("from", true); var b = p.Pt("to", true);
+                        var pts = p.Pts("points", 2);
+                        int degree = p.Int("degree", false, 3);
+                        string mode = p.Str("mode", false, "interpolate");
+                        string cont = (p.Str("continuity", false, "G1") ?? "G1").ToUpperInvariant();
+                        double bulge = p.Num("bulge", false, 1.0);
+                        bool join = p.Bool("join", true);
+                        if (p.Errors.Count > 0) return null;
+                        if (a.DistanceTo(b) <= tol) { p.Err("'from' and 'to' coincide"); return null; }
+                        if (cont != "G1" && cont != "G2") { p.Err("'continuity' must be G1 or G2"); return null; }
+                        if (mode != "interpolate" && mode != "control_points") { p.Err("'mode' must be 'interpolate' or 'control_points'"); return null; }
+                        if (degree < 2 || degree > 11) { p.Err("'degree' must be 2..11"); return null; }
+                        string berr;
+                        var parts = DesignerCurves.LineBlend(a, b, pts, degree, mode == "interpolate", cont, bulge, tol, out berr);
+                        if (parts == null) { p.Err(berr); return null; }
+                        p.Info["continuity"] = cont;
+                        p.Info["g_gaps_deg"] = new[] { GeoUtil.R(DesignerCurves.TangentGap(parts[0], parts[1])), GeoUtil.R(DesignerCurves.TangentGap(parts[1], parts[2])) };
+                        p.Info["line_length"] = GeoUtil.R(parts[0].GetLength());
+                        p.Info["blend_length"] = GeoUtil.R(parts[1].GetLength());
+                        if (!join) { p.Info["pieces"] = "line, blend, curve"; return parts.Select(x => (GeometryBase)x).ToList(); }
+                        var pc = new PolyCurve();
+                        foreach (var part in parts) if (!pc.Append(part)) { p.Err("pieces did not join (gap at " + DesignerCurves.Fmt(part.PointAtStart) + ")"); return null; }
+                        p.Info["segments"] = pc.SegmentCount;
+                        return One(pc);
                     }
                 case "arc":
                     {
@@ -391,7 +468,7 @@ namespace RhinoMCP.Tools.Geometry
                         return res == null ? null : Many(res);
                     }
                 default:
-                    p.Err("unknown kind '" + kind + "'. Valid: point, line, polyline, curve, arc, circle, rectangle, polygon, box, sphere, cylinder, cone, plane_surface, extrusion, loft, sweep1, revolve, pipe, text");
+                    p.Err("unknown kind '" + kind + "'. Valid: point, line, polyline, curve, line_blend, arc, circle, rectangle, polygon, box, sphere, cylinder, cone, plane_surface, extrusion, loft, sweep1, revolve, pipe, text");
                     return null;
             }
         }
@@ -429,41 +506,61 @@ namespace RhinoMCP.Tools.Geometry
             var curve = Profile(p, ctx, true, out fromPts);
             bool cap = p.Bool("cap", true);
             double height = p.Num("height");
-            bool hasVec = p.Has("vector");
-            var vec = p.Vec("vector");
+            bool hasVec = p.Has("vector"), hasDir = p.Has("direction");
+            var vec = p.Vec("vector"); var dirIn = p.Vec("direction");
+            bool both = p.Bool("both_sides");
+            double startOff = p.Num("start_offset", false, 0);
             if (p.Errors.Count > 0) return null;
             if (curve == null) return null;
             if (!hasVec && double.IsNaN(height)) { p.Err("give 'height' or 'vector'"); return null; }
-            bool capOk = cap && curve.IsClosed;
-            if (cap && !curve.IsClosed) { /* open profile: surface only */ }
+            Vector3d dir; double length;
             if (hasVec)
             {
                 if (vec.Length <= tol) { p.Err("'vector' has zero length"); return null; }
-                var srf = Surface.CreateExtrusion(curve, vec);
-                if (srf == null) return null;
-                var b = Brep.CreateFromSurface(srf);
-                return One(capOk ? Cap(b, tol) : b);
+                dir = vec; length = vec.Length; dir.Unitize();
             }
-            if (Math.Abs(height) <= tol) { p.Err("'height' must be non-zero"); return null; }
-            Plane pl;
-            if (!curve.TryGetPlane(out pl, tol)) { p.Err("profile is not planar; give a 'vector' to extrude a non-planar curve"); return null; }
-            double h = height;
-            if (fromPts && pl.ZAxis * p.Frame.Plane.ZAxis < 0) h = -h;
-            var ext = Extrusion.Create(curve, h, capOk);
-            if (ext == null) return null;
-            if (fromPts)
+            else
             {
-                // Make sure it went the intended way (frame Z * sign(height)).
-                var dir = p.Frame.Plane.ZAxis * Math.Sign(height);
-                var c0 = curve.GetBoundingBox(true).Center;
-                var c1 = ext.GetBoundingBox(true).Center;
-                if ((c1 - c0) * dir < 0)
+                if (Math.Abs(height) <= tol) { p.Err("'height' must be non-zero"); return null; }
+                dir = hasDir ? dirIn : p.Frame.Plane.ZAxis;
+                if (dir.Length <= 1e-12) { p.Err("'direction' has zero length"); return null; }
+                dir.Unitize();
+                if (height < 0) dir.Reverse();
+                length = Math.Abs(height);
+            }
+            double start = startOff - (both ? length : 0);
+            double total = both ? 2 * length : length;
+            curve = curve.DuplicateCurve();
+            if (Math.Abs(start) > 0) curve.Translate(dir * start);
+            bool capOk = cap && curve.IsClosed;
+            p.Info["direction"] = GeoUtil.Arr(dir);
+            p.Info["extruded_length"] = GeoUtil.R(total);
+            if (Math.Abs(startOff) > 0) p.Info["start_offset"] = GeoUtil.R(startOff);
+            if (both) p.Info["both_sides"] = true;
+
+            Plane pl;
+            bool planar = curve.TryGetPlane(out pl, tol);
+            if (planar && Math.Abs(pl.ZAxis * dir) > 1 - 1e-9)
+            {
+                double h = pl.ZAxis * dir > 0 ? total : -total;
+                var ext = Extrusion.Create(curve, h, capOk);
+                if (ext != null)
                 {
-                    var ext2 = Extrusion.Create(curve, -h, capOk);
-                    if (ext2 != null) ext = ext2;
+                    // Verify the direction really is 'dir' (profile orientation must not matter).
+                    var c0 = curve.GetBoundingBox(true).Center;
+                    var c1 = ext.GetBoundingBox(true).Center;
+                    if ((c1 - c0) * dir < 0)
+                    {
+                        var ext2 = Extrusion.Create(curve, -h, capOk);
+                        if (ext2 != null) ext = ext2;
+                    }
+                    return One(ext);
                 }
             }
-            return One(ext);
+            var srf = Surface.CreateExtrusion(curve, dir * total);
+            if (srf == null) return null;
+            var b = Brep.CreateFromSurface(srf);
+            return One(capOk ? Cap(b, tol) : b);
         }
 
         static List<GeometryBase> BuildRevolve(P p, ToolContext ctx)
