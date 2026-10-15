@@ -79,6 +79,14 @@ class ResourceTests(unittest.TestCase):
         self.assertIn("max_capture_pixels", r["error"]["details"]["limit"])
         self.assertNotIn("_images", r)
 
+    def test_offset_surface_max_cp_rebuilds(self):
+        d = ok(c.call("freeform_surface", {"layer": LAYER, "items": [{"kind": "nurbs_points", "points": grid(30, 30)}]}))
+        h = d["items"][0]["handle"]
+        r = ok(c.call("geometry_edit", {"target": h, "op": "offset_surface", "distance": 0.5, "max_cp": 100}))
+        cp = r["items"][0]["cp"]
+        self.assertLessEqual(cp["cp_max_face"], 100)
+        self.assertIn("rebuilt_to", cp)
+
     def test_performance_mode_round_trip(self):
         before = ok(c.call("performance_mode", {"action": "status"}))["meshing_style"]
         on = ok(c.call("performance_mode", {"action": "on"}))

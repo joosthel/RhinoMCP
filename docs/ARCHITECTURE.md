@@ -179,10 +179,13 @@ Rhino 7.39 Mac runs x86_64 under Rosetta and is mostly single-threaded, so heavy
 | `make2d_max_input_faces` | 20000 | `drawing_make2d` source faces |
 | `boolean_max_face_count` | 5000 | `geometry_boolean` total input faces (the retry ladder multiplies the cost) |
 | `clash_max_pairs` | 5000 | `clash_check` `max_pairs` argument |
+| `boolean_budget_ms` | 30000 | `geometry_boolean` `budget_ms`: checked between retry-ladder steps, structured `TIMEOUT` with step reached and diagnosis hints (a single kernel call cannot be interrupted) |
+| `clash_budget_ms` | 30000 | `clash_check` `budget_ms` default; on expiry partial results plus `data.timeout {pairs_tested, pairs_total, hints}` |
 | `warn_rss_mb` | 4000 | warning + `resources` block in results |
 | `block_rss_mb` | min(12000, 40% of RAM) | all guarded heavy tools refuse; **never** forceable |
 | `warn_call_ms` | 10000 | warning + `resources` block when a call is slower |
 
+- **`geometry_edit` `max_cp`** (`offset_surface`, `shell`; default `max_surface_control_points`): reports face control-point counts (`items[].cp`) and rebuilds a result that is one untrimmed face above it; joined or trimmed results only get a warning.
 - **`force: true`** (tool argument) overrides the count limits of that tool only. It never overrides `block_rss_mb`.
 - **`view_capture`** over the pixel limit is refused (RESOURCE_LIMIT with a suggested smaller size), not silently clamped, so the caller knows what it gets. Default capture sizes are unchanged (768x512; sheet 1024x768).
 - **Post-call accounting.** Guarded tools end with `Resources.Begin(tool)` ... `guard.Finish(result)`. `data.resources = {rss_mb, rss_delta_mb, call_ms, doc_cp_total?}` and a warning are attached only when notable (RSS growth > 200 MB, call > `warn_call_ms`, or RSS > `warn_rss_mb`), to keep tokens low.

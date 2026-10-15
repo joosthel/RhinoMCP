@@ -25,6 +25,8 @@ namespace RhinoMCP.Tools.Shared
         public int Make2dMaxInputFaces = 20000;
         public int BooleanMaxFaceCount = 5000;
         public int ClashMaxPairs = 5000;
+        public int BooleanBudgetMs = 30000;
+        public int ClashBudgetMs = 30000;
         public double WarnRssMb = 4000;
         public double BlockRssMb = 12000;
         public int WarnCallMs = 10000;
@@ -43,6 +45,8 @@ namespace RhinoMCP.Tools.Shared
                 { "make2d_max_input_faces", Make2dMaxInputFaces },
                 { "boolean_max_face_count", BooleanMaxFaceCount },
                 { "clash_max_pairs", ClashMaxPairs },
+                { "boolean_budget_ms", BooleanBudgetMs },
+                { "clash_budget_ms", ClashBudgetMs },
                 { "warn_rss_mb", WarnRssMb },
                 { "block_rss_mb", BlockRssMb },
                 { "warn_call_ms", WarnCallMs }
@@ -119,6 +123,8 @@ namespace RhinoMCP.Tools.Shared
             l.BooleanMaxFaceCount = I(o, "boolean_max_face_count", l.BooleanMaxFaceCount);
             l.ClashMaxPairs = I(o, "clash_max_pairs", l.ClashMaxPairs);
             l.WarnCallMs = I(o, "warn_call_ms", l.WarnCallMs);
+            l.BooleanBudgetMs = I(o, "boolean_budget_ms", l.BooleanBudgetMs);
+            l.ClashBudgetMs = I(o, "clash_budget_ms", l.ClashBudgetMs);
             l.WarnRssMb = D(o, "warn_rss_mb", l.WarnRssMb);
             l.BlockRssMb = D(o, "block_rss_mb", l.BlockRssMb);
             JToken t;
