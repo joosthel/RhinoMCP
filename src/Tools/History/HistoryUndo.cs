@@ -36,14 +36,7 @@ namespace RhinoMCP.Tools.History
         /// A cancelled scripted command can leave an undo record open; while it is open Undo() fails and later
         /// edits pile into it. Close it when no command is running.
         /// </summary>
-        internal static bool CloseStrayRecord(RhinoDoc doc)
-        {
-            if (!doc.UndoRecordingIsActive || Rhino.Commands.Command.InCommand()) return false;
-            uint sn = doc.CurrentUndoRecordSerialNumber;
-            if (sn == 0) return false;
-            doc.EndUndoRecord(sn);
-            return true;
-        }
+        internal static bool CloseStrayRecord(RhinoDoc doc) { return UndoScope.CloseStray(doc); }
     }
 
     public sealed class HistoryRedo : ITool, IManagesOwnUndo
