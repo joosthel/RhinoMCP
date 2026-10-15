@@ -123,9 +123,9 @@ namespace RhinoMCP.Tools.Script
             return ToolResult.Ok(data);
         }
         // Modal windows do not pump UI callbacks, so the input watchdog cannot cancel them: refuse up front.
-        static readonly HashSet<string> AlwaysModal = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        internal static readonly HashSet<string> AlwaysModal = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         { "What", "Options", "DocumentProperties", "PlugInManager", "About", "Help", "Notes", "SystemInfo" };
-        static readonly HashSet<string> ModalUnlessDash = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        internal static readonly HashSet<string> ModalUnlessDash = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         { "Open", "Save", "SaveAs", "SaveSmall", "Import", "Export", "ExportWithOrigin", "Insert", "Print", "Hatch", "Text",
           "Make2D", "ViewCaptureToFile", "Purge", "Audit3dmFile", "BlockManager", "Block", "Mesh", "Rebuild", "FitCrv",
           "Unroll", "Smash", "Dim", "TextObject", "Leader" };
