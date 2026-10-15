@@ -77,9 +77,22 @@ class CoreTests(unittest.TestCase):
         self.assertTrue(r["data"]["success"])
         self.assertEqual(len(r["data"]["added"]), 1)
         self.assertEqual(c.call("context_get")["data"]["objects"]["total"], before + 1)
-        r = c.call("run_command", {"command": "_Undo"})
+        r = c.call("history_undo", {"steps": 1})
         self.assertTrue(r["ok"], r)
         self.assertEqual(c.call("context_get")["data"]["objects"]["total"], before)
+
+    def test_command_waiting_for_input_is_cancelled(self):
+        r = c.call("run_command", {"command": "_Line", "input_timeout_s": 2})
+        self.assertFalse(r["ok"])
+        self.assertEqual(r["error"]["code"], "COMMAND_NEEDS_INPUT")
+        self.assertIn("Start of line", r["error"]["details"]["last_prompt"])
+        # Rhino is responsive again afterwards
+        self.assertTrue(c.call("context_get")["ok"])
+
+    def test_modal_commands_blocked(self):
+        for cmd in ("_What", "-_What", "_Options", "_Export"):
+            r = c.call("run_command", {"command": cmd})
+            self.assertEqual(r["error"]["code"], "COMMAND_BLOCKED", cmd)
 
     def test_invalid_args_collected(self):
         r = c.call("run_command", {})
