@@ -49,6 +49,14 @@ namespace RhinoMCP.Tools.Script
             "Rhino", "Rhino.Geometry", "Rhino.DocObjects", "Newtonsoft.Json.Linq"
         };
 
+        static readonly HashSet<string> ResolveAllowList = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Microsoft.CodeAnalysis", "Microsoft.CodeAnalysis.CSharp", "Microsoft.CodeAnalysis.Scripting",
+            "Microsoft.CodeAnalysis.CSharp.Scripting", "System.Collections.Immutable", "System.Reflection.Metadata",
+            "System.Memory", "System.Buffers", "System.Numerics.Vectors", "System.Runtime.CompilerServices.Unsafe",
+            "System.Threading.Tasks.Extensions"
+        };
+
         static bool _resolverInstalled;
         static string _monoDir;
         public static string MonoDir
@@ -69,11 +77,10 @@ namespace RhinoMCP.Tools.Script
                 try
                 {
                     string simple = new AssemblyName(e.Name).Name;
-                    if (!(simple.StartsWith("Microsoft.CodeAnalysis") || simple.StartsWith("System.Collections.Immutable") ||
-                          simple.StartsWith("System.Reflection.Metadata") || simple == "System.Memory" ||
-                          simple == "System.Runtime.CompilerServices.Unsafe" || simple == "System.Threading.Tasks.Extensions" ||
-                          simple == "System.Buffers" || simple == "System.Numerics.Vectors" || simple == "Mono.CSharp"))
-                        return null;
+                    // Never create a second copy of anything already loaded (a duplicate System.Drawing broke RhinoCommon bindings).
+                    foreach (var loaded in AppDomain.CurrentDomain.GetAssemblies())
+                        if (string.Equals(loaded.GetName().Name, simple, StringComparison.OrdinalIgnoreCase)) return loaded;
+                    if (!ResolveAllowList.Contains(simple)) return null;
                     string path = Path.Combine(MonoDir, simple + ".dll");
                     return File.Exists(path) ? Assembly.LoadFrom(path) : null;
                 }
@@ -88,11 +95,13 @@ namespace RhinoMCP.Tools.Script
                 typeof(object).Assembly, typeof(Uri).Assembly, typeof(Enumerable).Assembly,
                 typeof(RhinoDoc).Assembly, typeof(JObject).Assembly
             };
-            foreach (var n in new[] { "Microsoft.CSharp.dll", "System.Numerics.dll", "System.Drawing.dll", "Facades/System.Runtime.dll" })
+            // Reference framework assemblies only through the already-loaded copies (Assembly.Load by name never
+            // loads a second file); never LoadFrom the Mono dir for these.
+            foreach (var n in new[] { "System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a",
+                                      "System.Numerics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089",
+                                      "Microsoft.CSharp, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" })
             {
-                string p = Path.Combine(MonoDir, n);
-                if (!File.Exists(p)) continue;
-                try { l.Add(Assembly.LoadFrom(p)); } catch (Exception) { }
+                try { l.Add(Assembly.Load(n)); } catch (Exception) { }
             }
             return l.Distinct().ToList();
         }
@@ -170,7 +179,7 @@ namespace RhinoMCP.Tools.Script
 
     }
 
-    public sealed class RunCSharp : ITool
+    public sealed class RunCSharp : ITool, IManagesOwnUndo
     {
         public string Name { get { return "run_csharp"; } }
         public string Description
@@ -214,7 +223,7 @@ namespace RhinoMCP.Tools.Script
 
             var added = new List<Guid>();
             EventHandler<Rhino.DocObjects.RhinoObjectEventArgs> onAdd = delegate (object s, Rhino.DocObjects.RhinoObjectEventArgs e) { added.Add(e.ObjectId); };
-            uint undoBefore = ctx.Doc.CurrentUndoRecordSerialNumber;
+            uint undoBefore = RunPython.BeginRecord(ctx.Doc, "MCP: run_csharp");
             var log = new List<string>();
             var domain = AppDomain.CurrentDomain;
             domain.SetData("rhinomcp.doc", ctx.Doc);

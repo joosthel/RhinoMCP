@@ -9,7 +9,7 @@ using Rhino;
 namespace RhinoMCP.Tools.Script
 {
     /// <summary>IronPython 2.7 via Rhino.Runtime.PythonScript. Variables: doc, args, result; stdout is captured.</summary>
-    public sealed class RunPython : ITool
+    public sealed class RunPython : ITool, IManagesOwnUndo
     {
         public string Name { get { return "run_python"; } }
         public string Description
@@ -96,7 +96,7 @@ __mcp_errjson = json.dumps(__mcp_err, default=str)
 
             var added = new List<Guid>();
             EventHandler<Rhino.DocObjects.RhinoObjectEventArgs> onAdd = delegate (object s, Rhino.DocObjects.RhinoObjectEventArgs e) { added.Add(e.ObjectId); };
-            uint undoBefore = ctx.Doc.CurrentUndoRecordSerialNumber;
+            uint undoBefore = RunPython.BeginRecord(ctx.Doc, "MCP: run_python");
             var sw = Stopwatch.StartNew();
             string outText, resJson, errJson;
             Rhino.Runtime.PythonScript ps = null;
@@ -153,15 +153,22 @@ __mcp_errjson = json.dumps(__mcp_err, default=str)
             return ToolResult.Ok(data);
         }
 
-        // A script that called doc.BeginUndoRecord without ending it would swallow later edits; close records opened by the script.
-        internal static void CloseOpenedRecords(RhinoDoc doc, uint before)
+        // The registry's wrapper left a record open between calls on this Rhino (Undo then failed), so these tools
+        // manage their own record: heal a stray record, begin one, and always end every record that is still open.
+        internal static uint BeginRecord(RhinoDoc doc, string name)
+        {
+            CloseOpenedRecords(doc, 0);
+            return doc.BeginUndoRecord(name);
+        }
+
+        internal static void CloseOpenedRecords(RhinoDoc doc, uint unused)
         {
             try
             {
                 for (int i = 0; i < 10; i++)
                 {
                     uint cur = doc.CurrentUndoRecordSerialNumber;
-                    if (cur == 0 || cur == before) break;
+                    if (cur == 0) break;
                     doc.EndUndoRecord(cur);
                 }
             }

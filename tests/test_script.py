@@ -61,20 +61,20 @@ class ScriptTests(unittest.TestCase):
         self.assertEqual(r["error"]["details"]["stdout"].strip(), "before")
 
     def test_history_undo_reverts_run_python(self):
-        before = c.call("run_python", {"code": "result = doc.Objects.Count"})["data"]["result"]
+        # Compare by object id, not document counts: the live document may change for other reasons.
         r = c.call("run_python", {"code": (
             "if not rs.IsLayer('_mcp_test::script'): rs.AddLayer('_mcp_test::script')\n"
             "id = rs.AddPoint([1, 2, 3])\n"
             "rs.ObjectLayer(id, '_mcp_test::script')\n"
+            "result = str(id)\n"
         )})
         self.assertTrue(r["ok"], r)
-        mid = c.call("run_python", {"code": "result = doc.Objects.Count"})["data"]["result"]
-        self.assertEqual(mid, before + 1)
-        # the two read-style runs above are also undo records only if they changed something; they did not
+        pid = r["data"]["result"]
+        exists = {"code": "result = rs.IsObject(args['i'])", "args": {"i": pid}}
+        self.assertTrue(c.call("run_python", exists)["data"]["result"])
         u = c.call("history_undo", {})
         self.assertTrue(u["ok"], u)
-        after = c.call("run_python", {"code": "result = doc.Objects.Count"})["data"]["result"]
-        self.assertEqual(after, before)
+        self.assertFalse(c.call("run_python", exists)["data"]["result"])
 
     def test_run_csharp_value_and_point(self):
         r = c.call("run_csharp", {"code": "Log(\"hi\"); return 1 + 1;"})
@@ -95,6 +95,18 @@ class ScriptTests(unittest.TestCase):
         self.assertTrue(r["ok"], r)
         self.assertEqual(len(r["data"]["objects_added"]), 1)
         self.assertEqual(r["data"]["engine"], "roslyn")
+
+    def test_no_duplicate_framework_assemblies(self):
+        c.call("run_csharp", {"code": "return 1;"})
+        r = c.call("run_csharp", {"code": (
+            "return AppDomain.CurrentDomain.GetAssemblies().Select(a => a.GetName().Name)"
+            ".GroupBy(n => n).Where(g => g.Count() > 1 && (g.Key.StartsWith(\"System\") || g.Key == \"mscorlib\"))"
+            ".Select(g => g.Key + \"x\" + g.Count()).ToArray();"
+        )})
+        self.assertTrue(r["ok"], r)
+        self.assertEqual(r["data"]["result"], [])
+        r = c.call("run_python", {"code": "result = len([a for a in System.AppDomain.CurrentDomain.GetAssemblies() if a.GetName().Name == 'System.Drawing'])"})
+        self.assertEqual(r["data"]["result"], 1)
 
     def test_run_csharp_compile_error(self):
         r = c.call("run_csharp", {"code": "int x = 1;\nint y = x +;\nreturn y;"})
@@ -119,10 +131,10 @@ class ScriptTests(unittest.TestCase):
         self.assertEqual(names[0], "box")
 
     def test_commands_search_flags_modal(self):
-        r = c.call("commands_search", {"query": "options", "limit": 50})
+        r = c.call("commands_search", {"query": "what", "limit": 50})
         self.assertTrue(r["ok"], r)
         m = {x["name"].lower(): x for x in r["data"]["matches"]}
-        self.assertTrue(m["options"]["blocked_in_run_command"])
+        self.assertTrue(m["what"]["blocked_in_run_command"])
         r = c.call("commands_search", {"query": "export", "limit": 50})
         m = {x["name"].lower(): x for x in r["data"]["matches"]}
         self.assertTrue(m["export"]["dash_advised"])
