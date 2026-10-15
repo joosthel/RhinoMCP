@@ -33,7 +33,8 @@ namespace RhinoMCP.Tools.Geometry
                     "\"a\":{\"$ref\":\"#/$defs/target\"}," +
                     "\"b\":{\"$ref\":\"#/$defs/target\",\"description\":\"cutter(s); required for difference/intersection/split\"}," +
                     "\"keep_inputs\":{\"type\":\"boolean\"}," +
-                    "\"include_guids\":{\"type\":\"boolean\"}",
+                    "\"include_guids\":{\"type\":\"boolean\"}," +
+                    "\"force\":{\"type\":\"boolean\",\"description\":\"override boolean_max_face_count (never block_rss_mb)\"}",
                     "\"op\",\"a\"");
             }
         }
@@ -63,6 +64,17 @@ namespace RhinoMCP.Tools.Geometry
             var A = aList.Select(x => x.b).ToList();
             var B = bList.Select(x => x.b).ToList();
             if (op == "union") { A = A.Concat(B).ToList(); B = new List<Brep>(); }
+
+            // ---- resource pre-flight: booleans run a retry ladder (up to ~7 attempts), so cost scales with the face count
+            var rssBlock = Resources.CheckRss("geometry_boolean");
+            if (rssBlock != null) return rssBlock;
+            var resGuard = Resources.Begin("geometry_boolean");
+            long faceTotal = A.Sum(x => (long)x.Faces.Count) + B.Sum(x => (long)x.Faces.Count);
+            long cpTotal = A.Concat(B).Sum(x => x.Surfaces.Sum(s => { var ns = s as NurbsSurface; return ns == null ? 4L : (long)ns.Points.CountU * ns.Points.CountV; }));
+            if (faceTotal > Resources.Limits.BooleanMaxFaceCount && !p.Bool("force"))
+                return Resources.LimitFail("boolean_max_face_count", faceTotal, Resources.Limits.BooleanMaxFaceCount,
+                    "boolean inputs have " + faceTotal + " faces (" + cpTotal + " surface control points); the limit is " + Resources.Limits.BooleanMaxFaceCount + ". Nothing was changed.",
+                    "Reduce the work: rebuild dense surfaces first (freeform_surface rebuild_surface to ~20x20), split the operation (one cutter at a time, or a subset by layer/set), simplify the cutter, or convert SubD/mesh sources to simpler breps.", true);
 
             // ---- pre-flight ----
             var pre = new List<string>();
@@ -240,7 +252,7 @@ namespace RhinoMCP.Tools.Geometry
             var tr = ToolResult.Ok(data);
             if (stepUsed != "document_tolerance")
                 tr.Warn("Succeeded only at ladder step '" + stepUsed + "' (" + tried.Count + " attempts); verify the result with geometry_validate");
-            return tr;
+            return resGuard.Finish(tr);
         }
 
         static string DominantCause(List<Attempt> tried)
