@@ -6,7 +6,7 @@ using Rhino.PlugIns;
 
 [assembly: Guid("995CF377-563C-482D-B295-F80F5E24840B")]
 [assembly: AssemblyTitle("RhinoMCP")]
-[assembly: AssemblyVersion("0.1.0.0")]
+[assembly: AssemblyVersion("0.2.0.0")]
 [assembly: AssemblyFileVersion("0.1.0.0")]
 [assembly: PlugInDescription(DescriptionType.Organization, "RhinoMCP")]
 [assembly: PlugInDescription(DescriptionType.WebSite, "https://github.com/joosthel/RhinoMCP")]

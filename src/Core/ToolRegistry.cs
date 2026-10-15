@@ -198,10 +198,16 @@ namespace RhinoMCP
     {
         const string Prefix = "RhinoMCP.Tools.";
 
+        /// <summary>
+        /// Newest tools dll from the dev/deploy folder, falling back to the plugin's own folder (Yak installs ship the
+        /// tools dll next to the .rhp). File names carry a sortable build stamp.
+        /// </summary>
         public static string NewestDll()
         {
-            if (!Directory.Exists(Config.ToolsDir)) return null;
-            return Directory.GetFiles(Config.ToolsDir, Prefix + "*.dll")
+            var dirs = new List<string> { Config.ToolsDir };
+            try { dirs.Add(Path.GetDirectoryName(typeof(ToolsLoader).Assembly.Location)); } catch (Exception) { }
+            return dirs.Where(d => !string.IsNullOrEmpty(d) && Directory.Exists(d))
+                .SelectMany(d => Directory.GetFiles(d, Prefix + "*.dll"))
                 .OrderByDescending(f => Path.GetFileName(f), StringComparer.Ordinal).FirstOrDefault();
         }
 
