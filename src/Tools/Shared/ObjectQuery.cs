@@ -390,6 +390,7 @@ namespace RhinoMCP.Tools.Shared
             catch (Exception) { /* measurement is best-effort */ }
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
         public static string Hex(System.Drawing.Color c) { return "#" + c.R.ToString("x2") + c.G.ToString("x2") + c.B.ToString("x2"); }
 
         /// <summary>Up to <paramref name="max"/> handles plus a truncation note.</summary>

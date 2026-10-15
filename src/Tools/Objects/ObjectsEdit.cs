@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Drawing;
+using System.Runtime.CompilerServices;
 using System.Globalization;
 using System.Linq;
 using Newtonsoft.Json.Linq;
@@ -53,8 +53,9 @@ namespace RhinoMCP.Tools.Objects
                 d["type"] = ObjectQuery.TypeName(o);
                 d["layer"] = ObjectQuery.LayerPath(doc, o);
                 d["name"] = o.Attributes.Name ?? "";
-                d["color"] = ObjectQuery.Hex(o.Attributes.DrawColor(doc));
                 d["color_source"] = o.Attributes.ColorSource.ToString();
+                try { d["color"] = ColorHex(o, doc); }
+                catch (MissingMethodException) { d["color"] = null; }
                 d["visible"] = o.Visible;
                 d["locked"] = o.IsLocked;
                 d["selected"] = o.IsSelected(false) != 0;
@@ -83,6 +84,13 @@ namespace RhinoMCP.Tools.Objects
             var res = ToolResult.Ok(new { count = list.Count, objects = list });
             res.Units = ctx.Units;
             return res;
+        }
+
+        // System.Drawing members live in separate non-inlined methods so a binding problem with them cannot break the whole tool.
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        static string ColorHex(RhinoObject o, RhinoDoc doc)
+        {
+            return ObjectQuery.Hex(o.Attributes.DrawColor(doc));
         }
 
         static string Short(string log)
@@ -147,16 +155,15 @@ namespace RhinoMCP.Tools.Objects
                     a.Error("'layer': no layer '" + layerName + "'. Layers are not created implicitly. Existing layers: " + ObjectsQuery.LayerList(doc));
             }
 
-            Color? color = null; bool byLayer = false;
+            int rgb = -1; bool byLayer = false;
             JToken ct;
             if (args != null && args.TryGetValue("color", out ct) && ct.Type != JTokenType.Null)
             {
                 if (ct.Type == JTokenType.String && string.Equals((string)ct, "bylayer", StringComparison.OrdinalIgnoreCase)) byLayer = true;
                 else
                 {
-                    Color c;
-                    if (TryColor(ct, out c)) color = c;
-                    else a.Error("'color' must be \"#rrggbb\", [r,g,b] (0-255) or \"bylayer\"");
+                    if (!TryRgb(ct, out rgb)) rgb = -1;
+                    if (rgb < 0) a.Error("'color' must be \"#rrggbb\", [r,g,b] (0-255) or \"bylayer\"");
                 }
             }
 
@@ -176,7 +183,7 @@ namespace RhinoMCP.Tools.Objects
                     if (rm != null) utRemove.AddRange(rm.Select(x => (string)x));
                 }
             }
-            bool any = layerName != null || hasName || color.HasValue || byLayer || utSet.Count > 0 || utRemove.Count > 0 || visible.HasValue || locked.HasValue;
+            bool any = layerName != null || hasName || (rgb >= 0) || byLayer || utSet.Count > 0 || utRemove.Count > 0 || visible.HasValue || locked.HasValue;
             if (!any && !a.HasErrors) a.Error("nothing to change; give at least one of layer, name, color, user_text, visible, locked");
             if (a.HasErrors) return a.ErrorResult();
 
@@ -185,13 +192,17 @@ namespace RhinoMCP.Tools.Objects
             foreach (var o in objs)
             {
                 bool changed = false, ok = true;
-                bool attrChange = layerIndex >= 0 || hasName || color.HasValue || byLayer || utSet.Count > 0 || utRemove.Count > 0;
+                bool attrChange = layerIndex >= 0 || hasName || (rgb >= 0) || byLayer || utSet.Count > 0 || utRemove.Count > 0;
                 if (attrChange)
                 {
                     var at = o.Attributes.Duplicate();
                     if (layerIndex >= 0) at.LayerIndex = layerIndex;
                     if (hasName) at.Name = name ?? "";
-                    if (color.HasValue) { at.ObjectColor = color.Value; at.ColorSource = ObjectColorSource.ColorFromObject; }
+                    if (rgb >= 0)
+                    {
+                        try { SetObjectColor(at, rgb); }
+                        catch (MissingMethodException) { return ToolResult.Fail("UNSUPPORTED", "Setting an explicit object color is not available in this Rhino session (System.Drawing binding failed).", "Use color:\"bylayer\" and change the layer color instead."); }
+                    }
                     if (byLayer) at.ColorSource = ObjectColorSource.ColorFromLayer;
                     foreach (var kv in utSet) at.SetUserString(kv.Key, kv.Value);
                     foreach (var k in utRemove) at.DeleteUserString(k);
@@ -227,20 +238,26 @@ namespace RhinoMCP.Tools.Objects
             return res;
         }
 
-        static bool TryColor(JToken t, out Color c)
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        static void SetObjectColor(ObjectAttributes at, int rgb)
         {
-            c = Color.Empty;
+            at.ObjectColor = System.Drawing.Color.FromArgb((rgb >> 16) & 255, (rgb >> 8) & 255, rgb & 255);
+            at.ColorSource = ObjectColorSource.ColorFromObject;
+        }
+
+        static bool TryRgb(JToken t, out int rgb)
+        {
+            rgb = -1;
             if (t.Type == JTokenType.String)
             {
                 string s = ((string)t).Trim().TrimStart('#');
                 int v;
-                if (s.Length == 6 && int.TryParse(s, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out v))
-                { c = Color.FromArgb((v >> 16) & 255, (v >> 8) & 255, v & 255); return true; }
+                if (s.Length == 6 && int.TryParse(s, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out v)) { rgb = v; return true; }
                 return false;
             }
             var arr = t as JArray;
             if (arr != null && arr.Count == 3 && arr.All(x => x.Type == JTokenType.Integer && (long)x >= 0 && (long)x <= 255))
-            { c = Color.FromArgb((int)arr[0], (int)arr[1], (int)arr[2]); return true; }
+            { rgb = ((int)arr[0] << 16) | ((int)arr[1] << 8) | (int)arr[2]; return true; }
             return false;
         }
     }
