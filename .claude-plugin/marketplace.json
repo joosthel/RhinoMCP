@@ -1,0 +1,14 @@
+{
+  "name": "rhino-mcp",
+  "owner": {
+    "name": "joosthel"
+  },
+  "plugins": [
+    {
+      "name": "rhino-mcp",
+      "source": "./",
+      "description": "Agent skills for the RhinoMCP server (Rhino 7 Mac): efficient use, tolerances, hygiene, layers, drawings, massing, product design.",
+      "version": "0.1.0"
+    }
+  ]
+}
