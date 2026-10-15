@@ -1,4 +1,6 @@
 using System;
+using System.Runtime.InteropServices;
+using System.Threading;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json.Linq;
@@ -21,20 +23,90 @@ namespace RhinoMCP.Tools.Script
         System.Threading.Timer _timer;
         public volatile bool Fired;
         public string Prompt;
+        int _attempts;
         public void Start(int seconds)
         {
             if (seconds <= 0) return;
+            // First attempt after the timeout, then retry every 2 s (up to 4 tries): SendKeystrokes only
+            // reaches the command line while Rhino's main window has keyboard focus.
             _timer = new System.Threading.Timer(_ =>
             {
-                RhinoApp.InvokeOnUiThread(new Action(() =>
+                try
                 {
-                    try { Prompt = RhinoApp.CommandPrompt; } catch (Exception) { }
-                    Fired = true;
-                    RhinoApp.SendKeystrokes("!", true);
-                }));
-            }, null, seconds * 1000, System.Threading.Timeout.Infinite);
+                    if (Interlocked.Increment(ref _attempts) > 4) { _timer.Change(Timeout.Infinite, Timeout.Infinite); return; }
+                    RhinoApp.InvokeOnUiThread(new Action(() =>
+                    {
+                        try
+                        {
+                            if (!Rhino.Commands.Command.InCommand()) return;
+                            if (Prompt == null) { try { Prompt = RhinoApp.CommandPrompt; } catch (Exception) { } }
+                            Fired = true;
+                            // SendKeystrokes only works while Rhino has keyboard focus; posting a native
+                            // Escape key event into Rhino's own AppKit queue works in the background too.
+                            if (!MacEscape.Post()) RhinoApp.SendKeystrokes("!", true);
+                        }
+                        catch (Exception) { }
+                    }));
+                }
+                catch (Exception) { }
+            }, null, seconds * 1000, 2000);
         }
         public void Stop() { if (_timer != null) _timer.Dispose(); }
+    }
+
+    /// <summary>
+    /// Posts an Escape key-down/up pair to Rhino's main window via the Objective-C runtime
+    /// ([NSApp postEvent:atStart:]). Must run on the UI thread. Returns false if anything is unavailable.
+    /// </summary>
+    static class MacEscape
+    {
+        const string ObjC = "/usr/lib/libobjc.dylib";
+        [StructLayout(LayoutKind.Sequential)] struct NSPoint { public double X, Y; }
+
+        [DllImport(ObjC)] static extern IntPtr objc_getClass(string name);
+        [DllImport(ObjC)] static extern IntPtr sel_registerName(string name);
+        [DllImport(ObjC, EntryPoint = "objc_msgSend")] static extern IntPtr Send(IntPtr r, IntPtr s);
+        [DllImport(ObjC, EntryPoint = "objc_msgSend")] static extern IntPtr SendPtr(IntPtr r, IntPtr s, IntPtr a);
+        [DllImport(ObjC, EntryPoint = "objc_msgSend")] static extern IntPtr SendIdx(IntPtr r, IntPtr s, ulong i);
+        [DllImport(ObjC, EntryPoint = "objc_msgSend")] static extern long SendLong(IntPtr r, IntPtr s);
+        [DllImport(ObjC, EntryPoint = "objc_msgSend")] static extern ulong SendULong(IntPtr r, IntPtr s);
+        [DllImport(ObjC, EntryPoint = "objc_msgSend")] static extern void SendPost(IntPtr r, IntPtr s, IntPtr e, [MarshalAs(UnmanagedType.I1)] bool atStart);
+        [DllImport(ObjC, EntryPoint = "objc_msgSend")]
+        static extern IntPtr SendKeyEvent(IntPtr r, IntPtr s, ulong type, NSPoint loc, ulong flags, double time, long windowNumber,
+            IntPtr context, IntPtr chars, IntPtr charsIgnoring, [MarshalAs(UnmanagedType.I1)] bool isRepeat, ushort keyCode);
+
+        public static bool Post()
+        {
+            try
+            {
+                if (!Rhino.Runtime.HostUtils.RunningOnOSX) return false;
+                IntPtr app = Send(objc_getClass("NSApplication"), sel_registerName("sharedApplication"));
+                if (app == IntPtr.Zero) return false;
+                IntPtr win = Send(app, sel_registerName("mainWindow"));
+                if (win == IntPtr.Zero)
+                {
+                    IntPtr wins = Send(app, sel_registerName("orderedWindows"));
+                    if (wins != IntPtr.Zero && SendULong(wins, sel_registerName("count")) > 0)
+                        win = SendIdx(wins, sel_registerName("objectAtIndex:"), 0);
+                }
+                long winNum = win == IntPtr.Zero ? 0 : SendLong(win, sel_registerName("windowNumber"));
+                IntPtr esc = Marshal.StringToHGlobalAnsi("\u001b");
+                IntPtr str;
+                try { str = SendPtr(objc_getClass("NSString"), sel_registerName("stringWithUTF8String:"), esc); }
+                finally { Marshal.FreeHGlobal(esc); }
+                IntPtr keySel = sel_registerName("keyEventWithType:location:modifierFlags:timestamp:windowNumber:context:characters:charactersIgnoringModifiers:isARepeat:keyCode:");
+                IntPtr postSel = sel_registerName("postEvent:atStart:");
+                IntPtr nsEvent = objc_getClass("NSEvent");
+                foreach (ulong type in new ulong[] { 10, 11 }) // NSEventTypeKeyDown, NSEventTypeKeyUp
+                {
+                    IntPtr ev = SendKeyEvent(nsEvent, keySel, type, new NSPoint(), 0, 0, winNum, IntPtr.Zero, str, str, false, 53);
+                    if (ev == IntPtr.Zero) return false;
+                    SendPost(app, postSel, ev, false);
+                }
+                return true;
+            }
+            catch (Exception) { return false; }
+        }
     }
 
     public sealed class RunCommand : ITool, IManagesOwnUndo
