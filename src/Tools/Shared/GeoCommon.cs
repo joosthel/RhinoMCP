@@ -123,7 +123,7 @@ namespace RhinoMCP.Tools.Shared
             var t = Tok(n);
             if (t == null) { if (req) Err("'" + n + "' is required (handle, GUID, {set} or {query})"); return new List<RhinoObject>(); }
             var ar = new ArgReader(new JObject { { "t", t.DeepClone() } });
-            var l = ar.Target("t", Ctx, req);
+            var l = ObjectQuery.Resolve(Ctx, t, ar, "t", req);
             if (ar.HasErrors) Err(ar.ErrorResult().Message.Replace("'t'", "'" + n + "'"));
             return l;
         }

@@ -17,7 +17,7 @@ namespace RhinoMCP.Tools.Objects
         {
             get
             {
-                return "Find objects by filter (layer, type, name glob, user_text, bbox, selected, visible). Always returns total and group counts " +
+                return "Find objects by filters:{layer, include_sublayers, type, name glob, user_text, bbox, selected, visible, include_hidden}, combined with AND; hidden objects are included by default; unknown arguments are rejected.Always returns total and group counts " +
                        "(group_by layer|type|user_text:<key>, default type); rows only when limit>0 (default 50, max 500, use cursor to page). " +
                        "measure_sums:true adds length/area/volume sums per group (slower on big models). save_as_set stores ALL matches as a named set. " +
                        "Types: curve|surface|brep|extrusion|mesh|subd|point|annotation|instance|hatch. Returns handles (o12); pass include_guids for GUIDs.";
@@ -46,6 +46,10 @@ namespace RhinoMCP.Tools.Objects
             var doc = ctx.Doc;
             if (doc == null) return ToolResult.Fail("NO_DOCUMENT", "No active Rhino document", "Open or create a document in Rhino first.");
             var a = new ArgReader(args);
+            // Filter keys belong inside "filters"; a top-level layer/name/type used to be silently ignored (so everything matched).
+            ArgCheck.RejectUnknown(args, new[] { "filters", "group_by", "measure_sums", "fields", "limit", "cursor", "save_as_set", "include_guids" }, a,
+                k => Array.IndexOf(new[] { "layer", "include_sublayers", "type", "name", "user_text", "bbox", "selected", "visible", "include_hidden" }, k) >= 0
+                    ? "filter keys go inside \"filters\": {\"filters\":{\"" + k + "\": ...}}" : null);
             int limit = a.Int("limit", false, 50, 0, 500);
             string cursor = a.String("cursor");
             string groupBy = a.String("group_by", false, "type");

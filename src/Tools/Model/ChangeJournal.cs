@@ -206,8 +206,25 @@ namespace RhinoMCP.Tools.Model
             }
         }
 
+        // Core >= 0.2.0 exposes ToolRegistry.InToolCall (set around tool.Execute). Resolved once by reflection so that this
+        // tools dll still works on an older Core, where we fall back to scanning the stack for a ToolRegistry frame.
+        static System.Reflection.PropertyInfo _inToolCall;
+        static bool _inToolCallResolved;
+
         static bool IsAgentNow()
         {
+            try
+            {
+                if (!_inToolCallResolved)
+                {
+                    _inToolCallResolved = true;
+                    var rt = typeof(ITool).Assembly.GetType("RhinoMCP.ToolRegistry");
+                    var pi = rt == null ? null : rt.GetProperty("InToolCall", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                    if (pi != null && pi.PropertyType == typeof(bool)) _inToolCall = pi;
+                }
+                if (_inToolCall != null) return (bool)_inToolCall.GetValue(null, null);
+            }
+            catch (Exception) { }
             try
             {
                 var st = new StackTrace(2, false);

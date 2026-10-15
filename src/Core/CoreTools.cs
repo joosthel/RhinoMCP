@@ -18,12 +18,35 @@ namespace RhinoMCP
     sealed class ServerInfoTool : ITool
     {
         public string Name { get { return "server_info"; } }
-        public string Description { get { return "Server status: version, port, uptime, tool count, tools dll, devMode, Rhino version, state_token. Use to check the connection."; } }
+        public string Description { get { return "Server status: version, port, uptime, tool count, tools dll, devMode, Rhino version, rss_mb, rosetta. Use to check the connection."; } }
         public string InputSchema { get { return "{\"type\":\"object\",\"properties\":{},\"additionalProperties\":false}"; } }
         public ToolKind Kind { get { return ToolKind.Read; } }
+        static bool? _rosetta;
+        /// <summary>x86_64 process on Apple Silicon (sysctl sysctl.proc_translated), cached after the first call.</summary>
+        static bool IsRosetta()
+        {
+            if (_rosetta.HasValue) return _rosetta.Value;
+            bool r = false;
+            try
+            {
+                var psi = new System.Diagnostics.ProcessStartInfo("/usr/sbin/sysctl", "-n sysctl.proc_translated") { UseShellExecute = false, RedirectStandardOutput = true, CreateNoWindow = true };
+                using (var p = System.Diagnostics.Process.Start(psi))
+                {
+                    string o = p.StandardOutput.ReadToEnd();
+                    p.WaitForExit(2000);
+                    r = o.Trim() == "1";
+                }
+            }
+            catch (Exception) { }
+            _rosetta = r;
+            return r;
+        }
+
         public ToolResult Execute(ToolContext ctx, JObject args)
         {
             var s = RhinoMCPPlugin.Server;
+            double rss = -1;
+            try { using (var pr = System.Diagnostics.Process.GetCurrentProcess()) rss = Math.Round(pr.WorkingSet64 / 1048576.0); } catch (Exception) { }
             return ToolResult.Ok(new
             {
                 version = RhinoMCPPlugin.VersionString,
@@ -33,7 +56,9 @@ namespace RhinoMCP
                 tools = ToolRegistry.Count,
                 tools_dll = ToolRegistry.ToolsDll == null ? null : System.IO.Path.GetFileName(ToolRegistry.ToolsDll),
                 dev_mode = RhinoMCPPlugin.Config.DevMode,
-                allow_scripts = RhinoMCPPlugin.Config.AllowScripts
+                allow_scripts = RhinoMCPPlugin.Config.AllowScripts,
+                rss_mb = rss < 0 ? (double?)null : rss,
+                rosetta = IsRosetta()
             });
         }
     }

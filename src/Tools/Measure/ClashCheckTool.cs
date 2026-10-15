@@ -52,9 +52,9 @@ namespace RhinoMCP.Tools.Measure
         public ToolResult Execute(ToolContext ctx, JObject args)
         {
             var a = new ArgReader(args);
-            var aObjs = a.Target("a", ctx);
+            var aObjs = ObjectQuery.TargetOf(ctx, args, a, "a");
             bool within = !a.Has("b");
-            var bObjs = within ? null : a.Target("b", ctx);
+            var bObjs = within ? null : ObjectQuery.TargetOf(ctx, args, a, "b");
             double clearance = a.Double("clearance", false, 0);
             bool wantVol = a.Bool("compute_volume", false);
             int topK = a.Int("top_k", false, 20, 1, 200);

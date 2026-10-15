@@ -59,6 +59,7 @@ namespace RhinoMCP.Tools.Context
                 doc = new
                 {
                     objects = c.Objects,
+                    undo_held_deleted = c.UndoHeldDeleted,
                     control_points_total = c.ControlPoints,
                     brep_faces = c.BrepFaces,
                     mesh_vertices = c.MeshVertices,
@@ -84,6 +85,9 @@ namespace RhinoMCP.Tools.Context
                     rec.Add("SubD objects total " + c.SubdFaces + " faces (limit " + lim.MaxSubdFaces + "). Keep control cages low; do not subdivide further.");
                 if (c.BrepFaces > lim.Make2dMaxInputFaces)
                     rec.Add("The model has " + c.BrepFaces + " brep faces: run Make2D and clash_check per layer or set, not on everything at once.");
+                if (c.UndoHeldDeleted > 1000 && c.UndoHeldDeleted > c.Objects)
+                    rec.Add(c.UndoHeldDeleted + " deleted object(s) are still held in memory by the undo history (document has " + c.Objects + " live objects). " +
+                            "Save the file and reopen it to free that memory (a restart is not needed); fewer undo steps (_Undo limit in Rhino options) avoids it in future.");
                 if (c.Partial) rec.Add("The document scan hit its 2 s time box; totals are partial.");
             }
             if (rss >= lim.BlockRssMb) rec.Add("Rhino memory (" + Math.Round(rss) + " MB) is above block_rss_mb: heavy tools are refused. Save, delete or hide heavy objects, restart Rhino.");

@@ -15,6 +15,13 @@ namespace RhinoMCP
         static Assembly _toolsAssembly;
         static string _toolsPath;
 
+        [ThreadStatic] static string _currentTool;
+        [ThreadStatic] static int _toolDepth;
+        /// <summary>Name of the MCP tool whose Execute is running on this thread (null outside a tool call). Read by the change journal.</summary>
+        public static string CurrentTool { get { return _currentTool; } }
+        /// <summary>True while an MCP tool call is executing on this thread; document events raised now were caused by the agent.</summary>
+        public static bool InToolCall { get { return _toolDepth > 0; } }
+
         public static int Count { get { return _tools.Count; } }
         public static string ToolsDll { get { return _toolsPath; } }
         public static IEnumerable<ITool> All { get { return _tools.Values.OrderBy(t => t.Name, StringComparer.Ordinal); } }
@@ -115,6 +122,8 @@ namespace RhinoMCP
         {
             var cfg = RhinoMCPPlugin.Config;
             var ctx = new ToolContext { Doc = RhinoDoc.ActiveDoc };
+            var bad = ValidateArgs(tool, args);
+            if (bad != null) return bad;
             if (tool.Kind == ToolKind.Script && cfg != null && !cfg.AllowScripts)
                 return ToolResult.Fail("UNSUPPORTED", "Script tools are disabled (allowScripts=false in config.json)",
                     "Set allowScripts to true in ~/Library/Application Support/RhinoMCP/config.json and restart the server (MCPStop, MCPStart).");
@@ -125,6 +134,8 @@ namespace RhinoMCP
             bool wrapUndo = mutating && !(tool is IManagesOwnUndo);
             ToolResult r;
             UndoScope undo = null;
+            string prevTool = _currentTool;
+            _toolDepth++; _currentTool = tool.Name;
             try
             {
                 if (wrapUndo) undo = new UndoScope(ctx.Doc, tool.Name);
@@ -141,6 +152,7 @@ namespace RhinoMCP
                 {
                     try { undo.Dispose(); } catch (Exception) { }
                 }
+                _toolDepth--; _currentTool = prevTool;
             }
             if (mutating)
             {
@@ -150,6 +162,21 @@ namespace RhinoMCP
             else r.StateToken = StateToken.Current;
             if (r.Units == null) r.Units = ctx.Units;
             return r;
+        }
+
+        /// <summary>
+        /// Checks the arguments against the tool's inputSchema (unknown names when additionalProperties is false, required keys,
+        /// basic types). Returns an INVALID_ARGS result listing every problem, or null when the call may proceed.
+        /// </summary>
+        public static ToolResult ValidateArgs(ITool tool, JObject args)
+        {
+            ArgValidator.Result v;
+            try { v = ArgValidator.Validate(SchemaFor(tool), args); }
+            catch (Exception) { return null; }   // a validator fault must never block a call
+            if (v.Ok) return null;
+            return ToolResult.Fail("INVALID_ARGS", string.Join("; ", v.Errors),
+                "Fix all listed arguments and call again. Valid arguments for '" + tool.Name + "': " + (v.Valid.Count == 0 ? "(none)" : string.Join(", ", v.Valid)) + ". See the tool's inputSchema.",
+                new { errors = v.Errors, unknown = v.Unknown, valid = v.Valid });
         }
 
         public static ToolResult InternalError(Exception ex)
