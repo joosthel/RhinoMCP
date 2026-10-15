@@ -19,6 +19,8 @@ namespace RhinoMCP.Tools.Shared
         public string UserKey; public Regex UserValue;
         public BoundingBox Box; public bool HasBox; public bool BoxInside;
         public bool? Selected, Visible;
+        /// <summary>Default true: hidden objects (own Hide or hidden/off layer) are included, for every tool.</summary>
+        public bool IncludeHidden = true;
         readonly Dictionary<int, bool> _layerOk = new Dictionary<int, bool>();
 
         public static readonly string[] TypeNames = { "curve", "surface", "brep", "extrusion", "mesh", "subd", "point", "annotation", "instance", "hatch", "any" };
@@ -28,7 +30,7 @@ namespace RhinoMCP.Tools.Shared
         {
             var f = new ObjectFilter();
             if (q == null) return f;
-            var known = new HashSet<string> { "layer", "include_sublayers", "type", "name", "user_text", "bbox", "selected", "visible" };
+            var known = new HashSet<string> { "layer", "include_sublayers", "type", "name", "user_text", "bbox", "selected", "visible", "include_hidden" };
             foreach (var p in q.Properties())
                 if (!known.Contains(p.Name)) err(prefix + "unknown filter '" + p.Name + "'. Valid: " + string.Join(", ", known));
             JToken t;
@@ -80,6 +82,11 @@ namespace RhinoMCP.Tools.Shared
             }
             if (q.TryGetValue("selected", out t) && t.Type == JTokenType.Boolean) f.Selected = (bool)t;
             if (q.TryGetValue("visible", out t) && t.Type == JTokenType.Boolean) f.Visible = (bool)t;
+            if (q.TryGetValue("include_hidden", out t) && t.Type != JTokenType.Null)
+            {
+                if (t.Type != JTokenType.Boolean) err(prefix + "include_hidden must be a boolean");
+                else f.IncludeHidden = (bool)t;
+            }
             return f;
         }
 
@@ -125,6 +132,7 @@ namespace RhinoMCP.Tools.Shared
         public bool Matches(RhinoDoc doc, RhinoObject o)
         {
             if (Layer != null && !LayerMatches(doc, o.Attributes.LayerIndex)) return false;
+            if (!IncludeHidden && (o.IsHidden || !o.Visible)) return false;
             if (Types != null && !Types.Contains(ObjectQuery.TypeName(o))) return false;
             if (Name != null && !Name.IsMatch(o.Attributes.Name ?? "")) return false;
             if (UserKey != null)
@@ -159,11 +167,12 @@ namespace RhinoMCP.Tools.Shared
             "\"name\":{\"type\":\"string\",\"description\":\"Glob with * ?\"}," +
             "\"user_text\":{\"type\":\"object\",\"properties\":{\"key\":{\"type\":\"string\"},\"value\":{\"type\":\"string\",\"description\":\"glob; omit = key present\"}},\"required\":[\"key\"]}," +
             "\"bbox\":{\"type\":\"object\",\"properties\":{\"min\":{\"$ref\":\"#/$defs/point\"},\"max\":{\"$ref\":\"#/$defs/point\"},\"mode\":{\"enum\":[\"intersects\",\"inside\"],\"default\":\"intersects\"}},\"required\":[\"min\",\"max\"]}," +
-            "\"selected\":{\"type\":\"boolean\"},\"visible\":{\"type\":\"boolean\"}},\"additionalProperties\":false}";
+            "\"selected\":{\"type\":\"boolean\"},\"visible\":{\"type\":\"boolean\"}," +
+            "\"include_hidden\":{\"type\":\"boolean\",\"default\":true,\"description\":\"Hidden objects are included unless false (same default in every tool)\"}},\"additionalProperties\":false}";
 
         /// <summary>Target schema: handle | GUID | {set} | {query: filter} | array of those.</summary>
         public const string TargetSchema =
-            "{\"description\":\"Object handle (o12), GUID, {set:name}, {query:{layer,include_sublayers,type,name,user_text,bbox,selected,visible}} or an array of those\"," +
+            "{\"description\":\"Object handle (o12), GUID, {set:name}, {query:{layer,include_sublayers,type,name,user_text,bbox,selected,visible,include_hidden}} or an array of those\"," +
             "\"oneOf\":[{\"type\":\"string\"},{\"type\":\"object\",\"properties\":{\"set\":{\"type\":\"string\"},\"query\":" + FilterSchema + "}},{\"type\":\"array\",\"items\":{}}]}";
 
         public static string TypeName(RhinoObject o)
@@ -217,6 +226,17 @@ namespace RhinoMCP.Tools.Shared
             if (arr != null) { foreach (var it in arr) ResolveOne(ctx, it, a, name, res, seen); }
             else ResolveOne(ctx, t, a, name, res, seen);
             return res;
+        }
+
+        /// <summary>
+        /// Same as <see cref="Resolve"/> but reads <paramref name="name"/> from <paramref name="args"/>. Use this instead of
+        /// ArgReader.Target (Core) so that every tool resolves {query} targets identically (hidden objects included unless include_hidden:false).
+        /// </summary>
+        public static List<RhinoObject> TargetOf(ToolContext ctx, JObject args, ArgReader a, string name, bool required = true)
+        {
+            JToken t = null;
+            if (args != null) args.TryGetValue(name, out t);
+            return Resolve(ctx, t, a, name, required);
         }
 
         static void ResolveOne(ToolContext ctx, JToken t, ArgReader a, string name, List<RhinoObject> res, HashSet<Guid> seen)

@@ -66,6 +66,7 @@ namespace RhinoMCP.Tools.Shared
     public sealed class Complexity
     {
         public int Objects, Scanned;
+        public int UndoHeldDeleted;               // deleted objects still held by the undo stack (doc.Objects.Count - live)
         public long ControlPoints, MeshVertices, MeshFaces, SubdFaces, BrepFaces;
         public int RenderMeshObjects; public long RenderMeshFaces;
         public int OverCpObjects;                 // objects with a surface above max_surface_control_points
@@ -314,7 +315,11 @@ namespace RhinoMCP.Tools.Shared
                 if (maxSurf > limitCp) { c.OverCpObjects++; if (c.OverCp.Count < 50) c.OverCp.Add(o.Id); }
                 if (cp + faces > 50) all.Add(new HeavyObject { Id = o.Id, Type = o.ObjectType.ToString(), Layer = null, ControlPoints = cp, Faces = faces, RenderFaces = rf, MaxSurfaceCp = maxSurf });
             }
-            c.Objects = doc.Objects.Count;
+            // doc.Objects.Count also counts deleted objects the undo stack still holds; report live objects only.
+            int live = c.Scanned;
+            if (c.Partial) { try { live = doc.Objects.ObjectCount(settings); } catch (Exception) { } }
+            c.Objects = live;
+            c.UndoHeldDeleted = Math.Max(0, doc.Objects.Count - live);
             foreach (var h in all.OrderByDescending(x => x.Weight + x.RenderFaces / 4).Take(10))
             {
                 try { var ro = doc.Objects.FindId(h.Id); if (ro != null) { var l = doc.Layers[ro.Attributes.LayerIndex]; h.Layer = l.FullPath; } } catch (Exception) { }

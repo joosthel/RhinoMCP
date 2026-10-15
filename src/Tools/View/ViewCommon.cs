@@ -1,4 +1,5 @@
 using System;
+using RhinoMCP.Tools.Shared;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -90,7 +91,7 @@ namespace RhinoMCP.Tools.View
             {
                 bb = ReadBBox(z, a); label = "bbox"; return bb.IsValid;
             }
-            var objs = a.Target("zoom_to", ctx);
+            var objs = ObjectQuery.TargetOf(ctx, args, a, "zoom_to");
             if (a.HasErrors) return false;
             foreach (var o in objs) { var b = o.Geometry.GetBoundingBox(true); if (b.IsValid) bb.Union(b); }
             label = "target(" + objs.Count + ")";

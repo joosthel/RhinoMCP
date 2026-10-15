@@ -1,4 +1,5 @@
 using System;
+using RhinoMCP.Tools.Shared;
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json.Linq;
@@ -83,7 +84,7 @@ namespace RhinoMCP.Tools.Measure
         public ToolResult Execute(ToolContext ctx, JObject args)
         {
             var a = new ArgReader(args);
-            var objs = a.Target("target", ctx);
+            var objs = ObjectQuery.TargetOf(ctx, args, a, "target");
             int perObject = a.Int("per_object", false, 0, 0, 500);
             string groupBy = a.String("group_by");
             bool guids = a.Bool("include_guids", false);
