@@ -57,3 +57,9 @@ namespace RhinoMCP.Tools.Measure {
 - **The plugin doesn't load.** Check Rhino's command history for `RhinoMCP` lines and run `MCPStatus`.
 - **Port in use.** The server tries ports 7340–7359. The discovery file shows which one it picked.
 - **401 errors.** The token changed. Run `MCPConnect` again.
+
+## Shared live Rhino: rules for parallel work
+- **Touch the live Rhino only inside `scripts/dev-test.sh`,** which holds the lock. That includes manual `scripts/mcp.sh` calls during development. Use `scripts/dev-test.sh --` style runs, or keep exploratory calls to read-only tools.
+- `dev-test.sh` reloads **this worktree's** `dist/` DLL through `dev_reload {"dll": …}`, so builds from other worktrees can't interfere.
+- **Dispose everything deterministically.** Never let a finalizer or a thread-pool or timer callback throw. Mono exits Rhino on any unhandled exception. Traces go to `~/Library/Application Support/RhinoMCP/crash.log`.
+- Known `-_Layer` quirks: `_New` needs a trailing `_Enter`; the current layer is set with `_Current`, not `_Set`.

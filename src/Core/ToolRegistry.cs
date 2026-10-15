@@ -37,7 +37,7 @@ namespace RhinoMCP
         }
 
         /// <summary>Rebuilds the registry: core tools plus the newest tools dll. On failure the old set stays active.</summary>
-        public static ReloadResult Reload()
+        public static ReloadResult Reload(string explicitDll = null)
         {
             var res = new ReloadResult();
             try
@@ -47,7 +47,7 @@ namespace RhinoMCP
                 foreach (var t in CoreTools.Create(cfg != null && cfg.DevMode)) Add(map, t, "core");
 
                 string path;
-                Assembly asm = ToolsLoader.LoadNewest(out path);
+                Assembly asm = explicitDll != null ? ToolsLoader.Load(path = explicitDll) : ToolsLoader.LoadNewest(out path);
                 if (asm != null)
                 {
                     res.Changed = !object.ReferenceEquals(asm, _toolsAssembly);
@@ -185,6 +185,13 @@ namespace RhinoMCP
         {
             path = NewestDll();
             if (path == null) return null;
+            return Load(path);
+        }
+
+        /// <summary>Loads a specific tools dll from bytes (cached per path).</summary>
+        public static Assembly Load(string path)
+        {
+            if (!File.Exists(path)) throw new FileNotFoundException("Tools dll not found", path);
             Assembly asm;
             if (Loaded.TryGetValue(path, out asm)) return asm;
             byte[] dll = File.ReadAllBytes(path);

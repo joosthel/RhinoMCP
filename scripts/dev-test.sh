@@ -16,8 +16,10 @@ done
 trap 'rmdir "$LOCK" 2>/dev/null || true' EXIT INT TERM
 
 scripts/build.sh
-echo "==> dev_reload"
-scripts/mcp.sh call dev_reload '{}'
+# Load exactly this worktree's build: several worktrees share the deployed tools folder.
+DLL="$(ls -t "$ROOT"/dist/RhinoMCP.Tools.*.dll | head -1)"
+echo "==> dev_reload $DLL"
+scripts/mcp.sh call dev_reload "{\"dll\":\"$DLL\"}"
 
 echo "==> tests"
 PYTHONPATH="$ROOT/tests${PYTHONPATH:+:$PYTHONPATH}" python3 -m unittest -v "$@"

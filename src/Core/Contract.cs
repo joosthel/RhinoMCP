@@ -68,7 +68,27 @@ namespace RhinoMCP
         public static readonly SetStore Instance = new SetStore();
         readonly Dictionary<string, List<Guid>> _sets = new Dictionary<string, List<Guid>>();
         public void Save(string name, IEnumerable<Guid> ids) { lock (_sets) _sets[name] = ids.ToList(); }
-        public bool TryGet(string name, out List<Guid> ids) { lock (_sets) return _sets.TryGetValue(name, out ids); }
+        public const string DocKeyPrefix = "rhinomcp.set.";
+
+        /// <summary>In-memory first, then the persisted copy in the active document's Strings ("v1:" + ';'-joined GUIDs).</summary>
+        public bool TryGet(string name, out List<Guid> ids)
+        {
+            lock (_sets) if (_sets.TryGetValue(name, out ids)) return true;
+            ids = null;
+            try
+            {
+                var doc = Rhino.RhinoDoc.ActiveDoc;
+                string v = doc == null ? null : doc.Strings.GetValue(DocKeyPrefix + name);
+                if (string.IsNullOrEmpty(v) || !v.StartsWith("v1:")) return false;
+                var list = new List<Guid>();
+                foreach (var part in v.Substring(3).Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+                { Guid g; if (Guid.TryParse(part, out g)) list.Add(g); }
+                lock (_sets) _sets[name] = list;
+                ids = list;
+                return true;
+            }
+            catch (Exception) { return false; }
+        }
         public bool Delete(string name) { lock (_sets) return _sets.Remove(name); }
         public string[] Names() { lock (_sets) return _sets.Keys.OrderBy(k => k).ToArray(); }
     }
