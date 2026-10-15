@@ -1,0 +1,368 @@
+{"t": 1792068382.1, "tool": "layers_manage", "purpose": "create rebuild layer tree", "ok": true, "ms": 178}
+{"t": 1792068382.3, "tool": "geometry_create", "purpose": "reference curves: 3D outlines, plan outlines, mat grid", "ok": true, "ms": 305}
+{"t": 1792068386.9, "tool": "view_capture", "purpose": "Top capture of reference outlines", "ok": true, "ms": 749}
+{"t": 1792068394.9, "tool": "objects_query", "purpose": "what else sits near the origin", "ok": true, "ms": 40}
+{"t": 1792068395.0, "tool": "model_overview", "purpose": "model overview to find free space", "ok": true, "ms": 69}
+{"t": 1792068405.9, "tool": "objects_delete", "purpose": "delete everything on the rebuild layer tree (restart)", "ok": true, "ms": 43}
+{"t": 1792068406.2, "tool": "geometry_create", "purpose": "reference curves: 3D outlines, plan outlines, mat grid", "ok": true, "ms": 69}
+{"t": 1792068417.4, "tool": "view_capture", "purpose": "photo-matched capture", "ok": true, "ms": 588}
+{"t": 1792068463.2, "tool": "view_capture", "purpose": "photo-matched capture", "ok": true, "ms": 517}
+{"t": 1792068483.0, "tool": "freeform_surface", "purpose": "height-field surfaces (through_points 18x13)", "ok": true, "ms": 482}
+{"t": 1792068488.7, "tool": "objects_get", "purpose": "confirm field handles", "ok": true, "ms": 88}
+{"t": 1792068493.1, "tool": "geometry_edit", "purpose": "A plan outline inset 3 mm", "ok": true, "ms": 185}
+{"t": 1792068496.2, "tool": "objects_delete", "purpose": "remove test offset", "ok": true, "ms": 8}
+{"t": 1792068496.6, "tool": "geometry_edit", "purpose": "A plan outline inset 3 mm", "ok": true, "ms": 188}
+{"t": 1792068496.8, "tool": "geometry_edit", "purpose": "A plan outline inset 6 mm", "ok": true, "ms": 190}
+{"t": 1792068497.0, "tool": "geometry_create", "purpose": "A vertical cutters from plan outlines", "ok": true, "ms": 124}
+{"t": 1792068497.2, "tool": "geometry_transform", "purpose": "A field copy +2 mm", "ok": true, "ms": 11}
+{"t": 1792068497.2, "tool": "geometry_transform", "purpose": "A field copy +4 mm", "ok": true, "ms": 2}
+{"t": 1792068497.2, "tool": "geometry_edit", "purpose": "A split layer 0 by outline", "ok": true, "ms": 44}
+{"t": 1792068497.2, "tool": "objects_get", "purpose": "A layer 0: bboxes of split pieces", "ok": true, "ms": 199}
+{"t": 1792068497.4, "tool": "objects_delete", "purpose": "A layer 0: delete outer pieces", "ok": true, "ms": 1}
+{"t": 1792068497.4, "tool": "geometry_edit", "purpose": "A layer 0: thicken 2.3 mm to a solid", "ok": true, "ms": 1174}
+{"t": 1792068498.6, "tool": "objects_set_props", "purpose": "A layer 0 to element layer", "ok": true, "ms": 128}
+{"t": 1792068498.7, "tool": "geometry_edit", "purpose": "A split layer 1 by outline", "ok": true, "ms": 207}
+{"t": 1792068498.9, "tool": "objects_get", "purpose": "A layer 1: bboxes of split pieces", "ok": true, "ms": 246}
+{"t": 1792068499.2, "tool": "objects_delete", "purpose": "A layer 1: delete outer pieces", "ok": true, "ms": 22}
+{"t": 1792068499.2, "tool": "geometry_edit", "purpose": "A layer 1: thicken 2.3 mm to a solid", "ok": true, "ms": 1455}
+{"t": 1792068500.7, "tool": "objects_set_props", "purpose": "A layer 1 to element layer", "ok": true, "ms": 131}
+{"t": 1792068500.8, "tool": "geometry_edit", "purpose": "A split layer 2 by outline", "ok": true, "ms": 70}
+{"t": 1792068500.9, "tool": "objects_get", "purpose": "A layer 2: bboxes of split pieces", "ok": true, "ms": 243}
+{"t": 1792068501.1, "tool": "objects_delete", "purpose": "A layer 2: delete outer pieces", "ok": true, "ms": 3}
+{"t": 1792068501.1, "tool": "geometry_edit", "purpose": "A layer 2: thicken 2.3 mm to a solid", "ok": true, "ms": 1255}
+{"t": 1792068502.4, "tool": "objects_set_props", "purpose": "A layer 2 to element layer", "ok": true, "ms": 131}
+{"t": 1792068502.5, "tool": "geometry_edit", "purpose": "B plan outline inset 3 mm", "ok": true, "ms": 35}
+{"t": 1792068502.5, "tool": "geometry_edit", "purpose": "B plan outline inset 6 mm", "ok": true, "ms": 26}
+{"t": 1792068502.6, "tool": "geometry_create", "purpose": "B vertical cutters from plan outlines", "ok": true, "ms": 70}
+{"t": 1792068502.6, "tool": "geometry_transform", "purpose": "B field copy +2 mm", "ok": true, "ms": 10}
+{"t": 1792068502.6, "tool": "geometry_transform", "purpose": "B field copy +4 mm", "ok": true, "ms": 2}
+{"t": 1792068502.6, "tool": "geometry_edit", "purpose": "B split layer 0 by outline", "ok": false, "ms": 9, "error": {"code": "GEOMETRY_FAILED", "message": "split failed: o30569: split produced 0 piece(s): the cutter does not cross the object (or only touches it)", "guidance": "See details.items for the reason per object.", "details": {"items": [{"source": "o30569", "ok": false, "error": "split produced 0 piece(s): the cutter does not cross the object (or only touches it)"}]}}}
+{"t": 1792068517.6, "tool": "objects_delete", "purpose": "B resume: remove inverted cutters, offsets and field copies", "ok": true, "ms": 13}
+{"t": 1792068517.6, "tool": "geometry_edit", "purpose": "B plan outline inset 3 mm", "ok": true, "ms": 65}
+{"t": 1792068517.7, "tool": "geometry_edit", "purpose": "B plan outline inset 6 mm", "ok": true, "ms": 38}
+{"t": 1792068517.8, "tool": "geometry_create", "purpose": "B vertical cutters from plan outlines", "ok": true, "ms": 89}
+{"t": 1792068517.8, "tool": "geometry_transform", "purpose": "B field copy +2 mm", "ok": true, "ms": 3}
+{"t": 1792068517.8, "tool": "geometry_transform", "purpose": "B field copy +4 mm", "ok": true, "ms": 21}
+{"t": 1792068517.9, "tool": "geometry_edit", "purpose": "B split layer 0 by outline", "ok": true, "ms": 31}
+{"t": 1792068517.9, "tool": "objects_get", "purpose": "B layer 0: bboxes of split pieces", "ok": true, "ms": 205}
+{"t": 1792068518.1, "tool": "objects_delete", "purpose": "B layer 0: delete outer pieces", "ok": true, "ms": 2}
+{"t": 1792068518.1, "tool": "geometry_edit", "purpose": "B layer 0: thicken 2.3 mm to a solid", "ok": true, "ms": 1498}
+{"t": 1792068519.6, "tool": "objects_set_props", "purpose": "B layer 0 to element layer", "ok": true, "ms": 136}
+{"t": 1792068519.7, "tool": "geometry_edit", "purpose": "B split layer 1 by outline", "ok": true, "ms": 53}
+{"t": 1792068519.8, "tool": "objects_get", "purpose": "B layer 1: bboxes of split pieces", "ok": true, "ms": 197}
+{"t": 1792068520.0, "tool": "objects_delete", "purpose": "B layer 1: delete outer pieces", "ok": true, "ms": 3}
+{"t": 1792068520.0, "tool": "geometry_edit", "purpose": "B layer 1: thicken 2.3 mm to a solid", "ok": true, "ms": 1152}
+{"t": 1792068521.2, "tool": "objects_set_props", "purpose": "B layer 1 to element layer", "ok": true, "ms": 131}
+{"t": 1792068521.3, "tool": "geometry_edit", "purpose": "B split layer 2 by outline", "ok": true, "ms": 44}
+{"t": 1792068521.3, "tool": "objects_get", "purpose": "B layer 2: bboxes of split pieces", "ok": true, "ms": 159}
+{"t": 1792068521.5, "tool": "objects_delete", "purpose": "B layer 2: delete outer pieces", "ok": true, "ms": 3}
+{"t": 1792068521.5, "tool": "geometry_edit", "purpose": "B layer 2: thicken 2.3 mm to a solid", "ok": true, "ms": 733}
+{"t": 1792068522.2, "tool": "objects_set_props", "purpose": "B layer 2 to element layer", "ok": true, "ms": 68}
+{"t": 1792068531.4, "tool": "layers_manage", "purpose": "hide construction layer for capture", "ok": true, "ms": 16}
+{"t": 1792068531.8, "tool": "view_capture", "purpose": "round 1 photo-cam capture", "ok": true, "ms": 97}
+{"t": 1792068607.5, "tool": "objects_delete", "purpose": "delete everything on the rebuild layer tree (restart)", "ok": true, "ms": 33}
+{"t": 1792068607.5, "tool": "geometry_create", "purpose": "reference curves: 3D outlines, plan outlines, mat grid", "ok": true, "ms": 43}
+{"t": 1792068607.6, "tool": "freeform_surface", "purpose": "height-field surfaces (through_points 18x13)", "ok": true, "ms": 157}
+{"t": 1792068607.8, "tool": "geometry_edit", "purpose": "A plan outline inset 3 mm", "ok": true, "ms": 337}
+{"t": 1792068608.1, "tool": "geometry_edit", "purpose": "A plan outline inset 6 mm", "ok": true, "ms": 64}
+{"t": 1792068608.2, "tool": "geometry_create", "purpose": "A vertical cutters from plan outlines", "ok": true, "ms": 162}
+{"t": 1792068608.3, "tool": "geometry_transform", "purpose": "A field copy +2 mm", "ok": true, "ms": 5}
+{"t": 1792068608.3, "tool": "geometry_transform", "purpose": "A field copy +4 mm", "ok": true, "ms": 53}
+{"t": 1792068608.4, "tool": "geometry_edit", "purpose": "A split layer 0 by outline", "ok": true, "ms": 35}
+{"t": 1792068608.4, "tool": "objects_get", "purpose": "A layer 0: bboxes of split pieces", "ok": true, "ms": 202}
+{"t": 1792068608.6, "tool": "objects_delete", "purpose": "A layer 0: delete outer pieces", "ok": true, "ms": 2}
+{"t": 1792068608.6, "tool": "geometry_edit", "purpose": "A layer 0: thicken 2.3 mm to a solid", "ok": true, "ms": 3362}
+{"t": 1792068612.0, "tool": "objects_set_props", "purpose": "A layer 0 to element layer", "ok": true, "ms": 33}
+{"t": 1792068612.0, "tool": "geometry_edit", "purpose": "A split layer 1 by outline", "ok": true, "ms": 185}
+{"t": 1792068612.2, "tool": "objects_get", "purpose": "A layer 1: bboxes of split pieces", "ok": true, "ms": 263}
+{"t": 1792068612.5, "tool": "objects_delete", "purpose": "A layer 1: delete outer pieces", "ok": true, "ms": 2}
+{"t": 1792068612.5, "tool": "geometry_edit", "purpose": "A layer 1: thicken 2.3 mm to a solid", "ok": true, "ms": 2413}
+{"t": 1792068614.9, "tool": "objects_set_props", "purpose": "A layer 1 to element layer", "ok": true, "ms": 33}
+{"t": 1792068614.9, "tool": "geometry_edit", "purpose": "A split layer 2 by outline", "ok": true, "ms": 285}
+{"t": 1792068615.2, "tool": "objects_get", "purpose": "A layer 2: bboxes of split pieces", "ok": true, "ms": 241}
+{"t": 1792068615.4, "tool": "objects_delete", "purpose": "A layer 2: delete outer pieces", "ok": true, "ms": 1}
+{"t": 1792068615.5, "tool": "geometry_edit", "purpose": "A layer 2: thicken 2.3 mm to a solid", "ok": true, "ms": 2082}
+{"t": 1792068617.5, "tool": "objects_set_props", "purpose": "A layer 2 to element layer", "ok": true, "ms": 36}
+{"t": 1792068617.6, "tool": "geometry_edit", "purpose": "B plan outline inset 3 mm", "ok": true, "ms": 140}
+{"t": 1792068617.7, "tool": "geometry_edit", "purpose": "B plan outline inset 6 mm", "ok": true, "ms": 44}
+{"t": 1792068617.8, "tool": "geometry_create", "purpose": "B vertical cutters from plan outlines", "ok": true, "ms": 109}
+{"t": 1792068617.9, "tool": "geometry_transform", "purpose": "B field copy +2 mm", "ok": true, "ms": 9}
+{"t": 1792068617.9, "tool": "geometry_transform", "purpose": "B field copy +4 mm", "ok": true, "ms": 2}
+{"t": 1792068617.9, "tool": "geometry_edit", "purpose": "B split layer 0 by outline", "ok": true, "ms": 32}
+{"t": 1792068617.9, "tool": "objects_get", "purpose": "B layer 0: bboxes of split pieces", "ok": true, "ms": 179}
+{"t": 1792068618.1, "tool": "objects_delete", "purpose": "B layer 0: delete outer pieces", "ok": true, "ms": 2}
+{"t": 1792068618.1, "tool": "geometry_edit", "purpose": "B layer 0: thicken 2.3 mm to a solid", "ok": true, "ms": 1717}
+{"t": 1792068619.8, "tool": "objects_set_props", "purpose": "B layer 0 to element layer", "ok": true, "ms": 28}
+{"t": 1792068619.8, "tool": "geometry_edit", "purpose": "B split layer 1 by outline", "ok": true, "ms": 161}
+{"t": 1792068620.0, "tool": "objects_get", "purpose": "B layer 1: bboxes of split pieces", "ok": true, "ms": 178}
+{"t": 1792068620.2, "tool": "objects_delete", "purpose": "B layer 1: delete outer pieces", "ok": true, "ms": 2}
+{"t": 1792068620.2, "tool": "geometry_edit", "purpose": "B layer 1: thicken 2.3 mm to a solid", "ok": true, "ms": 1449}
+{"t": 1792068621.6, "tool": "objects_set_props", "purpose": "B layer 1 to element layer", "ok": true, "ms": 25}
+{"t": 1792068621.7, "tool": "geometry_edit", "purpose": "B split layer 2 by outline", "ok": true, "ms": 151}
+{"t": 1792068621.8, "tool": "objects_get", "purpose": "B layer 2: bboxes of split pieces", "ok": true, "ms": 156}
+{"t": 1792068622.0, "tool": "objects_delete", "purpose": "B layer 2: delete outer pieces", "ok": true, "ms": 3}
+{"t": 1792068622.0, "tool": "geometry_edit", "purpose": "B layer 2: thicken 2.3 mm to a solid", "ok": true, "ms": 929}
+{"t": 1792068622.9, "tool": "objects_set_props", "purpose": "B layer 2 to element layer", "ok": true, "ms": 174}
+{"t": 1792068630.5, "tool": "layers_manage", "purpose": "hide construction + reference layers for capture", "ok": true, "ms": 32}
+{"t": 1792068630.6, "tool": "view_capture", "purpose": "round 2 photo-cam capture", "ok": true, "ms": 199}
+{"t": 1792068630.8, "tool": "view_capture", "purpose": "round 2 front capture", "ok": false, "ms": 26, "error": {"code": "INVALID_ARGS", "message": "zoom_to target has no valid bounding box", "guidance": "Fix all listed arguments and call again. See the tool's inputSchema.", "details": {"errors": ["zoom_to target has no valid bounding box"]}}}
+{"t": 1792068644.3, "tool": "view_capture", "purpose": "round 2 photo-cam Rendered", "ok": true, "ms": 190}
+{"t": 1792068644.5, "tool": "view_capture", "purpose": "round 2 photo-cam Arctic", "ok": false, "ms": 26, "error": {"code": "INVALID_ARGS", "message": "unknown display_mode 'Arctic'. Available: Wireframe, Shaded, Rendered, Ghosted, X-Ray, Technical, Artistic, Pen, Arctic, Raytraced", "guidance": "Fix all listed arguments and call again. See the tool's inputSchema.", "details": {"errors": ["unknown display_mode 'Arctic'. Available: Wireframe, Shaded, Rendered, Ghosted, X-Ray, Technical, Artistic, Pen, Arctic, Raytraced"]}}}
+{"t": 1792068653.7, "tool": "view_capture", "purpose": "round 2 perspective check", "ok": true, "ms": 207}
+{"t": 1792068653.9, "tool": "objects_get", "purpose": "check layer color of A layer 0", "ok": true, "ms": 1478}
+{"t": 1792068661.6, "tool": "view_capture", "purpose": "list display modes", "ok": false, "ms": 9, "error": {"code": "INVALID_ARGS", "message": "unknown display_mode '?'. Available: Wireframe, Shaded, Rendered, Ghosted, X-Ray, Technical, Artistic, Pen, Arctic, Raytraced", "guidance": "Fix all listed arguments and call again. See the tool's inputSchema.", "details": {"errors": ["unknown display_mode '?'. Available: Wireframe, Shaded, Rendered, Ghosted, X-Ray, Technical, Artistic, Pen, Arctic, Raytraced"]}}}
+{"t": 1792068668.8, "tool": "view_capture", "purpose": "round 2 photo-cam Artic", "ok": false, "ms": 10, "error": {"code": "INVALID_ARGS", "message": "unknown display_mode 'Artic'. Available: Wireframe, Shaded, Rendered, Ghosted, X-Ray, Technical, Artistic, Pen, Arctic, Raytraced", "guidance": "Fix all listed arguments and call again. See the tool's inputSchema.", "details": {"errors": ["unknown display_mode 'Artic'. Available: Wireframe, Shaded, Rendered, Ghosted, X-Ray, Technical, Artistic, Pen, Arctic, Raytraced"]}}}
+{"t": 1792068668.8, "tool": "view_capture", "purpose": "round 2 photo-cam Technical", "ok": true, "ms": 1474}
+{"t": 1792068684.3, "tool": "view_capture", "purpose": "round 2 front capture", "ok": true, "ms": 216}
+{"t": 1792068684.5, "tool": "view_capture", "purpose": "round 2 low oblique capture", "ok": true, "ms": 146}
+{"t": 1792068717.3, "tool": "objects_delete", "purpose": "delete everything on the rebuild layer tree (restart)", "ok": true, "ms": 45}
+{"t": 1792068717.4, "tool": "geometry_create", "purpose": "reference curves: 3D outlines, plan outlines, mat grid", "ok": true, "ms": 52}
+{"t": 1792068717.4, "tool": "freeform_surface", "purpose": "height-field surfaces (through_points 18x13)", "ok": true, "ms": 107}
+{"t": 1792068717.5, "tool": "geometry_edit", "purpose": "A plan outline inset 3 mm", "ok": true, "ms": 308}
+{"t": 1792068717.8, "tool": "geometry_edit", "purpose": "A plan outline inset 6 mm", "ok": true, "ms": 164}
+{"t": 1792068718.0, "tool": "geometry_create", "purpose": "A vertical cutters from plan outlines", "ok": true, "ms": 154}
+{"t": 1792068718.2, "tool": "geometry_transform", "purpose": "A field copy +2 mm", "ok": true, "ms": 6}
+{"t": 1792068718.2, "tool": "geometry_transform", "purpose": "A field copy +4 mm", "ok": true, "ms": 57}
+{"t": 1792068718.2, "tool": "geometry_edit", "purpose": "A split layer 0 by outline", "ok": true, "ms": 84}
+{"t": 1792068718.3, "tool": "objects_get", "purpose": "A layer 0: bboxes of split pieces", "ok": true, "ms": 196}
+{"t": 1792068718.5, "tool": "objects_delete", "purpose": "A layer 0: delete outer pieces", "ok": true, "ms": 1}
+{"t": 1792068718.5, "tool": "geometry_edit", "purpose": "A layer 0: thicken 2.3 mm to a solid", "ok": true, "ms": 1325}
+{"t": 1792068719.8, "tool": "objects_set_props", "purpose": "A layer 0 to element layer", "ok": true, "ms": 22}
+{"t": 1792068719.9, "tool": "geometry_edit", "purpose": "A split layer 1 by outline", "ok": true, "ms": 183}
+{"t": 1792068720.0, "tool": "objects_get", "purpose": "A layer 1: bboxes of split pieces", "ok": true, "ms": 241}
+{"t": 1792068720.3, "tool": "objects_delete", "purpose": "A layer 1: delete outer pieces", "ok": true, "ms": 1}
+{"t": 1792068720.3, "tool": "geometry_edit", "purpose": "A layer 1: thicken 2.3 mm to a solid", "ok": true, "ms": 1584}
+{"t": 1792068721.9, "tool": "objects_set_props", "purpose": "A layer 1 to element layer", "ok": true, "ms": 29}
+{"t": 1792068721.9, "tool": "geometry_edit", "purpose": "A split layer 2 by outline", "ok": true, "ms": 175}
+{"t": 1792068722.1, "tool": "objects_get", "purpose": "A layer 2: bboxes of split pieces", "ok": true, "ms": 219}
+{"t": 1792068722.3, "tool": "objects_delete", "purpose": "A layer 2: delete outer pieces", "ok": true, "ms": 2}
+{"t": 1792068722.3, "tool": "geometry_edit", "purpose": "A layer 2: thicken 2.3 mm to a solid", "ok": true, "ms": 1348}
+{"t": 1792068723.6, "tool": "objects_set_props", "purpose": "A layer 2 to element layer", "ok": true, "ms": 25}
+{"t": 1792068723.7, "tool": "geometry_edit", "purpose": "B plan outline inset 3 mm", "ok": true, "ms": 141}
+{"t": 1792068723.8, "tool": "geometry_edit", "purpose": "B plan outline inset 6 mm", "ok": true, "ms": 44}
+{"t": 1792068723.9, "tool": "geometry_create", "purpose": "B vertical cutters from plan outlines", "ok": true, "ms": 105}
+{"t": 1792068724.0, "tool": "geometry_transform", "purpose": "B field copy +2 mm", "ok": true, "ms": 7}
+{"t": 1792068724.0, "tool": "geometry_transform", "purpose": "B field copy +4 mm", "ok": true, "ms": 51}
+{"t": 1792068724.0, "tool": "geometry_edit", "purpose": "B split layer 0 by outline", "ok": true, "ms": 79}
+{"t": 1792068724.1, "tool": "objects_get", "purpose": "B layer 0: bboxes of split pieces", "ok": true, "ms": 187}
+{"t": 1792068724.3, "tool": "objects_delete", "purpose": "B layer 0: delete outer pieces", "ok": true, "ms": 1}
+{"t": 1792068724.3, "tool": "geometry_edit", "purpose": "B layer 0: thicken 2.3 mm to a solid", "ok": true, "ms": 1769}
+{"t": 1792068726.1, "tool": "objects_set_props", "purpose": "B layer 0 to element layer", "ok": true, "ms": 28}
+{"t": 1792068726.1, "tool": "geometry_edit", "purpose": "B split layer 1 by outline", "ok": true, "ms": 164}
+{"t": 1792068726.3, "tool": "objects_get", "purpose": "B layer 1: bboxes of split pieces", "ok": true, "ms": 183}
+{"t": 1792068726.4, "tool": "objects_delete", "purpose": "B layer 1: delete outer pieces", "ok": true, "ms": 2}
+{"t": 1792068726.4, "tool": "geometry_edit", "purpose": "B layer 1: thicken 2.3 mm to a solid", "ok": true, "ms": 1508}
+{"t": 1792068728.0, "tool": "objects_set_props", "purpose": "B layer 1 to element layer", "ok": true, "ms": 24}
+{"t": 1792068728.0, "tool": "geometry_edit", "purpose": "B split layer 2 by outline", "ok": true, "ms": 153}
+{"t": 1792068728.1, "tool": "objects_get", "purpose": "B layer 2: bboxes of split pieces", "ok": true, "ms": 150}
+{"t": 1792068728.3, "tool": "objects_delete", "purpose": "B layer 2: delete outer pieces", "ok": true, "ms": 2}
+{"t": 1792068728.3, "tool": "geometry_edit", "purpose": "B layer 2: thicken 2.3 mm to a solid", "ok": true, "ms": 926}
+{"t": 1792068729.2, "tool": "objects_set_props", "purpose": "B layer 2 to element layer", "ok": true, "ms": 15}
+{"t": 1792068734.8, "tool": "view_capture", "purpose": "round 3 photo-cam capture", "ok": true, "ms": 385}
+{"t": 1792068735.2, "tool": "view_capture", "purpose": "round 3 front capture", "ok": true, "ms": 154}
+{"t": 1792068792.1, "tool": "geometry_create", "purpose": "rib band rails (base + top) for 3 ribs", "ok": true, "ms": 18}
+{"t": 1792068792.1, "tool": "freeform_surface", "purpose": "rib ribbons: loft base->top", "ok": true, "ms": 115}
+{"t": 1792068792.2, "tool": "geometry_edit", "purpose": "B_rib_lower_edge: thicken ribbon 1.5 mm to a solid", "ok": true, "ms": 1258}
+{"t": 1792068793.5, "tool": "objects_set_props", "purpose": "B_rib_lower_edge to element layer", "ok": true, "ms": 17}
+{"t": 1792068793.5, "tool": "geometry_edit", "purpose": "B_rib_inner_C: thicken ribbon 1.5 mm to a solid", "ok": true, "ms": 23483}
+{"t": 1792068817.0, "tool": "objects_set_props", "purpose": "B_rib_inner_C to element layer", "ok": true, "ms": 240}
+{"t": 1792068817.2, "tool": "geometry_edit", "purpose": "A_rib_opening: thicken ribbon 1.5 mm to a solid", "ok": true, "ms": 1553}
+{"t": 1792068818.7, "tool": "objects_set_props", "purpose": "A_rib_opening to element layer", "ok": true, "ms": 524}
+{"t": 1792068825.3, "tool": "geometry_boolean", "purpose": "A: union laminate layers + ribs into one solid", "ok": true, "ms": 7287}
+{"t": 1792068832.6, "tool": "objects_set_props", "purpose": "A solid to final layer", "ok": true, "ms": 568}
+{"t": 1792068833.2, "tool": "geometry_boolean", "purpose": "B: union laminate layers + ribs into one solid", "ok": false, "ms": 76894, "error": {"code": "BOOLEAN_FAILED", "message": "Boolean union failed: all 7 attempts rejected; last: volume 0 is smaller than the largest operand 16859.302344; geometry is far from the origin", "guidance": "Try: (1) geometry_validate on a and b, (2) offset the cutter slightly so faces are not coplanar (geometry_transform move by a few x tolerance), (3) make cutters overlap clearly past the target's faces, (4) split the job into one cutter at a time, (5) rebuild/simplify the cutter shape.", "details": {"op": "union", "cause": "all 7 attempts rejected; last: volume 0 is smaller than the largest operand 16859.302344; geometry is far from the origin", "tried": [{"step": "document_tolerance", "tol": 0.001, "result": "volume 0 is smaller than the largest operand 16859.302344"}, {"step": "tolerance_x0.1", "tol": 0.0001, "result": "volume 0 is smaller than the largest operand 16859.302344"}, {"step": "tolerance_x10", "tol": 0.01, "result": "volume 0 is smaller than the largest operand 16859.302344"}, {"step": "one_at_a_time", "tol": 0.001, "result": "volume 0 is smaller than the largest operand 16859.302344"}, {"step": "nudge_cutter_+", "tol": 0.001, "result": "volume 0 is smaller than the largest operand 16859.302344"}, {"step": "nudge_cutter_-", "tol": 0.001, "result": "volume 0 is smaller than the largest operand 16859.302344"}, {"step": "repair_inputs", "tol": 0.001, "result": "volume 0 is smaller than the largest operand 16859.302344"}], "notes": ["document_tolerance (tol 0.001): volume 0 is smaller than the largest operand 16859.302344", "tolerance_x0.1 (tol 0.0001): volume 0 is smaller than the largest operand 16859.302344", "tolerance_x10 (tol 0.01): volume 0 is smaller than the largest operand 16859.302344", "one_at_a_time (tol 0.001): volume 0 is smaller than the largest operand 16859.302344", "nudge_cutter_+ (tol 0.001): volume 0 is smaller than the largest operand 16859.302344", "nudge_cutter_- (tol 0.001): volume 0 is smaller than the largest operand 16859.302344", "repair_inputs (tol 0.001): volume 0 is smaller than the largest operand 16859.302344"], "diagnosis": {"max_distance_from_origin": 3182.572021, "far_from_origin": "geometry is very far from the origin relative to tolerance; move it near 0,0,0 for robust booleans"}, "inputs_changed": false}}}
+{"t": 1792068910.3, "tool": "clash_check", "purpose": "clash check A vs B", "ok": true, "ms": 158}
+{"t": 1792068910.4, "tool": "measure_distance", "purpose": "min distance A to B", "ok": false, "ms": 9, "error": {"code": "INVALID_ARGS", "message": "'b' is required (handle, GUID, {set} or {query})", "guidance": "Fix all listed arguments and call again. See the tool's inputSchema.", "details": {"errors": ["'b' is required (handle, GUID, {set} or {query})"]}}}
+{"t": 1792068925.1, "tool": "geometry_validate", "purpose": "validate B parts before union", "ok": true, "ms": 15005}
+{"t": 1792068945.6, "tool": "geometry_boolean", "purpose": "B: union laminate layers only (diagnose)", "ok": true, "ms": 5172}
+{"t": 1792068953.8, "tool": "geometry_boolean", "purpose": "B: laminate + B_rib_lower_edge (diagnose)", "ok": true, "ms": 6341}
+{"t": 1792068960.1, "tool": "geometry_boolean", "purpose": "B: laminate + B_rib_inner_C (diagnose)", "ok": false, "ms": 54242, "error": {"code": "BOOLEAN_FAILED", "message": "Boolean union failed: all 6 attempts rejected; last: volume 0 is smaller than the largest operand 28778.157184; geometry is far from the origin", "guidance": "Try: (1) geometry_validate on a and b, (2) offset the cutter slightly so faces are not coplanar (geometry_transform move by a few x tolerance), (3) make cutters overlap clearly past the target's faces, (4) split the job into one cutter at a time, (5) rebuild/simplify the cutter shape.", "details": {"op": "union", "cause": "all 6 attempts rejected; last: volume 0 is smaller than the largest operand 28778.157184; geometry is far from the origin", "tried": [{"step": "document_tolerance", "tol": 0.001, "result": "volume 0 is smaller than the largest operand 28778.157184"}, {"step": "tolerance_x0.1", "tol": 0.0001, "result": "volume 0 is smaller than the largest operand 28778.157184"}, {"step": "tolerance_x10", "tol": 0.01, "result": "volume 0 is smaller than the largest operand 28778.157184"}, {"step": "nudge_cutter_+", "tol": 0.001, "result": "volume 0 is smaller than the largest operand 28778.157184"}, {"step": "nudge_cutter_-", "tol": 0.001, "result": "volume 0 is smaller than the largest operand 28778.157184"}, {"step": "repair_inputs", "tol": 0.001, "result": "volume 0 is smaller than the largest operand 28778.157184"}], "notes": ["document_tolerance (tol 0.001): volume 0 is smaller than the largest operand 28778.157184", "tolerance_x0.1 (tol 0.0001): volume 0 is smaller than the largest operand 28778.157184", "tolerance_x10 (tol 0.01): volume 0 is smaller than the largest operand 28778.157184", "nudge_cutter_+ (tol 0.001): volume 0 is smaller than the largest operand 28778.157184", "nudge_cutter_- (tol 0.001): volume 0 is smaller than the largest operand 28778.157184", "repair_inputs (tol 0.001): volume 0 is smaller than the largest operand 28778.157184"], "diagnosis": {"max_distance_from_origin": 3182.572021, "far_from_origin": "geometry is very far from the origin relative to tolerance; move it near 0,0,0 for robust booleans"}, "inputs_changed": false}}}
+{"t": 1792069029.1, "tool": "objects_delete", "purpose": "delete everything on the rebuild layer tree (restart)", "ok": true, "ms": 63}
+{"t": 1792069029.1, "tool": "geometry_create", "purpose": "reference curves: 3D outlines, plan outlines, mat grid", "ok": true, "ms": 42}
+{"t": 1792069029.2, "tool": "freeform_surface", "purpose": "height-field surfaces (through_points 18x13)", "ok": true, "ms": 74}
+{"t": 1792069029.3, "tool": "geometry_edit", "purpose": "A plan outline inset 3 mm", "ok": true, "ms": 301}
+{"t": 1792069029.6, "tool": "geometry_edit", "purpose": "A plan outline inset 6 mm", "ok": true, "ms": 157}
+{"t": 1792069029.7, "tool": "geometry_create", "purpose": "A vertical cutters from plan outlines", "ok": true, "ms": 150}
+{"t": 1792069029.9, "tool": "geometry_transform", "purpose": "A field copy +2 mm", "ok": true, "ms": 8}
+{"t": 1792069029.9, "tool": "geometry_transform", "purpose": "A field copy +4 mm", "ok": true, "ms": 3}
+{"t": 1792069029.9, "tool": "geometry_edit", "purpose": "A split layer 0 by outline", "ok": true, "ms": 40}
+{"t": 1792069029.9, "tool": "objects_get", "purpose": "A layer 0: bboxes of split pieces", "ok": true, "ms": 182}
+{"t": 1792069030.1, "tool": "objects_delete", "purpose": "A layer 0: delete outer pieces", "ok": true, "ms": 2}
+{"t": 1792069030.1, "tool": "geometry_edit", "purpose": "A layer 0: thicken 2.3 mm to a solid", "ok": true, "ms": 1302}
+{"t": 1792069031.4, "tool": "objects_set_props", "purpose": "A layer 0 to element layer", "ok": true, "ms": 24}
+{"t": 1792069031.4, "tool": "geometry_edit", "purpose": "A split layer 1 by outline", "ok": true, "ms": 184}
+{"t": 1792069031.6, "tool": "objects_get", "purpose": "A layer 1: bboxes of split pieces", "ok": true, "ms": 227}
+{"t": 1792069031.8, "tool": "objects_delete", "purpose": "A layer 1: delete outer pieces", "ok": true, "ms": 8}
+{"t": 1792069031.9, "tool": "geometry_edit", "purpose": "A layer 1: thicken 2.3 mm to a solid", "ok": true, "ms": 1565}
+{"t": 1792069033.4, "tool": "objects_set_props", "purpose": "A layer 1 to element layer", "ok": true, "ms": 26}
+{"t": 1792069033.4, "tool": "geometry_edit", "purpose": "A split layer 2 by outline", "ok": true, "ms": 181}
+{"t": 1792069033.6, "tool": "objects_get", "purpose": "A layer 2: bboxes of split pieces", "ok": true, "ms": 212}
+{"t": 1792069033.8, "tool": "objects_delete", "purpose": "A layer 2: delete outer pieces", "ok": true, "ms": 7}
+{"t": 1792069033.8, "tool": "geometry_edit", "purpose": "A layer 2: thicken 2.3 mm to a solid", "ok": true, "ms": 1320}
+{"t": 1792069035.2, "tool": "objects_set_props", "purpose": "A layer 2 to element layer", "ok": true, "ms": 28}
+{"t": 1792069035.2, "tool": "geometry_edit", "purpose": "B plan outline inset 3 mm", "ok": true, "ms": 151}
+{"t": 1792069035.4, "tool": "geometry_edit", "purpose": "B plan outline inset 6 mm", "ok": true, "ms": 29}
+{"t": 1792069035.4, "tool": "geometry_create", "purpose": "B vertical cutters from plan outlines", "ok": true, "ms": 84}
+{"t": 1792069035.5, "tool": "geometry_transform", "purpose": "B field copy +2 mm", "ok": true, "ms": 9}
+{"t": 1792069035.5, "tool": "geometry_transform", "purpose": "B field copy +4 mm", "ok": true, "ms": 14}
+{"t": 1792069035.5, "tool": "geometry_edit", "purpose": "B split layer 0 by outline", "ok": true, "ms": 43}
+{"t": 1792069035.5, "tool": "objects_get", "purpose": "B layer 0: bboxes of split pieces", "ok": true, "ms": 180}
+{"t": 1792069035.7, "tool": "objects_delete", "purpose": "B layer 0: delete outer pieces", "ok": true, "ms": 2}
+{"t": 1792069035.7, "tool": "geometry_edit", "purpose": "B layer 0: thicken 2.3 mm to a solid", "ok": true, "ms": 1718}
+{"t": 1792069037.4, "tool": "objects_set_props", "purpose": "B layer 0 to element layer", "ok": true, "ms": 30}
+{"t": 1792069037.5, "tool": "geometry_edit", "purpose": "B split layer 1 by outline", "ok": true, "ms": 179}
+{"t": 1792069037.7, "tool": "objects_get", "purpose": "B layer 1: bboxes of split pieces", "ok": true, "ms": 176}
+{"t": 1792069037.8, "tool": "objects_delete", "purpose": "B layer 1: delete outer pieces", "ok": true, "ms": 20}
+{"t": 1792069037.9, "tool": "geometry_edit", "purpose": "B layer 1: thicken 2.3 mm to a solid", "ok": true, "ms": 1486}
+{"t": 1792069039.3, "tool": "objects_set_props", "purpose": "B layer 1 to element layer", "ok": true, "ms": 40}
+{"t": 1792069039.4, "tool": "geometry_edit", "purpose": "B split layer 2 by outline", "ok": true, "ms": 170}
+{"t": 1792069039.6, "tool": "objects_get", "purpose": "B layer 2: bboxes of split pieces", "ok": true, "ms": 139}
+{"t": 1792069039.7, "tool": "objects_delete", "purpose": "B layer 2: delete outer pieces", "ok": true, "ms": 25}
+{"t": 1792069039.7, "tool": "geometry_edit", "purpose": "B layer 2: thicken 2.3 mm to a solid", "ok": true, "ms": 928}
+{"t": 1792069040.6, "tool": "objects_set_props", "purpose": "B layer 2 to element layer", "ok": true, "ms": 25}
+{"t": 1792069040.9, "tool": "geometry_create", "purpose": "rib band rails (base + top) for 3 ribs", "ok": true, "ms": 6}
+{"t": 1792069040.9, "tool": "freeform_surface", "purpose": "rib ribbons: loft base->top", "ok": true, "ms": 71}
+{"t": 1792069041.0, "tool": "geometry_edit", "purpose": "B_rib_lower_edge: thicken ribbon 1.5 mm to a solid", "ok": true, "ms": 1214}
+{"t": 1792069042.2, "tool": "objects_set_props", "purpose": "B_rib_lower_edge to element layer", "ok": true, "ms": 42}
+{"t": 1792069042.2, "tool": "geometry_edit", "purpose": "B_rib_inner_C: thicken ribbon 1.5 mm to a solid", "ok": true, "ms": 22821}
+{"t": 1792069065.1, "tool": "objects_set_props", "purpose": "B_rib_inner_C to element layer", "ok": true, "ms": 71}
+{"t": 1792069065.1, "tool": "geometry_edit", "purpose": "A_rib_opening: thicken ribbon 1.5 mm to a solid", "ok": true, "ms": 1949}
+{"t": 1792069067.1, "tool": "objects_set_props", "purpose": "A_rib_opening to element layer", "ok": true, "ms": 42}
+{"t": 1792069067.1, "tool": "geometry_boolean", "purpose": "A: union laminate layers + ribs into one solid", "ok": true, "ms": 6989}
+{"t": 1792069074.1, "tool": "objects_set_props", "purpose": "A solid to final layer", "ok": true, "ms": 427}
+{"t": 1792069074.5, "tool": "geometry_boolean", "purpose": "B: union laminate layers + ribs into one solid", "ok": false, "ms": 90002, "error": {"code": "PROTOCOL", "message": "timed out"}}
+{"t": 1792069173.0, "tool": "objects_query", "purpose": "state after B union timeout", "ok": true, "ms": 70406}
+{"t": 1792069249.7, "tool": "geometry_boolean", "purpose": "B: union laminate layers (stepwise 1)", "ok": true, "ms": 4841}
+{"t": 1792069254.5, "tool": "geometry_boolean", "purpose": "B: + lower-edge rib (stepwise 2)", "ok": true, "ms": 6069}
+{"t": 1792069260.6, "tool": "geometry_boolean", "purpose": "B: + inner-C rib (stepwise 3)", "ok": false, "ms": 90003, "error": {"code": "PROTOCOL", "message": "timed out"}}
+{"t": 1792069365.5, "tool": "objects_delete", "purpose": "delete failing inner-C rib solid", "ok": true, "ms": 30661}
+{"t": 1792069396.3, "tool": "geometry_create", "purpose": "inner-C rib rails, inset 4 mm", "ok": true, "ms": 52}
+{"t": 1792069396.4, "tool": "freeform_surface", "purpose": "inner-C ribbon loft", "ok": true, "ms": 33}
+{"t": 1792069396.4, "tool": "geometry_edit", "purpose": "inner-C ribbon -> 1.5 mm solid", "ok": true, "ms": 23966}
+{"t": 1792069420.4, "tool": "objects_set_props", "purpose": "inner-C rib to element layer", "ok": true, "ms": 52}
+{"t": 1792069420.4, "tool": "geometry_boolean", "purpose": "B: + inner-C rib v2", "ok": false, "ms": 90001, "error": {"code": "PROTOCOL", "message": "timed out"}}
+{"t": 1792069522.2, "tool": "objects_query", "purpose": "check final layer after timeout", "ok": true, "ms": 54148}
+{"t": 1792069576.3, "tool": "objects_delete", "purpose": "delete inner-C rib v2", "ok": true, "ms": 21}
+{"t": 1792069576.6, "tool": "geometry_create", "purpose": "inner-C rib rails v3 (shorter)", "ok": true, "ms": 4}
+{"t": 1792069576.6, "tool": "freeform_surface", "purpose": "inner-C ribbon v3", "ok": true, "ms": 49}
+{"t": 1792069576.6, "tool": "geometry_edit", "purpose": "inner-C ribbon v3 -> solid", "ok": true, "ms": 30888}
+{"t": 1792069607.5, "tool": "objects_set_props", "purpose": "rib v3 to element layer", "ok": true, "ms": 238}
+{"t": 1792069607.7, "tool": "geometry_boolean", "purpose": "B: + inner-C rib v3", "ok": false, "ms": 90003, "error": {"code": "PROTOCOL", "message": "timed out"}}
+{"t": 1792069705.7, "tool": "clash_check", "purpose": "inner-C rib vs B body: do they intersect", "ok": false, "ms": 90008, "error": {"code": "PROTOCOL", "message": "timed out"}}
+{"t": 1792069795.7, "tool": "objects_set_props", "purpose": "B body solid to final layer", "ok": true, "ms": 5808}
+{"t": 1792069801.5, "tool": "objects_set_props", "purpose": "B inner-C rib solid to final layer (union timed out)", "ok": true, "ms": 9}
+{"t": 1792069801.6, "tool": "clash_check", "purpose": "A vs B: clash + clearance < 3 mm", "ok": true, "ms": 84}
+{"t": 1792069801.6, "tool": "measure_distance", "purpose": "min distance A to B (hover gap)", "ok": true, "ms": 97}
+{"t": 1792069813.4, "tool": "geometry_boolean", "purpose": "notch A where B's tip rests (A minus B, keep B)", "ok": true, "ms": 7776}
+{"t": 1792069821.2, "tool": "objects_delete", "purpose": "remove un-notched A (keep_inputs kept it)", "ok": true, "ms": 359}
+{"t": 1792069821.5, "tool": "objects_set_props", "purpose": "name notched A", "ok": true, "ms": 43}
+{"t": 1792069821.6, "tool": "measure_distance", "purpose": "A-B distance after notch", "ok": true, "ms": 306}
+{"t": 1792069821.9, "tool": "clash_check", "purpose": "A vs B clash after notch", "ok": true, "ms": 297}
+{"t": 1792069836.7, "tool": "layers_move_objects", "purpose": "keep construction curves (rib rails, inset outlines) on reference_curves", "ok": false, "ms": 52, "error": {"code": "NOT_FOUND", "message": "The target matched no objects", "guidance": "Check the handle/set/query. {query} targets exclude hidden objects."}}
+{"t": 1792069836.8, "tool": "objects_delete", "purpose": "delete construction surfaces/cutters", "ok": true, "ms": 13}
+{"t": 1792069836.8, "tool": "objects_query", "purpose": "inventory of the rebuild tree", "ok": true, "ms": 17}
+{"t": 1792069836.8, "tool": "geometry_validate", "purpose": "validate final solids", "ok": true, "ms": 22453}
+{"t": 1792069859.3, "tool": "measure", "purpose": "measure final solids", "ok": true, "ms": 22437}
+{"t": 1792069881.7, "tool": "analyze_surface", "purpose": "curvature stats o30948", "ok": true, "ms": 1933}
+{"t": 1792069883.6, "tool": "analyze_surface", "purpose": "curvature stats o30939", "ok": true, "ms": 1475}
+{"t": 1792069906.7, "tool": "objects_delete", "purpose": "delete heavy inner-C rib (40-pt rails, slow offset)", "ok": true, "ms": 19}
+{"t": 1792069906.8, "tool": "geometry_create", "purpose": "light inner-C rib rails (12 pts)", "ok": true, "ms": 4}
+{"t": 1792069906.8, "tool": "freeform_surface", "purpose": "light inner-C ribbon loft", "ok": true, "ms": 20}
+{"t": 1792069906.9, "tool": "geometry_edit", "purpose": "light inner-C ribbon -> solid", "ok": true, "ms": 2239}
+{"t": 1792069909.1, "tool": "objects_set_props", "purpose": "light rib to final", "ok": true, "ms": 29}
+{"t": 1792069909.1, "tool": "objects_delete", "purpose": "delete ribbon surface", "ok": true, "ms": 118}
+{"t": 1792069916.7, "tool": "geometry_boolean", "purpose": "B: + light inner-C rib (single attempt)", "ok": true, "ms": 9317}
+{"t": 1792069926.0, "tool": "objects_set_props", "purpose": "name B solid", "ok": true, "ms": 541}
+{"t": 1792069926.5, "tool": "geometry_validate", "purpose": "validate final solids (after simplification)", "ok": true, "ms": 9138}
+{"t": 1792069935.7, "tool": "measure", "purpose": "measure final solids (after simplification)", "ok": true, "ms": 8880}
+{"t": 1792069944.5, "tool": "measure_distance", "purpose": "A-B distance final", "ok": true, "ms": 275}
+{"t": 1792069952.1, "tool": "analyze_surface", "purpose": "cp counts + curvature o30948", "ok": true, "ms": 1895}
+{"t": 1792069954.0, "tool": "analyze_surface", "purpose": "cp counts + curvature o30953", "ok": true, "ms": 3274}
+{"t": 1792069969.3, "tool": "layers_manage", "purpose": "reference + construction layers off for final captures", "ok": true, "ms": 30}
+{"t": 1792069969.3, "tool": "view_capture", "purpose": "final photo-matched capture", "ok": true, "ms": 1421}
+{"t": 1792069970.7, "tool": "view_capture", "purpose": "final Top capture", "ok": true, "ms": 122}
+{"t": 1792069970.9, "tool": "view_capture", "purpose": "final Front capture", "ok": true, "ms": 195}
+{"t": 1792069971.1, "tool": "view_capture", "purpose": "final Right capture", "ok": true, "ms": 269}
+{"t": 1792069971.3, "tool": "view_capture", "purpose": "final low oblique perspective", "ok": true, "ms": 136}
+{"t": 1792069971.5, "tool": "view_capture_sheet", "purpose": "final 2x2 sheet (zooms to ALL objects)", "ok": true, "ms": 459}
+{"t": 1792069971.9, "tool": "view_set", "purpose": "set active view to photo camera", "ok": true, "ms": 68}
+{"t": 1792069972.0, "tool": "views_named", "purpose": "save named view rebuild_photo_cam", "ok": true, "ms": 3}
+{"t": 1792070011.5, "tool": "objects_delete", "purpose": "delete everything on the rebuild layer tree (restart)", "ok": true, "ms": 33}
+{"t": 1792070011.6, "tool": "geometry_create", "purpose": "reference curves: 3D outlines, plan outlines, mat grid", "ok": true, "ms": 37}
+{"t": 1792070011.6, "tool": "freeform_surface", "purpose": "height-field surfaces (through_points 18x13)", "ok": true, "ms": 73}
+{"t": 1792070011.7, "tool": "geometry_edit", "purpose": "A plan outline inset 3 mm", "ok": true, "ms": 290}
+{"t": 1792070012.0, "tool": "geometry_edit", "purpose": "A plan outline inset 6 mm", "ok": true, "ms": 151}
+{"t": 1792070012.1, "tool": "geometry_create", "purpose": "A vertical cutters from plan outlines", "ok": true, "ms": 142}
+{"t": 1792070012.3, "tool": "geometry_transform", "purpose": "A field copy +2 mm", "ok": true, "ms": 4}
+{"t": 1792070012.3, "tool": "geometry_transform", "purpose": "A field copy +4 mm", "ok": true, "ms": 3}
+{"t": 1792070012.3, "tool": "geometry_edit", "purpose": "A split layer 0 by outline", "ok": true, "ms": 37}
+{"t": 1792070012.3, "tool": "objects_get", "purpose": "A layer 0: bboxes of split pieces", "ok": true, "ms": 162}
+{"t": 1792070012.5, "tool": "objects_delete", "purpose": "A layer 0: delete outer pieces", "ok": true, "ms": 2}
+{"t": 1792070012.5, "tool": "geometry_edit", "purpose": "A layer 0: thicken 2.3 mm to a solid", "ok": true, "ms": 1262}
+{"t": 1792070013.8, "tool": "objects_set_props", "purpose": "A layer 0 to element layer", "ok": true, "ms": 13}
+{"t": 1792070013.8, "tool": "geometry_edit", "purpose": "A split layer 1 by outline", "ok": true, "ms": 199}
+{"t": 1792070014.0, "tool": "objects_get", "purpose": "A layer 1: bboxes of split pieces", "ok": true, "ms": 231}
+{"t": 1792070014.2, "tool": "objects_delete", "purpose": "A layer 1: delete outer pieces", "ok": true, "ms": 3}
+{"t": 1792070014.2, "tool": "geometry_edit", "purpose": "A layer 1: thicken 2.3 mm to a solid", "ok": true, "ms": 1522}
+{"t": 1792070015.7, "tool": "objects_set_props", "purpose": "A layer 1 to element layer", "ok": true, "ms": 19}
+{"t": 1792070015.7, "tool": "geometry_edit", "purpose": "A split layer 2 by outline", "ok": true, "ms": 224}
+{"t": 1792070016.0, "tool": "objects_get", "purpose": "A layer 2: bboxes of split pieces", "ok": true, "ms": 212}
+{"t": 1792070016.2, "tool": "objects_delete", "purpose": "A layer 2: delete outer pieces", "ok": true, "ms": 2}
+{"t": 1792070016.2, "tool": "geometry_edit", "purpose": "A layer 2: thicken 2.3 mm to a solid", "ok": true, "ms": 1314}
+{"t": 1792070017.5, "tool": "objects_set_props", "purpose": "A layer 2 to element layer", "ok": true, "ms": 21}
+{"t": 1792070017.5, "tool": "geometry_edit", "purpose": "B plan outline inset 3 mm", "ok": true, "ms": 176}
+{"t": 1792070017.7, "tool": "geometry_edit", "purpose": "B plan outline inset 6 mm", "ok": true, "ms": 24}
+{"t": 1792070017.7, "tool": "geometry_create", "purpose": "B vertical cutters from plan outlines", "ok": true, "ms": 78}
+{"t": 1792070017.8, "tool": "geometry_transform", "purpose": "B field copy +2 mm", "ok": true, "ms": 10}
+{"t": 1792070017.8, "tool": "geometry_transform", "purpose": "B field copy +4 mm", "ok": true, "ms": 2}
+{"t": 1792070017.8, "tool": "geometry_edit", "purpose": "B split layer 0 by outline", "ok": true, "ms": 38}
+{"t": 1792070017.9, "tool": "objects_get", "purpose": "B layer 0: bboxes of split pieces", "ok": true, "ms": 169}
+{"t": 1792070018.0, "tool": "objects_delete", "purpose": "B layer 0: delete outer pieces", "ok": true, "ms": 2}
+{"t": 1792070018.0, "tool": "geometry_edit", "purpose": "B layer 0: thicken 2.3 mm to a solid", "ok": true, "ms": 1719}
+{"t": 1792070019.8, "tool": "objects_set_props", "purpose": "B layer 0 to element layer", "ok": true, "ms": 24}
+{"t": 1792070019.8, "tool": "geometry_edit", "purpose": "B split layer 1 by outline", "ok": true, "ms": 192}
+{"t": 1792070020.0, "tool": "objects_get", "purpose": "B layer 1: bboxes of split pieces", "ok": true, "ms": 183}
+{"t": 1792070020.2, "tool": "objects_delete", "purpose": "B layer 1: delete outer pieces", "ok": true, "ms": 3}
+{"t": 1792070020.2, "tool": "geometry_edit", "purpose": "B layer 1: thicken 2.3 mm to a solid", "ok": true, "ms": 1490}
+{"t": 1792070021.7, "tool": "objects_set_props", "purpose": "B layer 1 to element layer", "ok": true, "ms": 24}
+{"t": 1792070021.7, "tool": "geometry_edit", "purpose": "B split layer 2 by outline", "ok": true, "ms": 184}
+{"t": 1792070021.9, "tool": "objects_get", "purpose": "B layer 2: bboxes of split pieces", "ok": true, "ms": 143}
+{"t": 1792070022.0, "tool": "objects_delete", "purpose": "B layer 2: delete outer pieces", "ok": true, "ms": 2}
+{"t": 1792070022.0, "tool": "geometry_edit", "purpose": "B layer 2: thicken 2.3 mm to a solid", "ok": true, "ms": 917}
+{"t": 1792070022.9, "tool": "objects_set_props", "purpose": "B layer 2 to element layer", "ok": true, "ms": 18}
+{"t": 1792070023.1, "tool": "geometry_create", "purpose": "rib band rails (base + top) for 3 ribs", "ok": true, "ms": 19}
+{"t": 1792070023.1, "tool": "freeform_surface", "purpose": "rib ribbons: loft base->top", "ok": true, "ms": 24}
+{"t": 1792070023.1, "tool": "geometry_edit", "purpose": "B_rib_lower_edge: thicken ribbon 1.5 mm to a solid", "ok": true, "ms": 77}
+{"t": 1792070023.2, "tool": "objects_set_props", "purpose": "B_rib_lower_edge to element layer", "ok": true, "ms": 13}
+{"t": 1792070023.2, "tool": "geometry_edit", "purpose": "B_rib_inner_C: thicken ribbon 1.5 mm to a solid", "ok": true, "ms": 108}
+{"t": 1792070023.3, "tool": "objects_set_props", "purpose": "B_rib_inner_C to element layer", "ok": true, "ms": 13}
+{"t": 1792070023.3, "tool": "geometry_edit", "purpose": "A_rib_opening: thicken ribbon 1.5 mm to a solid", "ok": true, "ms": 176}
+{"t": 1792070023.5, "tool": "objects_set_props", "purpose": "A_rib_opening to element layer", "ok": true, "ms": 14}
+{"t": 1792070023.5, "tool": "geometry_boolean", "purpose": "A: union laminate layers + ribs into one solid", "ok": true, "ms": 5609}
+{"t": 1792070029.1, "tool": "objects_set_props", "purpose": "A solid to final layer", "ok": true, "ms": 774}
+{"t": 1792070029.9, "tool": "geometry_boolean", "purpose": "B: union laminate layers + ribs into one solid", "ok": true, "ms": 5462}
+{"t": 1792070035.4, "tool": "objects_set_props", "purpose": "B solid to final layer", "ok": true, "ms": 11}
+{"t": 1792070035.4, "tool": "geometry_boolean", "purpose": "notch A where B's tip rests (A minus B, keep B)", "ok": true, "ms": 6460}
+{"t": 1792070041.8, "tool": "objects_delete", "purpose": "remove un-notched A", "ok": true, "ms": 668}
+{"t": 1792070042.5, "tool": "objects_set_props", "purpose": "name notched A", "ok": true, "ms": 13}
+{"t": 1792070042.5, "tool": "objects_delete", "purpose": "delete construction surfaces/cutters/rails", "ok": true, "ms": 16}
+{"t": 1792070052.8, "tool": "objects_get", "purpose": "inspect B union pieces", "ok": true, "ms": 2057}
+{"t": 1792070058.0, "tool": "objects_get", "purpose": "inspect B union pieces", "ok": true, "ms": 2063}
+{"t": 1792070071.7, "tool": "objects_delete", "purpose": "delete 2 boolean debris slivers (0.27 and -0.01 mm3)", "ok": true, "ms": 12}
+{"t": 1792070071.7, "tool": "objects_set_props", "purpose": "name B solid", "ok": true, "ms": 117}
+{"t": 1792070071.8, "tool": "geometry_validate", "purpose": "validate final solids (round 5)", "ok": true, "ms": 4555}
+{"t": 1792070076.4, "tool": "measure", "purpose": "measure final (round 5)", "ok": true, "ms": 4503}
+{"t": 1792070080.9, "tool": "measure_distance", "purpose": "A-B distance (round 5)", "ok": true, "ms": 280}
+{"t": 1792070081.1, "tool": "clash_check", "purpose": "A vs B contact/overlap volume", "ok": true, "ms": 916}
+{"t": 1792070082.1, "tool": "analyze_surface", "purpose": "cp counts + curvature o31070", "ok": true, "ms": 1288}
+{"t": 1792070083.3, "tool": "analyze_surface", "purpose": "cp counts + curvature o31067", "ok": true, "ms": 974}
+{"t": 1792070092.7, "tool": "view_capture", "purpose": "final photo-matched capture (round 5)", "ok": true, "ms": 132}
+{"t": 1792070092.8, "tool": "view_capture", "purpose": "final Top capture (round 5)", "ok": true, "ms": 118}
+{"t": 1792070092.9, "tool": "view_capture", "purpose": "final Front capture (round 5)", "ok": true, "ms": 127}
+{"t": 1792070093.1, "tool": "view_capture", "purpose": "final Right capture (round 5)", "ok": true, "ms": 190}
+{"t": 1792070093.2, "tool": "view_capture", "purpose": "final low oblique (round 5)", "ok": true, "ms": 132}
+{"t": 1792070093.4, "tool": "view_capture", "purpose": "named view rebuild_photo_cam check (Shaded)", "ok": true, "ms": 114}
+{"t": 1792070093.5, "tool": "view_capture_sheet", "purpose": "final 2x2 sheet (zooms to ALL)", "ok": true, "ms": 776}
+{"t": 1792070107.7, "tool": "view_capture", "purpose": "final photo cam Rendered", "ok": true, "ms": 128}
+{"t": 1792070118.2, "tool": "layers_manage", "purpose": "delete empty construction layer", "ok": true, "ms": 27}
+{"t": 1792070118.2, "tool": "layers_list", "purpose": "final layer check", "ok": true, "ms": 58}
