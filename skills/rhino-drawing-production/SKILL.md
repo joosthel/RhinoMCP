@@ -5,7 +5,7 @@ description: Produce clean 2D drawings from a Rhino 3D model: plans, sections, e
 
 # Drawing production
 
-Pipeline: views, clipping, clean Make2D, layers and weights, layout at scale, title block, export. The tools below are M2; check `tools/list`. If missing, use the listed `run_command` fallback and warn the user the result is not cleaned.
+Pipeline: views, clipping, clean Make2D, layers and weights, layout at scale, title block, export. `drawing_make2d` and `drawing_clipping_plane` exist; the layout, annotate and export tools may not yet, so check `tools/list`. If a tool is missing, use the `run_command` fallback and warn the user the result is not cleaned.
 
 ## 1. Prepare
 
@@ -16,8 +16,8 @@ Pipeline: views, clipping, clean Make2D, layers and weights, layout at scale, ti
 
 ## 2. Views and clipping
 
-- Plans: cut at about 1.0 to 1.2 m above floor (verify local convention; US often 4 ft / 1.2 m). Use `drawing_clipping_plane` with plane and depth. Section lines for sections and elevations.
-- Elevations: no clipping, parallel projection, view direction by name or vector.
+- Plans: cut at about 1.0 to 1.2 m above floor (verify local convention; US often 4 ft / 1.2 m). `drawing_clipping_plane {z: 1200, looking: 'down'}` returns a handle and the matching `view`. Sections: `{section_line: {from, to}, looking: 'left'|'right'}`; pass the returned `view` to `drawing_make2d`. The side the plane normal points to stays, the other side is clipped (Rhino's own convention).
+- Elevations: no clipping, parallel projection, view direction by name (Front, Back, Left, Right) or vector. Do not clip a section exactly on a shared wall/slab face: shift it by a small offset.
 - `view_set` to a parallel projection in the matching named view (`views_named`).
 
 ## 3. Make2D, clean
@@ -29,13 +29,14 @@ Call `drawing_make2d` with the set, view or plane, clipping planes, scale, origi
 - `duplicates_removed`, `overlaps_removed`
 - curve counts by type (line, arc, polyline, NURBS)
 - `open_ends`, `closed_section_loops`, `hatches_created`
-- `bbox`, `scale_check`, `mesh_sources`
+- `bbox`, `scale_check`, `mesh_sources`, `kept_section_duplicates`, `open_section_end_gaps`
+- with `compare_native: true`: Rhino's own Make2D on the same input (`native.curves`, `curves_by_kind`, `open_ends`) for a side-by-side check; use it only when you need the comparison, it runs a second command.
 
 Decision rules: `open_ends` above zero means gaps (raise tolerance only with consent, or fix the source). `closed_section_loops` lower than the number of cut solids means unclosed sections. `mesh_sources` above zero means jagged output. NURBS counts high means simplify failed on free-form edges (acceptable for organic shapes). Report the key numbers to the user in two lines.
 
 ## 4. Layers and weights
 
-Output layers: `Drawing::<view>::{Visible, Hidden, Section, Silhouette, Tangent, Hatch, Annotation}`. Weights per ISO 128 steps: [references/lineweights.md](references/lineweights.md). Lighter at small scales, heavier at large scales. Colour ByLayer. Do not set widths below 0.13 mm for PDF: widths under about 0.04 mm are converted to hairlines in Illustrator.
+Output layers: `Drawing::<view>::{Section, Silhouette, Visible, Hidden, Tangent, Hatch}` (`Annotation` is for later tools). Override widths, linetypes, colours and suffixes with `layer_scheme`. Weights per ISO 128 steps: [references/lineweights.md](references/lineweights.md). Lighter at small scales, heavier at large scales. Colour ByLayer. Do not set widths below 0.13 mm for PDF: widths under about 0.04 mm are converted to hairlines in Illustrator.
 
 ## 5. Hatches
 
