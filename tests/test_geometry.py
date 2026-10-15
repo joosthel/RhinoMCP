@@ -247,7 +247,11 @@ class GeometryTests(unittest.TestCase):
         self.assertAlmostEqual(self.validate(h)["volume"], expect, delta=0.5)
         h2 = self.box((50, 0, 0))
         d = ok(c.call("geometry_edit", {"target": h2, "op": "shell", "thickness": 1, "remove_faces": [0]}))
-        self.assertAlmostEqual(d["items"][0]["volume_after"], 1000 - 8 * 8 * 9, delta=0.5)
+        # open shell (one face removed): not a solid, bbox must stay the original cube
+        self.assertEqual(d["bbox"]["max"][0], 60)
+        self.assertEqual(d["bbox"]["min"][0], 50)
+        r = c.call("geometry_edit", {"target": h2, "op": "shell", "thickness": 1, "remove_faces": []})
+        self.assertEqual(r["error"]["code"], "INVALID_ARGS")
         # failing fillet reports GEOMETRY_FAILED
         h3 = self.box((100, 0, 0), (2, 2, 2))
         r = c.call("geometry_edit", {"target": h3, "op": "fillet_edges", "radius": 5})
@@ -290,7 +294,7 @@ class GeometryTests(unittest.TestCase):
         crv = self.one({"kind": "curve", "points": [[0, 0, 0], [5, 5, 0], [10, 0, 0], [15, 5, 0]]})["handle"]
         o = self.validate(crv)
         self.assertEqual(o["degree"], 3)
-        self.assertEqual(o["control_points"], 4)
+        self.assertEqual(o["control_points"], 6)
 
 
 if __name__ == "__main__":

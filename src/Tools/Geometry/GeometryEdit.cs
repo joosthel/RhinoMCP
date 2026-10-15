@@ -363,15 +363,18 @@ namespace RhinoMCP.Tools.Geometry
                     if (x.Type != JTokenType.Integer || (int)x < 0 || (int)x >= b.Faces.Count) { _p.Err("'remove_faces' index out of range 0.." + (b.Faces.Count - 1)); return; }
                     faces.Add((int)x);
                 }
+            if (faces.Count == 0) { _p.Err("'remove_faces' needs at least one face index (Rhino cannot shell without an opening); see face indices with geometry_validate / explode"); return; }
             double v0 = GeoUtil.Volume(b);
-            // Rhino's CreateShell offsets outward for positive distance on a properly oriented solid; we want positive = inward.
-            Brep[] res = Brep.CreateShell(b, faces, -t, tol);
+            // Verified live: positive distance offsets inward on a solid.
+            Brep[] res = Brep.CreateShell(b, faces, t, tol);
             if (res == null || res.Length == 0) { Fail(o, "shell failed (thickness " + t + ")"); return; }
             var result = res[0];
             if (res.Length > 1) { var j = Brep.JoinBreps(res, tol); if (j != null && j.Length == 1) result = j[0]; }
             string log;
             if (!result.IsValidWithLog(out log)) { Fail(o, "shell produced an invalid brep: " + GeoUtil.FirstLines(log, 2, 160)); return; }
             double v1 = GeoUtil.Volume(result);
+            var bo = b.GetBoundingBox(true); bo.Inflate(tol * 2);
+            if (!bo.Contains(result.GetBoundingBox(true).Min) || !bo.Contains(result.GetBoundingBox(true).Max)) { Fail(o, "shell grew outside the original bounding box (offset went outward)"); return; }
             if (v0 > 0 && v1 >= v0) { Fail(o, "shell result is not thinner than the original (" + GeoUtil.R(v1) + " >= " + GeoUtil.R(v0) + ")"); return; }
             string h = ReplaceKeep(o, result);
             if (h == null) { Fail(o, "could not store the shell"); return; }
