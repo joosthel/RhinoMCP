@@ -218,6 +218,15 @@ class DrawingTests(unittest.TestCase):
         names = [l["path"] for l in ok(c.call("layers_list", {"limit": 500}))["layers"]]
         self.assertFalse([n for n in names if n.startswith("Make2D")], names)   # native Make2D layers were removed again
 
+    def test_clipping_convention_matches_rhino(self):
+        # our tools and Rhino's own Make2D keep the same side of a clipping plane
+        hs = self.mk(box(0, 0, 0, 4000, 3000, 2500))
+        for looking, kept in (("down", 1200.0), ("up", 1300.0)):
+            clip = self.clip_z(1200, looking=looking)
+            d, _ = self.m2d(hs, view="Front", clipping_planes=[clip["handle"]], compare_native=True, layer_root=OUT + "::" + looking)
+            self.assertAlmostEqual(d["report"]["bbox"]["size"][1], kept, 2)
+            self.assertAlmostEqual(d["native"]["extent"][1], kept, 2)
+
     def test_group_by_source_and_sublayers(self):
         hs = self.mk(box(0, 0, 0, 1000, 1000, 500), {"kind": "cylinder", "base": [3000, 500, 0], "radius": 400, "height": 800})
         clip = self.clip_z(300)

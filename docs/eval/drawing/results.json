@@ -1,0 +1,1194 @@
+{
+ "building": {
+  "elevation": {
+   "layers": {
+    "_mcp_eval::drawing::elevation_south::Silhouette": 8,
+    "_mcp_eval::drawing::elevation_south::Visible": 6
+   },
+   "native": {
+    "closed_curves": 0,
+    "command": "-_Make2D _ShowTangents=No _CreateHiddenLines=No _CreateSceneSilhouette=No _CreateClippingPlaneIntersections=No _ShowViewRectangle=No _GroupOutput=No _Enter",
+    "curves": 23,
+    "curves_by_kind": {
+     "arc": 0,
+     "line": 0,
+     "nurbs": 23,
+     "polycurve": 0,
+     "polyline": 0
+    },
+    "extent": [
+     12000.0,
+     6900.0
+    ],
+    "layers": 1,
+    "new_objects": 23,
+    "note": "native output was deleted again; Make2D option values stay sticky in Rhino",
+    "nurbs_that_are_lines_or_arcs": 23,
+    "ok": true,
+    "open_ends": 0,
+    "overlapping_pieces": 0,
+    "segments": 23,
+    "time_ms": 599.6
+   },
+   "origin": [
+    600.0,
+    -30000.0,
+    0.0
+   ],
+   "report": {
+    "bbox": {
+     "max": [
+      720.0,
+      -29931.0,
+      0.0
+     ],
+     "min": [
+      600.0,
+      -30000.0,
+      0.0
+     ],
+     "size": [
+      120.0,
+      69.0
+     ]
+    },
+    "by_category": {
+     "silhouette": 8,
+     "visible": 6
+    },
+    "closed_section_loops": 0,
+    "curves_out": {
+     "arc": 0,
+     "line": 10,
+     "nurbs": 0,
+     "polycurve": 0,
+     "polyline": 4,
+     "total": 14
+    },
+    "dropped_clipped": 0,
+    "dropped_duplicate": 9,
+    "dropped_projecting": 0,
+    "dropped_tiny": 0,
+    "hatches_created": 0,
+    "joined_curves": 4,
+    "kept_section_duplicates": 0,
+    "mesh_sources": 0,
+    "open_ends": 0,
+    "open_section_curves": 0,
+    "open_section_end_gaps": [],
+    "overlaps_removed": 0,
+    "pieces_before_cleanup": 24,
+    "scale_check": {
+     "clipped": false,
+     "drawing_extent": [
+      120.0,
+      69.0
+     ],
+     "factor": 0.01,
+     "hidden_line_extent": [
+      12000.0,
+      6900.0
+     ],
+     "model_extent": [
+      12000.0,
+      6900.0
+     ],
+     "model_ratio": [
+      1.0,
+      1.0
+     ],
+     "ok": true,
+     "ratio": [
+      1.0,
+      1.0
+     ],
+     "scale": "1:100"
+    },
+    "segments_in": 37,
+    "segments_out": 24,
+    "sources": 6,
+    "timings_ms": {
+     "classify_ms": 0.1,
+     "cleanup_ms": 0.1,
+     "hidden_line_ms": 404.6,
+     "join_ms": 0.2,
+     "native_ms": 602.1,
+     "place_ms": 0.4,
+     "write_ms": 24.2
+    },
+    "welded_endpoints": 0
+   },
+   "warnings": []
+  },
+  "elevation_east": {
+   "layers": {
+    "_mcp_eval::drawing::elevation_east::Silhouette": 8,
+    "_mcp_eval::drawing::elevation_east::Visible": 10
+   },
+   "native": {
+    "closed_curves": 0,
+    "command": "-_Make2D _ShowTangents=No _CreateHiddenLines=No _CreateSceneSilhouette=No _CreateClippingPlaneIntersections=No _ShowViewRectangle=No _GroupOutput=No _Enter",
+    "curves": 37,
+    "curves_by_kind": {
+     "arc": 0,
+     "line": 0,
+     "nurbs": 37,
+     "polycurve": 0,
+     "polyline": 0
+    },
+    "extent": [
+     12000.0,
+     6900.0
+    ],
+    "layers": 1,
+    "new_objects": 37,
+    "note": "native output was deleted again; Make2D option values stay sticky in Rhino",
+    "nurbs_that_are_lines_or_arcs": 37,
+    "ok": true,
+    "open_ends": 0,
+    "overlapping_pieces": 0,
+    "segments": 37,
+    "time_ms": 506.8
+   },
+   "origin": [
+    750.0,
+    -30000.0,
+    0.0
+   ],
+   "report": {
+    "bbox": {
+     "max": [
+      870.0,
+      -29931.0,
+      0.0
+     ],
+     "min": [
+      750.0,
+      -30000.0,
+      0.0
+     ],
+     "size": [
+      120.0,
+      69.0
+     ]
+    },
+    "by_category": {
+     "silhouette": 8,
+     "visible": 10
+    },
+    "closed_section_loops": 0,
+    "curves_out": {
+     "arc": 0,
+     "line": 9,
+     "nurbs": 0,
+     "polycurve": 0,
+     "polyline": 9,
+     "total": 18
+    },
+    "dropped_clipped": 0,
+    "dropped_duplicate": 32,
+    "dropped_projecting": 28,
+    "dropped_tiny": 0,
+    "hatches_created": 0,
+    "joined_curves": 9,
+    "kept_section_duplicates": 0,
+    "mesh_sources": 0,
+    "open_ends": 0,
+    "open_section_curves": 0,
+    "open_section_end_gaps": [],
+    "overlaps_removed": 0,
+    "pieces_before_cleanup": 37,
+    "scale_check": {
+     "clipped": false,
+     "drawing_extent": [
+      120.0,
+      69.0
+     ],
+     "factor": 0.01,
+     "hidden_line_extent": [
+      12000.0,
+      6900.0
+     ],
+     "model_extent": [
+      12000.0,
+      6900.0
+     ],
+     "model_ratio": [
+      1.0,
+      1.0
+     ],
+     "ok": true,
+     "ratio": [
+      1.0,
+      1.0
+     ],
+     "scale": "1:100"
+    },
+    "segments_in": 105,
+    "segments_out": 37,
+    "sources": 6,
+    "timings_ms": {
+     "classify_ms": 0.2,
+     "cleanup_ms": 0.1,
+     "hidden_line_ms": 411.0,
+     "join_ms": 0.4,
+     "native_ms": 510.2,
+     "place_ms": 0.4,
+     "write_ms": 20.0
+    },
+    "welded_endpoints": 0
+   },
+   "warnings": []
+  },
+  "elevation_hidden": {
+   "layers": {
+    "_mcp_eval::drawing::elevation_south_hidden::Hidden": 34,
+    "_mcp_eval::drawing::elevation_south_hidden::Silhouette": 8,
+    "_mcp_eval::drawing::elevation_south_hidden::Visible": 6
+   },
+   "native": {
+    "closed_curves": 0,
+    "command": "-_Make2D _ShowTangents=Yes _CreateHiddenLines=Yes _CreateSceneSilhouette=No _CreateClippingPlaneIntersections=No _ShowViewRectangle=No _GroupOutput=No _Enter",
+    "curves": 87,
+    "curves_by_kind": {
+     "arc": 0,
+     "line": 0,
+     "nurbs": 87,
+     "polycurve": 0,
+     "polyline": 0
+    },
+    "extent": [
+     12000.0,
+     6900.0
+    ],
+    "layers": 3,
+    "new_objects": 87,
+    "note": "native output was deleted again; Make2D option values stay sticky in Rhino",
+    "nurbs_that_are_lines_or_arcs": 87,
+    "ok": true,
+    "open_ends": 0,
+    "overlapping_pieces": 0,
+    "segments": 87,
+    "time_ms": 579.5
+   },
+   "origin": [
+    900.0,
+    -30000.0,
+    0.0
+   ],
+   "report": {
+    "bbox": {
+     "max": [
+      1020.0,
+      -29931.0,
+      0.0
+     ],
+     "min": [
+      900.0,
+      -30000.0,
+      0.0
+     ],
+     "size": [
+      120.0,
+      69.0
+     ]
+    },
+    "by_category": {
+     "hidden": 34,
+     "silhouette": 8,
+     "visible": 6
+    },
+    "closed_section_loops": 0,
+    "curves_out": {
+     "arc": 0,
+     "line": 29,
+     "nurbs": 0,
+     "polycurve": 0,
+     "polyline": 19,
+     "total": 48
+    },
+    "dropped_clipped": 0,
+    "dropped_duplicate": 165,
+    "dropped_projecting": 96,
+    "dropped_tiny": 0,
+    "hatches_created": 0,
+    "joined_curves": 19,
+    "kept_section_duplicates": 0,
+    "mesh_sources": 0,
+    "open_ends": 0,
+    "open_section_curves": 0,
+    "open_section_end_gaps": [],
+    "overlaps_removed": 0,
+    "pieces_before_cleanup": 87,
+    "scale_check": {
+     "clipped": false,
+     "drawing_extent": [
+      120.0,
+      69.0
+     ],
+     "factor": 0.01,
+     "hidden_line_extent": [
+      12000.0,
+      6900.0
+     ],
+     "model_extent": [
+      12000.0,
+      6900.0
+     ],
+     "model_ratio": [
+      1.0,
+      1.0
+     ],
+     "ok": true,
+     "ratio": [
+      1.0,
+      1.0
+     ],
+     "scale": "1:100"
+    },
+    "segments_in": 348,
+    "segments_out": 87,
+    "sources": 6,
+    "timings_ms": {
+     "classify_ms": 0.3,
+     "cleanup_ms": 2.6,
+     "hidden_line_ms": 446.2,
+     "join_ms": 1.6,
+     "native_ms": 586.9,
+     "place_ms": 0.6,
+     "write_ms": 32.4
+    },
+    "welded_endpoints": 0
+   },
+   "warnings": []
+  },
+  "model_groups": [
+   {
+    "count": 3,
+    "key": "_mcp_eval::drawing::model::Slabs"
+   },
+   {
+    "count": 2,
+    "key": "_mcp_eval::drawing::model::Walls"
+   },
+   {
+    "count": 1,
+    "key": "_mcp_eval::drawing::model::Stair"
+   }
+  ],
+  "model_objects": 6,
+  "plan": {
+   "layers": {
+    "_mcp_eval::drawing::plan_1200::Hatch": 3,
+    "_mcp_eval::drawing::plan_1200::Section": 3,
+    "_mcp_eval::drawing::plan_1200::Silhouette": 1,
+    "_mcp_eval::drawing::plan_1200::Visible": 8
+   },
+   "native": {
+    "closed_curves": 0,
+    "command": "-_Make2D _ShowTangents=No _CreateHiddenLines=No _CreateSceneSilhouette=No _CreateClippingPlaneIntersections=Yes _ShowViewRectangle=No _GroupOutput=No _Enter",
+    "curves": 63,
+    "curves_by_kind": {
+     "arc": 0,
+     "line": 0,
+     "nurbs": 63,
+     "polycurve": 0,
+     "polyline": 0
+    },
+    "extent": [
+     12000.0,
+     12000.0
+    ],
+    "layers": 2,
+    "new_objects": 63,
+    "note": "native output was deleted again; Make2D option values stay sticky in Rhino",
+    "nurbs_that_are_lines_or_arcs": 63,
+    "ok": true,
+    "open_ends": 0,
+    "overlapping_pieces": 0,
+    "segments": 63,
+    "time_ms": 739.2
+   },
+   "origin": [
+    0.0,
+    -30000.0,
+    0.0
+   ],
+   "report": {
+    "bbox": {
+     "max": [
+      120.0,
+      -29880.0,
+      0.0
+     ],
+     "min": [
+      0.0,
+      -30000.0,
+      0.0
+     ],
+     "size": [
+      120.0,
+      120.0
+     ]
+    },
+    "by_category": {
+     "section": 3,
+     "silhouette": 1,
+     "visible": 8
+    },
+    "closed_section_loops": 3,
+    "curves_out": {
+     "arc": 0,
+     "line": 8,
+     "nurbs": 0,
+     "polycurve": 0,
+     "polyline": 4,
+     "total": 12
+    },
+    "dropped_clipped": 0,
+    "dropped_duplicate": 66,
+    "dropped_projecting": 68,
+    "dropped_tiny": 0,
+    "hatches_created": 3,
+    "joined_curves": 4,
+    "kept_section_duplicates": 0,
+    "mesh_sources": 0,
+    "open_ends": 0,
+    "open_section_curves": 0,
+    "open_section_end_gaps": [],
+    "overlaps_removed": 0,
+    "pieces_before_cleanup": 63,
+    "scale_check": {
+     "clipped": true,
+     "drawing_extent": [
+      120.0,
+      120.0
+     ],
+     "factor": 0.01,
+     "hidden_line_extent": [
+      12000.0,
+      12000.0
+     ],
+     "model_extent": null,
+     "model_ratio": null,
+     "ok": true,
+     "ratio": [
+      1.0,
+      1.0
+     ],
+     "scale": "1:100"
+    },
+    "segments_in": 197,
+    "segments_out": 63,
+    "sources": 6,
+    "timings_ms": {
+     "classify_ms": 0.3,
+     "cleanup_ms": 0.6,
+     "hidden_line_ms": 418.5,
+     "join_ms": 0.4,
+     "native_ms": 744.9,
+     "place_ms": 0.2,
+     "write_ms": 30.7
+    },
+    "welded_endpoints": 4
+   },
+   "warnings": []
+  },
+  "plan_clip": {
+   "clips_views": 0,
+   "description": "plan cut at z=1200 looking down",
+   "handle": "o26246",
+   "kept_side": "the side the normal points to stays; the opposite side is clipped (Rhino convention)",
+   "normal": [
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "plane": {
+    "origin": [
+     0.0,
+     0.0,
+     1200.0
+    ],
+    "x_axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y_axis": [
+     0.0,
+     -1.0,
+     0.0
+    ]
+   },
+   "view": {
+    "direction": [
+     0.0,
+     0.0,
+     -1.0
+    ],
+    "up": [
+     0.0,
+     1.0,
+     0.0
+    ]
+   }
+  },
+  "section": {
+   "layers": {
+    "_mcp_eval::drawing::section_y3000::Hatch": 11,
+    "_mcp_eval::drawing::section_y3000::Section": 11,
+    "_mcp_eval::drawing::section_y3000::Silhouette": 2,
+    "_mcp_eval::drawing::section_y3000::Visible": 6
+   },
+   "native": {
+    "closed_curves": 0,
+    "command": "-_Make2D _ShowTangents=No _CreateHiddenLines=No _CreateSceneSilhouette=No _CreateClippingPlaneIntersections=Yes _ShowViewRectangle=No _GroupOutput=No _Enter",
+    "curves": 79,
+    "curves_by_kind": {
+     "arc": 0,
+     "line": 0,
+     "nurbs": 79,
+     "polycurve": 0,
+     "polyline": 0
+    },
+    "extent": [
+     12000.0,
+     6900.0
+    ],
+    "layers": 2,
+    "new_objects": 79,
+    "note": "native output was deleted again; Make2D option values stay sticky in Rhino",
+    "nurbs_that_are_lines_or_arcs": 79,
+    "ok": true,
+    "open_ends": 0,
+    "overlapping_pieces": 0,
+    "segments": 79,
+    "time_ms": 752.2
+   },
+   "origin": [
+    300.0,
+    -30000.0,
+    0.0
+   ],
+   "report": {
+    "bbox": {
+     "max": [
+      420.0,
+      -29931.0,
+      0.0
+     ],
+     "min": [
+      300.0,
+      -30000.0,
+      0.0
+     ],
+     "size": [
+      120.0,
+      69.0
+     ]
+    },
+    "by_category": {
+     "section": 11,
+     "silhouette": 2,
+     "visible": 6
+    },
+    "closed_section_loops": 11,
+    "curves_out": {
+     "arc": 0,
+     "line": 6,
+     "nurbs": 0,
+     "polycurve": 0,
+     "polyline": 13,
+     "total": 19
+    },
+    "dropped_clipped": 0,
+    "dropped_duplicate": 93,
+    "dropped_projecting": 76,
+    "dropped_tiny": 0,
+    "hatches_created": 11,
+    "joined_curves": 13,
+    "kept_section_duplicates": 9,
+    "mesh_sources": 0,
+    "open_ends": 0,
+    "open_section_curves": 0,
+    "open_section_end_gaps": [],
+    "overlaps_removed": 0,
+    "pieces_before_cleanup": 89,
+    "scale_check": {
+     "clipped": true,
+     "drawing_extent": [
+      120.0,
+      69.0
+     ],
+     "factor": 0.01,
+     "hidden_line_extent": [
+      12000.0,
+      6900.0
+     ],
+     "model_extent": null,
+     "model_ratio": null,
+     "ok": true,
+     "ratio": [
+      1.0,
+      1.0
+     ],
+     "scale": "1:100"
+    },
+    "segments_in": 258,
+    "segments_out": 89,
+    "sources": 6,
+    "timings_ms": {
+     "classify_ms": 0.3,
+     "cleanup_ms": 0.2,
+     "hidden_line_ms": 348.0,
+     "join_ms": 0.5,
+     "native_ms": 758.9,
+     "place_ms": 0.2,
+     "write_ms": 34.5
+    },
+    "welded_endpoints": 9
+   },
+   "warnings": []
+  },
+  "section_clip": {
+   "clips_views": 0,
+   "description": "section through the line looking left",
+   "handle": "o26247",
+   "kept_side": "the side the normal points to stays; the opposite side is clipped (Rhino convention)",
+   "normal": [
+    0.0,
+    -1.0,
+    0.0
+   ],
+   "plane": {
+    "origin": [
+     -1000.0,
+     3000.0,
+     0.0
+    ],
+    "x_axis": [
+     1.0,
+     0.0,
+     0.0
+    ],
+    "y_axis": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   },
+   "view": {
+    "direction": [
+     0.0,
+     -1.0,
+     0.0
+    ],
+    "up": [
+     0.0,
+     0.0,
+     1.0
+    ]
+   }
+  }
+ },
+ "notes": {
+  "stair_union": "document_tolerance"
+ },
+ "product": {
+  "bbox": {
+   "max": [
+    20052.473437,
+    52.473437,
+    200.0
+   ],
+   "min": [
+    19947.526563,
+    -52.473437,
+    0.0
+   ]
+  },
+  "built": {
+   "boolean_step": "document_tolerance",
+   "layer": "_mcp_eval::drawing::product",
+   "solid": true
+  },
+  "elevation": {
+   "layers": {
+    "_mcp_eval::drawing::vase_elevation::Silhouette": 1
+   },
+   "native": {
+    "closed_curves": 0,
+    "command": "-_Make2D _ShowTangents=Yes _CreateHiddenLines=No _CreateSceneSilhouette=No _CreateClippingPlaneIntersections=No _ShowViewRectangle=No _GroupOutput=No _Enter",
+    "curves": 4,
+    "curves_by_kind": {
+     "arc": 0,
+     "line": 0,
+     "nurbs": 4,
+     "polycurve": 0,
+     "polyline": 0
+    },
+    "extent": [
+     104.947,
+     200.0
+    ],
+    "layers": 1,
+    "new_objects": 4,
+    "note": "native output was deleted again; Make2D option values stay sticky in Rhino",
+    "nurbs_that_are_lines_or_arcs": 2,
+    "ok": true,
+    "open_ends": 0,
+    "overlapping_pieces": 0,
+    "segments": 4,
+    "time_ms": 740.7
+   },
+   "origin": [
+    19147.526563,
+    -452.473437,
+    0.0
+   ],
+   "report": {
+    "bbox": {
+     "max": [
+      19200.0,
+      -352.473437,
+      0.0
+     ],
+     "min": [
+      19147.526563,
+      -452.473437,
+      0.0
+     ],
+     "size": [
+      52.473437,
+      100.0
+     ]
+    },
+    "by_category": {
+     "silhouette": 1
+    },
+    "closed_section_loops": 0,
+    "curves_out": {
+     "arc": 0,
+     "line": 0,
+     "nurbs": 1,
+     "polycurve": 0,
+     "polyline": 0,
+     "total": 1
+    },
+    "dropped_clipped": 0,
+    "dropped_duplicate": 3,
+    "dropped_projecting": 0,
+    "dropped_tiny": 0,
+    "hatches_created": 0,
+    "joined_curves": 1,
+    "kept_section_duplicates": 0,
+    "mesh_sources": 0,
+    "open_ends": 0,
+    "open_section_curves": 0,
+    "open_section_end_gaps": [],
+    "overlaps_removed": 0,
+    "pieces_before_cleanup": 4,
+    "scale_check": {
+     "clipped": false,
+     "drawing_extent": [
+      52.473437,
+      100.0
+     ],
+     "factor": 0.5,
+     "hidden_line_extent": [
+      104.946873,
+      200.0
+     ],
+     "model_extent": [
+      104.946873,
+      200.0
+     ],
+     "model_ratio": [
+      1.0,
+      1.0
+     ],
+     "ok": true,
+     "ratio": [
+      1.0,
+      1.0
+     ],
+     "scale": "1:2"
+    },
+    "segments_in": 7,
+    "segments_out": 4,
+    "sources": 1,
+    "timings_ms": {
+     "classify_ms": 0.3,
+     "cleanup_ms": 0.1,
+     "hidden_line_ms": 435.7,
+     "join_ms": 0.2,
+     "native_ms": 742.1,
+     "place_ms": 0.4,
+     "write_ms": 17.8
+    },
+    "welded_endpoints": 0
+   },
+   "warnings": []
+  },
+  "plan": {
+   "layers": {
+    "_mcp_eval::drawing::vase_plan::Silhouette": 1,
+    "_mcp_eval::drawing::vase_plan::Visible": 3
+   },
+   "native": {
+    "closed_curves": 4,
+    "command": "-_Make2D _ShowTangents=No _CreateHiddenLines=No _CreateSceneSilhouette=No _CreateClippingPlaneIntersections=No _ShowViewRectangle=No _GroupOutput=No _Enter",
+    "curves": 4,
+    "curves_by_kind": {
+     "arc": 0,
+     "line": 0,
+     "nurbs": 4,
+     "polycurve": 0,
+     "polyline": 0
+    },
+    "extent": [
+     104.947,
+     104.947
+    ],
+    "layers": 1,
+    "new_objects": 4,
+    "note": "native output was deleted again; Make2D option values stay sticky in Rhino",
+    "nurbs_that_are_lines_or_arcs": 4,
+    "ok": true,
+    "open_ends": 0,
+    "overlapping_pieces": 0,
+    "segments": 4,
+    "time_ms": 896.6
+   },
+   "origin": [
+    19547.526563,
+    -452.473437,
+    0.0
+   ],
+   "report": {
+    "bbox": {
+     "max": [
+      19600.0,
+      -400.0,
+      0.0
+     ],
+     "min": [
+      19547.526563,
+      -452.473437,
+      0.0
+     ],
+     "size": [
+      52.473437,
+      52.473437
+     ]
+    },
+    "by_category": {
+     "silhouette": 1,
+     "visible": 3
+    },
+    "closed_section_loops": 0,
+    "curves_out": {
+     "arc": 4,
+     "line": 0,
+     "nurbs": 0,
+     "polycurve": 0,
+     "polyline": 0,
+     "total": 4
+    },
+    "dropped_clipped": 0,
+    "dropped_duplicate": 0,
+    "dropped_projecting": 0,
+    "dropped_tiny": 0,
+    "hatches_created": 0,
+    "joined_curves": 0,
+    "kept_section_duplicates": 0,
+    "mesh_sources": 0,
+    "open_ends": 0,
+    "open_section_curves": 0,
+    "open_section_end_gaps": [],
+    "overlaps_removed": 0,
+    "pieces_before_cleanup": 4,
+    "scale_check": {
+     "clipped": false,
+     "drawing_extent": [
+      52.473437,
+      52.473437
+     ],
+     "factor": 0.5,
+     "hidden_line_extent": [
+      104.946873,
+      104.946873
+     ],
+     "model_extent": [
+      104.946873,
+      104.946873
+     ],
+     "model_ratio": [
+      1.0,
+      1.0
+     ],
+     "ok": true,
+     "ratio": [
+      1.0,
+      1.0
+     ],
+     "scale": "1:2"
+    },
+    "segments_in": 8,
+    "segments_out": 4,
+    "sources": 1,
+    "timings_ms": {
+     "classify_ms": 0.2,
+     "cleanup_ms": 0.2,
+     "hidden_line_ms": 577.8,
+     "join_ms": 0.1,
+     "native_ms": 897.9,
+     "place_ms": 0.4,
+     "write_ms": 23.8
+    },
+    "welded_endpoints": 0
+   },
+   "warnings": []
+  },
+  "scale": "1:2",
+  "section": {
+   "layers": {
+    "_mcp_eval::drawing::vase_section::Hatch": 1,
+    "_mcp_eval::drawing::vase_section::Section": 1,
+    "_mcp_eval::drawing::vase_section::Visible": 1
+   },
+   "native": {
+    "closed_curves": 0,
+    "command": "-_Make2D _ShowTangents=No _CreateHiddenLines=No _CreateSceneSilhouette=No _CreateClippingPlaneIntersections=Yes _ShowViewRectangle=No _GroupOutput=No _Enter",
+    "curves": 10,
+    "curves_by_kind": {
+     "arc": 0,
+     "line": 0,
+     "nurbs": 10,
+     "polycurve": 0,
+     "polyline": 0
+    },
+    "extent": [
+     104.947,
+     200.0
+    ],
+    "layers": 2,
+    "new_objects": 10,
+    "note": "native output was deleted again; Make2D option values stay sticky in Rhino",
+    "nurbs_that_are_lines_or_arcs": 6,
+    "ok": true,
+    "open_ends": 0,
+    "overlapping_pieces": 0,
+    "segments": 10,
+    "time_ms": 801.9
+   },
+   "origin": [
+    19347.526563,
+    -452.473437,
+    0.0
+   ],
+   "report": {
+    "bbox": {
+     "max": [
+      19400.0,
+      -352.473437,
+      0.0
+     ],
+     "min": [
+      19347.526563,
+      -452.473437,
+      0.0
+     ],
+     "size": [
+      52.473437,
+      100.0
+     ]
+    },
+    "by_category": {
+     "section": 1,
+     "visible": 1
+    },
+    "closed_section_loops": 1,
+    "curves_out": {
+     "arc": 0,
+     "line": 1,
+     "nurbs": 1,
+     "polycurve": 0,
+     "polyline": 0,
+     "total": 2
+    },
+    "dropped_clipped": 0,
+    "dropped_duplicate": 6,
+    "dropped_projecting": 0,
+    "dropped_tiny": 0,
+    "hatches_created": 1,
+    "joined_curves": 1,
+    "kept_section_duplicates": 2,
+    "mesh_sources": 0,
+    "open_ends": 0,
+    "open_section_curves": 0,
+    "open_section_end_gaps": [],
+    "overlaps_removed": 2,
+    "pieces_before_cleanup": 12,
+    "scale_check": {
+     "clipped": true,
+     "drawing_extent": [
+      52.473437,
+      100.0
+     ],
+     "factor": 0.5,
+     "hidden_line_extent": [
+      104.946873,
+      200.0
+     ],
+     "model_extent": null,
+     "model_ratio": null,
+     "ok": true,
+     "ratio": [
+      1.0,
+      1.0
+     ],
+     "scale": "1:2"
+    },
+    "segments_in": 24,
+    "segments_out": 10,
+    "sources": 1,
+    "timings_ms": {
+     "classify_ms": 0.5,
+     "cleanup_ms": 0.5,
+     "hidden_line_ms": 372.1,
+     "join_ms": 0.2,
+     "native_ms": 804.1,
+     "place_ms": 0.1,
+     "write_ms": 27.6
+    },
+    "welded_endpoints": 18
+   },
+   "warnings": []
+  },
+  "section_on_seam": {
+   "layers": {
+    "_mcp_eval::drawing::vase_section_on_seam::Hatch": 1,
+    "_mcp_eval::drawing::vase_section_on_seam::Section": 1,
+    "_mcp_eval::drawing::vase_section_on_seam::Visible": 1
+   },
+   "native": {
+    "closed_curves": 0,
+    "command": "-_Make2D _ShowTangents=No _CreateHiddenLines=No _CreateSceneSilhouette=No _CreateClippingPlaneIntersections=Yes _ShowViewRectangle=No _GroupOutput=No _Enter",
+    "curves": 12,
+    "curves_by_kind": {
+     "arc": 0,
+     "line": 0,
+     "nurbs": 12,
+     "polycurve": 0,
+     "polyline": 0
+    },
+    "extent": [
+     104.947,
+     200.0
+    ],
+    "layers": 2,
+    "new_objects": 12,
+    "note": "native output was deleted again; Make2D option values stay sticky in Rhino",
+    "nurbs_that_are_lines_or_arcs": 5,
+    "ok": true,
+    "open_ends": 0,
+    "overlapping_pieces": 0,
+    "segments": 12,
+    "time_ms": 685.5
+   },
+   "origin": [
+    19247.526563,
+    -452.473437,
+    0.0
+   ],
+   "report": {
+    "bbox": {
+     "max": [
+      19300.0,
+      -352.473437,
+      0.0
+     ],
+     "min": [
+      19247.526563,
+      -452.473437,
+      0.0
+     ],
+     "size": [
+      52.473437,
+      100.0
+     ]
+    },
+    "by_category": {
+     "section": 1,
+     "visible": 1
+    },
+    "closed_section_loops": 1,
+    "curves_out": {
+     "arc": 0,
+     "line": 1,
+     "nurbs": 1,
+     "polycurve": 0,
+     "polyline": 0,
+     "total": 2
+    },
+    "dropped_clipped": 0,
+    "dropped_duplicate": 3,
+    "dropped_projecting": 0,
+    "dropped_tiny": 0,
+    "hatches_created": 1,
+    "joined_curves": 1,
+    "kept_section_duplicates": 7,
+    "mesh_sources": 0,
+    "open_ends": 0,
+    "open_section_curves": 0,
+    "open_section_end_gaps": [],
+    "overlaps_removed": 10,
+    "pieces_before_cleanup": 19,
+    "scale_check": {
+     "clipped": true,
+     "drawing_extent": [
+      52.473437,
+      100.0
+     ],
+     "factor": 0.5,
+     "hidden_line_extent": [
+      104.946873,
+      200.0
+     ],
+     "model_extent": null,
+     "model_ratio": null,
+     "ok": true,
+     "ratio": [
+      1.0,
+      1.0
+     ],
+     "scale": "1:2"
+    },
+    "segments_in": 22,
+    "segments_out": 9,
+    "sources": 1,
+    "timings_ms": {
+     "classify_ms": 0.6,
+     "cleanup_ms": 1.0,
+     "hidden_line_ms": 434.2,
+     "join_ms": 0.2,
+     "native_ms": 687.8,
+     "place_ms": 0.1,
+     "write_ms": 28.1
+    },
+    "welded_endpoints": 8
+   },
+   "warnings": []
+  },
+  "source": "_mcp_eval::drawing::product (rebuilt: _mcp_eval::freeform not present)",
+  "source_layer_objects": 1,
+  "targets": [
+   {
+    "handle": "o26250",
+    "name": "vase_outer"
+   }
+  ]
+ }
+}

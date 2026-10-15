@@ -19,9 +19,9 @@ namespace RhinoMCP.Tools.Drawing
             get
             {
                 return "Create, list or delete clipping planes used to cut plans and sections for drawing_make2d. action=create takes ONE of: " +
-                       "{z, looking?:'down'|'up'} (plan cut at height z: looking down removes everything above z), " +
+                       "{z, looking?:'down'|'up'} (plan cut at height z: looking down removes everything above z; the plane normal then points down), " +
                        "{section_line:{from:[x,y,z],to:[x,y,z]}, looking?:'left'|'right'} (vertical section plane through the line; the viewer stands on the 'looking' side of from->to and sees the far side; default left), " +
-                       "or {plane:{origin,x_axis,y_axis}} (the plane's normal side is removed). Returns the handle, the plane and the matching 'view' to pass to drawing_make2d. " +
+                       "or {plane:{origin,x_axis,y_axis}} (Rhino convention: the side the normal points to stays, the opposite side is clipped). Returns the handle, the plane and the matching 'view' to pass to drawing_make2d. " +
                        "By default the plane clips no viewport (the model stays untouched on screen); give apply_to_views:['Top',...] to also clip those viewports. action=list returns all clipping planes, action=delete removes handles.";
             }
         }
@@ -107,10 +107,11 @@ namespace RhinoMCP.Tools.Drawing
                 if (looking == "") looking = "down";
                 if (looking != "down" && looking != "up") a.Error("'looking' must be down or up for a z cut");
                 if (a.HasErrors) return a.ErrorResult();
-                // The removed side is the side the plane's normal points to: looking down removes what is above.
-                var n = looking == "down" ? Vector3d.ZAxis : -Vector3d.ZAxis;
+                // Rhino's convention: the side the plane's normal points to stays, the opposite side is clipped.
+                // Looking down removes what is above, so the normal points down.
+                var n = looking == "down" ? -Vector3d.ZAxis : Vector3d.ZAxis;
                 plane = new Plane(new Point3d(0, 0, z), Vector3d.XAxis, n.Z > 0 ? Vector3d.YAxis : -Vector3d.YAxis);
-                look = -n; up = looking == "down" ? Vector3d.YAxis : -Vector3d.YAxis;
+                look = n; up = looking == "down" ? Vector3d.YAxis : -Vector3d.YAxis;
                 desc = "plan cut at z=" + z + " looking " + looking;
             }
             else if (args["section_line"] != null)
@@ -127,12 +128,12 @@ namespace RhinoMCP.Tools.Drawing
                 if (!dir.Unitize()) return ToolResult.Fail("INVALID_ARGS", "'section_line' must have a horizontal extent (from and to differ in X/Y)");
                 // left of the direction of travel = dir rotated +90 degrees about Z
                 var left = new Vector3d(-dir.Y, dir.X, 0);
-                // the viewer stands on the 'looking' side; that side is removed (normal points to the viewer) and the view looks the other way
-                var normal = looking == "left" ? left : -left;
+                // the viewer stands on the 'looking' side; what lies between viewer and plane is removed, so the normal (kept side) points away from the viewer
+                var normal = looking == "left" ? -left : left;
                 var xaxis = Vector3d.CrossProduct(Vector3d.ZAxis, normal); // lies in the plane
                 plane = new Plane(p0, xaxis, Vector3d.ZAxis);
                 if (Vector3d.Multiply(plane.ZAxis, normal) < 0) plane = new Plane(p0, xaxis, -Vector3d.ZAxis);
-                look = -normal; up = Vector3d.ZAxis;
+                look = normal; up = Vector3d.ZAxis;
                 desc = "section through the line looking " + looking;
             }
             else
@@ -140,7 +141,7 @@ namespace RhinoMCP.Tools.Drawing
                 string perr;
                 var fr = GeoUtil.ParsePlane(args["plane"], ctx, null, out perr);
                 if (fr == null) return ToolResult.Fail("INVALID_ARGS", "'plane': " + perr);
-                plane = fr.Plane; look = -plane.ZAxis;
+                plane = fr.Plane; look = plane.ZAxis;
                 up = Math.Abs(Vector3d.Multiply(look, Vector3d.ZAxis)) > 0.9999 ? Vector3d.YAxis : Vector3d.ZAxis;
                 desc = "custom plane";
             }
@@ -187,7 +188,7 @@ namespace RhinoMCP.Tools.Drawing
                 description = desc,
                 plane = PlaneJson(plane),
                 normal = GeoUtil.Arr(plane.ZAxis),
-                removes = "everything on the side the normal points to",
+                kept_side = "the side the normal points to stays; the opposite side is clipped (Rhino convention)",
                 view = viewHint,
                 clips_views = vpIds.Count
             });

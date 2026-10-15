@@ -122,12 +122,25 @@ namespace RhinoMCP.Tools.Drawing
                     var spc = s as PolyCurve;
                     if (spc != null)
                     {
-                        // one level deeper so a segment that stays free-form is not simplified again
-                        for (int i = 0; i < spc.SegmentCount; i++) Decompose(spc.SegmentCurve(i), tol, angTol, src, cat, outp, st, 1);
+                        // Simplify only helps when it found lines or arcs; a purely free-form result is just the curve cut at its knots
+                        bool found = false;
+                        for (int i = 0; i < spc.SegmentCount && !found; i++)
+                        {
+                            var sg = spc.SegmentCurve(i);
+                            found = sg is LineCurve || sg is ArcCurve || sg is PolylineCurve;
+                        }
+                        if (found)
+                        {
+                            // one level deeper so a segment that stays free-form is not simplified again
+                            for (int i = 0; i < spc.SegmentCount; i++) Decompose(spc.SegmentCurve(i), tol, angTol, src, cat, outp, st, 1);
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        Decompose(s, tol, angTol, src, cat, outp, st, 1);
                         return;
                     }
-                    Decompose(s, tol, angTol, src, cat, outp, st, 1);
-                    return;
                 }
             }
             double len = c.GetLength();
@@ -336,7 +349,19 @@ namespace RhinoMCP.Tools.Drawing
                 {
                     string k = FreeKey(p.C, tol);
                     if (!freeKeys.Add(k)) { removed++; continue; }
-                    result.Add(p);
+                    // a free-form piece lying entirely on an already kept free-form piece (same section solid, or any other category) is a duplicate
+                    var fc = new HashSet<int>();
+                    grid.Query(Inflate(PieceBox(p), tol * 2), fc);
+                    bool dup = false;
+                    foreach (int id in fc)
+                    {
+                        var a = kept[id];
+                        if (a.Kind != Piece.KFree) continue;
+                        if (p.Cat == Cat.Section && a.Cat == Cat.Section && a.Src != p.Src) continue;
+                        if (FreeCovered(p.C, a.C, tol * 2)) { dup = true; break; }
+                    }
+                    if (dup) { removed++; continue; }
+                    Keep(p, kept, grid, result, tol);
                     continue;
                 }
                 var cand = new HashSet<int>();
@@ -346,6 +371,7 @@ namespace RhinoMCP.Tools.Drawing
                 {
                     var a = kept[id];
                     if (a.Kind != p.Kind) continue;
+                    if (p.Cat == Cat.Section && a.Cat == Cat.Section && a.Src != p.Src) continue;   // each solid keeps its own closed section loop
                     if (p.Kind == Piece.KLine) CoverLine(p, a, tol, covered);
                     else CoverArc(p, a, tol, covered);
                 }
@@ -447,6 +473,19 @@ namespace RhinoMCP.Tools.Drawing
             return gaps;
         }
 
+        /// <summary>True when b lies entirely within d of curve a (sampled).</summary>
+        static bool FreeCovered(Curve b, Curve a, double d)
+        {
+            var dom = b.Domain;
+            for (int i = 0; i <= 8; i++)
+            {
+                var pt = b.PointAt(dom.ParameterAt(i / 8.0));
+                double t;
+                if (!a.ClosestPoint(pt, out t, d * 2) || a.PointAt(t).DistanceTo(pt) > d) return false;
+            }
+            return true;
+        }
+
         static string FreeKey(Curve c, double tol)
         {
             string f = KeyFor(c, tol, false), r = KeyFor(c, tol, true);
@@ -526,6 +565,12 @@ namespace RhinoMCP.Tools.Drawing
                 return new PolylineCurve(pts);
             }
             if (segs.Count == 1 && segs[0] is ArcCurve) return segs[0].DuplicateCurve();
+            // purely free-form result (several NURBS pieces joined end to end): one NURBS curve is easier to edit than a polycurve
+            if (segs.Count > 1 && segs.All(x => x is NurbsCurve))
+            {
+                var nc = s.ToNurbsCurve();
+                if (nc != null) return nc;
+            }
             return s.DuplicateCurve();
         }
 
@@ -644,6 +689,27 @@ namespace RhinoMCP.Tools.Drawing
                 if (!covered) open++;
             }
             return open;
+        }
+
+        /// <summary>For every endpoint of the given open curves: the distance to the nearest endpoint of another open curve (or, failing that, of the same curve), sorted ascending. Pairs counted once.</summary>
+        public static List<double> NearestEndGaps(IList<Curve> open, double tol)
+        {
+            var pts = new List<Point3d>(); var owner = new List<int>();
+            for (int i = 0; i < open.Count; i++) { pts.Add(open[i].PointAtStart); owner.Add(i); pts.Add(open[i].PointAtEnd); owner.Add(i); }
+            var res = new List<double>();
+            for (int i = 0; i < pts.Count; i++)
+            {
+                double best = double.MaxValue;
+                for (int j = 0; j < pts.Count; j++)
+                {
+                    if (i == j) continue;
+                    if (owner[i] == owner[j] && open.Count > 1) continue;
+                    best = Math.Min(best, pts[i].DistanceTo(pts[j]));
+                }
+                if (best < double.MaxValue && best > tol) res.Add(best);
+            }
+            res.Sort();
+            return res;
         }
 
         static bool OnCurve(Curve c, Point3d p, double tol)

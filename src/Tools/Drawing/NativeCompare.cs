@@ -52,6 +52,8 @@ namespace RhinoMCP.Tools.Drawing
                     var id = doc.Objects.AddClippingPlane(p, size, size, vp.Id);
                     if (id != Guid.Empty) clipIds.Add(id);
                 }
+                // Make2D only cuts with clipping planes that are part of the selection
+                foreach (var id in clipIds) doc.Objects.Select(id, true, true);
                 rv.Redraw();
                 cmd = "-_Make2D _ShowTangents=" + (tangents ? "Yes" : "No") + " _CreateHiddenLines=" + (hidden ? "Yes" : "No") +
                       " _CreateSceneSilhouette=No _CreateClippingPlaneIntersections=" + (clip.Count > 0 ? "Yes" : "No") +
@@ -160,6 +162,8 @@ namespace RhinoMCP.Tools.Drawing
                 DrawingGeometry.Decompose(fc, tol, angTol, 0, Cat.Visible, pieces, st);
             }
             int openEnds = DrawingGeometry.OpenEnds(flatCurves, tol);
+            var nbb = BoundingBox.Empty;
+            foreach (var fc in flatCurves) nbb.Union(fc.GetBoundingBox(true));
             int removed;
             DrawingGeometry.Deoverlap(pieces, tol, out removed);
             foreach (var c in flatCurves) c.Dispose();
@@ -174,6 +178,7 @@ namespace RhinoMCP.Tools.Drawing
                 overlapping_pieces = removed,
                 open_ends = openEnds,
                 closed_curves = closed,
+                extent = nbb.IsValid ? new[] { Math.Round(nbb.Max.X - nbb.Min.X, 3), Math.Round(nbb.Max.Y - nbb.Min.Y, 3) } : null,
                 layers = layers,
                 new_objects = newObjects,
                 time_ms = Math.Round(ms, 1),

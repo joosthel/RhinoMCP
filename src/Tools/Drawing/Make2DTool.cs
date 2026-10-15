@@ -52,7 +52,7 @@ namespace RhinoMCP.Tools.Drawing
                        "hatches closed section loops, and places the result at scale next to the model. Returns a numeric quality report " +
                        "(segments in/out, drops, curve kinds, overlaps removed, open_ends, closed_section_loops, hatches, bbox, scale_check). " +
                        "view: Top|Bottom|Front|Back|Left|Right (parallel), a named view, 'Perspective' (allowed but flagged), {plane:{origin,x_axis,y_axis}} (looks at the plane from its +normal side) or {direction:[x,y,z] (viewing direction), up?}. " +
-                       "clipping_planes: handles of drawing_clipping_plane objects or inline {origin,x_axis,y_axis}; geometry on the plane's NORMAL side is removed and the cut appears as Section lines + hatch. " +
+                       "clipping_planes: handles of drawing_clipping_plane objects or inline {origin,x_axis,y_axis}; same convention as Rhino's own clipping planes (the side the normal points to stays); the cut appears as Section lines + hatch. " +
                        "scale '1:100' shrinks the output (model units); origin is where the drawing's lower-left corner lands (default: right of the model). compare_native:true also runs Rhino's own Make2D on the same input, counts its curves and removes its output. " +
                        "Mesh sources give jagged outlines (warned). Fails with NO_GEOMETRY when nothing drawable was selected.";
             }
@@ -65,7 +65,7 @@ namespace RhinoMCP.Tools.Drawing
                     "\"target\":{\"$ref\":\"#/$defs/target\"}," +
                     "\"layers\":{\"type\":\"array\",\"items\":{\"type\":\"string\"},\"description\":\"alternative to target: all objects on these layers (and sublayers)\"}," +
                     "\"view\":{\"description\":\"Top|Bottom|Front|Back|Left|Right|Perspective, a named view, {plane:{origin,x_axis,y_axis},name?} or {direction:[x,y,z],up?,name?}. Default Top\"}," +
-                    "\"clipping_planes\":{\"type\":\"array\",\"items\":{},\"description\":\"clipping plane handles/GUIDs and/or inline {origin,x_axis,y_axis} planes; the normal side is removed\"}," +
+                    "\"clipping_planes\":{\"type\":\"array\",\"items\":{},\"description\":\"clipping plane handles/GUIDs and/or inline {origin,x_axis,y_axis} planes; the side the normal points to stays (Rhino convention)\"}," +
                     "\"scale\":{\"description\":\"'1:100' (default 1:1), or a number = denominator\"}," +
                     "\"origin\":{\"$ref\":\"#/$defs/point\",\"description\":\"where the lower-left corner of the drawing is placed; default right of the model, same Y\"}," +
                     "\"tolerance\":{\"type\":\"number\",\"description\":\"default: document absolute tolerance\"}," +
@@ -181,14 +181,14 @@ namespace RhinoMCP.Tools.Drawing
                 hp.Flatten = true;
                 hp.SetViewport(vpInfo);
                 foreach (var kv in added) hp.AddGeometry(kv.G, kv.X, (object)kv.Src);
-                foreach (var cp in clipPlanes) hp.AddClippingPlane(cp);
+                foreach (var cp in clipPlanes) { var flipped = cp; flipped.Flip(); hp.AddClippingPlane(flipped); }   // HiddenLineDrawing keeps the opposite side to Rhino's clipping-plane objects
 
                 hld = HiddenLineDrawing.Compute(hp, false);
                 if (hld == null) return ToolResult.Fail("MAKE2D_FAILED", "Rhino's hidden line engine returned no result", "Try a looser tolerance or fewer / simpler objects.");
                 times["hidden_line_ms"] = sw.Elapsed.TotalMilliseconds; sw.Restart();
 
                 // ---- filter + classify + decompose
-                int segIn = 0, dDup = 0, dClip = 0, dProj = 0;
+                int segIn = 0, dDup = 0, dClip = 0, dProj = 0, keptSecDup = 0;
                 var st = new DecomposeStats();
                 var pieces = new List<Piece>();
                 var catCount = new Dictionary<Cat, int>();
@@ -196,7 +196,13 @@ namespace RhinoMCP.Tools.Drawing
                 {
                     segIn++;
                     var vis = seg.SegmentVisibility;
-                    if (vis == HiddenLineDrawingSegment.Visibility.Duplicate) { dDup++; if (!keepDup) continue; }
+                    if (vis == HiddenLineDrawingSegment.Visibility.Duplicate)
+                    {
+                        // A section line shared by two solids (wall resting on a slab) is flagged Duplicate on one of them.
+                        // Both solids need their own closed loop (for closed_section_loops and the hatch), so it is kept.
+                        if (seg.ParentCurve != null && seg.ParentCurve.SilhouetteType == SilhouetteType.SectionCut) keptSecDup++;
+                        else { dDup++; if (!keepDup) continue; }
+                    }
                     if (vis == HiddenLineDrawingSegment.Visibility.Clipped) { dClip++; continue; }
                     if (vis == HiddenLineDrawingSegment.Visibility.Projecting) { dProj++; continue; }
                     var parent = seg.ParentCurve;
@@ -233,7 +239,7 @@ namespace RhinoMCP.Tools.Drawing
 
                 if (outCurves.Count == 0)
                     return ToolResult.Fail("EMPTY_DRAWING", "The hidden-line engine produced no drawable curves (" + segIn + " segments, " + dDup + " duplicate, " + dClip + " clipped, " + dProj + " projecting)",
-                        "If you used clipping planes, check which side is removed (the plane normal side) and that the plane cuts the target.");
+                        "If you used clipping planes, check which side is kept (the normal side stays) and that the plane cuts the target.");
 
                 // ---- quality numbers (before placement; invariant under translate/uniform scale except tolerances)
                 var kinds = new Dictionary<string, int> { { "line", 0 }, { "arc", 0 }, { "polyline", 0 }, { "polycurve", 0 }, { "nurbs", 0 } };
@@ -247,7 +253,11 @@ namespace RhinoMCP.Tools.Drawing
                 var bySrcSection = outCurves.Where(o => o.Cat == Cat.Section).ToList();
                 int loops = bySrcSection.Count(o => o.Curve.IsClosed);
                 int openSection = bySrcSection.Count - loops;
+                var gaps = DrawingGeometry.NearestEndGaps(bySrcSection.Where(o => !o.Curve.IsClosed).Select(o => o.Curve).ToList(), tol);
                 foreach (var o in outCurves) { int n; catCount.TryGetValue(o.Cat, out n); catCount[o.Cat] = n + 1; }
+                if (openSection > 0)
+                    warnings.Add(openSection + " section curve(s) are not closed" + (gaps.Count > 0 ? " (nearest end gaps: " + string.Join(", ", gaps.Take(4).Select(g => Math.Round(g, 4).ToString(CultureInfo.InvariantCulture))) + ")" : "") +
+                                 ", so they get no hatch. Likely causes: the section plane lies exactly on a surface seam or edge (shift it by a small offset or a few degrees), the source is not a closed solid, or the tolerance is tighter than the section accuracy.");
 
                 // ---- scale + placement
                 var dbb = BoundingBox.Empty;
@@ -397,6 +407,7 @@ namespace RhinoMCP.Tools.Drawing
                     { "segments_in", segIn },
                     { "segments_out", segmentsOut },
                     { "dropped_duplicate", dDup },
+                    { "kept_section_duplicates", keptSecDup },
                     { "dropped_clipped", dClip },
                     { "dropped_projecting", dProj },
                     { "dropped_tiny", st.Tiny },
@@ -409,6 +420,7 @@ namespace RhinoMCP.Tools.Drawing
                     { "open_ends", openEnds },
                     { "closed_section_loops", loops },
                     { "open_section_curves", openSection },
+                    { "open_section_end_gaps", gaps.Select(g => Math.Round(g, 6)).Take(12).ToList() },
                     { "hatches_created", hatchesCreated },
                     { "bbox", new { min = GeoUtil.Arr(final.Min), max = GeoUtil.Arr(final.Max), size = new[] { GeoUtil.R(fw), GeoUtil.R(fh) } } },
                     { "scale_check", new { scale = denom == 1 ? "1:1" : "1:" + denom.ToString("0.###", CultureInfo.InvariantCulture), factor = scale,

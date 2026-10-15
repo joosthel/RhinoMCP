@@ -23,8 +23,8 @@ Pen series (step factor sqrt 2): 0.13, 0.18, 0.25, 0.35, 0.5, 0.7, 1.0, 1.4, 2.0
 |---|---|---|
 | `Drawing::<view>::Section` | 0.5 | Continuous |
 | `Drawing::<view>::Silhouette` | 0.35 | Continuous |
-| `Drawing::<view>::Visible` | 0.25 | Continuous |
-| `Drawing::<view>::Hidden` | 0.13 | Hidden |
+| `Drawing::<view>::Visible` | 0.35 | Continuous |
+| `Drawing::<view>::Hidden` | 0.18 | Hidden |
 | `Drawing::<view>::Tangent` | 0.13 | Continuous |
 | `Drawing::<view>::Hatch` | 0.13 | Continuous |
 | `Drawing::<view>::Annotation` | 0.18 | Continuous |
