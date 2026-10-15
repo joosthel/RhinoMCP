@@ -122,3 +122,10 @@ docs/              research/ · ARCHITECTURE.md · PLAN.md · DEVELOPMENT.md · 
 - The server listens on loopback only, requires a token, and checks Host and Origin.
 - Script tools execute arbitrary code by design. Keep the token private.
 - `dev_reload` exists only when `devMode` is true.
+
+## Interactive commands (learned on Rhino 7.39 Mac)
+- **Commands waiting at a prompt** (GetPoint/GetOption) keep pumping UI callbacks. `run_command` arms a watchdog with `input_timeout_s` (default 10 s) that injects Escape (`!`). It returns `COMMAND_NEEDS_INPUT` with the exact `last_prompt` and its options, so the agent can retry with every input inline.
+- **Modal windows** (`What`, `Options`, …, and non-dash `Export`/`Print`/`Hatch`/…) do *not* pump callbacks. They freeze Rhino until a person closes them. `run_command` refuses them up front with `COMMAND_BLOCKED`.
+- **`_Undo` via `RunScript` is a no-op.** Use `history_undo` / `history_redo`, which call `RhinoDoc.Undo()` / `Redo()`.
+- **A cancelled command can leave an undo record open.** While it is open, `Undo()` fails and later edits pile into it. The tools close a stray record (`CurrentUndoRecordSerialNumber`) when no command is running.
+- **`CapturedCommandWindowStrings` is empty on Mac.** `run_command` falls back to diffing `CommandHistoryWindowText`.
