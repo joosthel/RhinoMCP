@@ -33,7 +33,9 @@ namespace RhinoMCP.Tools.Geometry
                     "\"a\":{\"$ref\":\"#/$defs/target\"}," +
                     "\"b\":{\"$ref\":\"#/$defs/target\",\"description\":\"cutter(s); required for difference/intersection/split\"}," +
                     "\"keep_inputs\":{\"type\":\"boolean\"}," +
-                    "\"include_guids\":{\"type\":\"boolean\"}",
+                    "\"include_guids\":{\"type\":\"boolean\"}," +
+                    "\"force\":{\"type\":\"boolean\",\"description\":\"override boolean_max_face_count (never block_rss_mb)\"}," +
+                    "\"budget_ms\":{\"type\":\"integer\",\"minimum\":1000,\"maximum\":600000,\"description\":\"time budget checked between retry-ladder steps (default limits.boolean_budget_ms = 30000). A single kernel call cannot be interrupted, so the budget can be exceeded by one step; TIMEOUT is returned with the step reached\"}",
                     "\"op\",\"a\"");
             }
         }
@@ -63,6 +65,20 @@ namespace RhinoMCP.Tools.Geometry
             var A = aList.Select(x => x.b).ToList();
             var B = bList.Select(x => x.b).ToList();
             if (op == "union") { A = A.Concat(B).ToList(); B = new List<Brep>(); }
+
+            // ---- resource pre-flight: booleans run a retry ladder (up to ~7 attempts), so cost scales with the face count
+            var rssBlock = Resources.CheckRss("geometry_boolean");
+            if (rssBlock != null) return rssBlock;
+            var resGuard = Resources.Begin("geometry_boolean");
+            int budgetMs = p.Has("budget_ms") ? p.Int("budget_ms", false, Resources.Limits.BooleanBudgetMs) : Resources.Limits.BooleanBudgetMs;
+            var budgetSw = System.Diagnostics.Stopwatch.StartNew();
+            bool timedOut = false; string stepReached = null;
+            long faceTotal = A.Sum(x => (long)x.Faces.Count) + B.Sum(x => (long)x.Faces.Count);
+            long cpTotal = A.Concat(B).Sum(x => x.Surfaces.Sum(s => { var ns = s as NurbsSurface; return ns == null ? 4L : (long)ns.Points.CountU * ns.Points.CountV; }));
+            if (faceTotal > Resources.Limits.BooleanMaxFaceCount && !p.Bool("force"))
+                return Resources.LimitFail("boolean_max_face_count", faceTotal, Resources.Limits.BooleanMaxFaceCount,
+                    "boolean inputs have " + faceTotal + " faces (" + cpTotal + " surface control points); the limit is " + Resources.Limits.BooleanMaxFaceCount + ". Nothing was changed.",
+                    "Reduce the work: rebuild dense surfaces first (freeform_surface rebuild_surface to ~20x20), split the operation (one cutter at a time, or a subset by layer/set), simplify the cutter, or convert SubD/mesh sources to simpler breps.", true);
 
             // ---- pre-flight ----
             var pre = new List<string>();
@@ -121,6 +137,8 @@ namespace RhinoMCP.Tools.Geometry
             {
                 var at = new Attempt { Step = name, Tol = t };
                 tried.Add(at);
+                if (budgetSw.ElapsedMilliseconds > budgetMs) { timedOut = true; at.Result = "skipped: time budget exceeded"; return null; }
+                stepReached = name;
                 Brep[] r;
                 try { r = fn(t); }
                 catch (Exception ex) { at.Result = "exception: " + ex.Message; return null; }
@@ -193,6 +211,18 @@ namespace RhinoMCP.Tools.Geometry
                 if (result != null) stepUsed = "repair_inputs";
             }
 
+            if (result == null && timedOut)
+            {
+                var hints = new List<string>();
+                hints.Add("Self-intersecting or kinked input is the usual cause: run geometry_validate on each input, and check lofts/sweeps for kinks or crossing rails.");
+                hints.Add("Near-tangent or coplanar contact between a and b is the second cause: nudge the cutter by a few tolerances, or overlap the solids clearly.");
+                if (diag.ContainsKey("coplanar_face_pairs")) hints.Add("Detected " + diag["coplanar_face_pairs"] + " coplanar face pair(s) between a and b.");
+                hints.Add("Dense surfaces slow every step: rebuild faces above ~2500 control points (freeform_surface rebuild_surface) and split the operation (one cutter at a time).");
+                return ToolResult.Fail("TIMEOUT", "boolean " + op + " exceeded its time budget of " + budgetMs + " ms after " + budgetSw.ElapsedMilliseconds + " ms; last step started: " + stepReached + " (" + tried.Count(x => x.Result != null && !x.Result.StartsWith("skipped")) + " of the retry ladder steps ran). Nothing was changed.",
+                    "Fix the cause below, or raise budget_ms if the inputs are simply large.",
+                    new { budget_ms = budgetMs, elapsed_ms = budgetSw.ElapsedMilliseconds, step_reached = stepReached, tried = tried.Select(x => new { step = x.Step, result = x.Result }).ToList(), hints = hints, faces = faceTotal, control_points = cpTotal });
+            }
+
             if (result == null)
             {
                 var causes = tried.Select(t => t.Step + " (tol " + GeoUtil.R(t.Tol) + "): " + t.Result).ToList();
@@ -240,7 +270,7 @@ namespace RhinoMCP.Tools.Geometry
             var tr = ToolResult.Ok(data);
             if (stepUsed != "document_tolerance")
                 tr.Warn("Succeeded only at ladder step '" + stepUsed + "' (" + tried.Count + " attempts); verify the result with geometry_validate");
-            return tr;
+            return resGuard.Finish(tr);
         }
 
         static string DominantCause(List<Attempt> tried)

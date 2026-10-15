@@ -38,7 +38,7 @@ namespace RhinoMCP.Tools.Freeform
                     "\"levels\":{\"type\":\"integer\"},\"distance\":{\"type\":\"number\"},\"solid\":{\"type\":\"boolean\"}," +
                     "\"edges\":{\"type\":\"array\",\"items\":{\"type\":\"integer\"}},\"all_sharp_by_angle\":{\"type\":\"number\"},\"in_box\":{\"type\":\"object\"},\"tag\":{\"type\":\"string\"}," +
                     "\"method\":{\"type\":\"string\"},\"corners\":{},\"closed\":{\"type\":\"boolean\"},\"add_corners\":{\"type\":\"boolean\"},\"add_creases\":{\"type\":\"boolean\"},\"divisions\":{\"type\":\"integer\"}," +
-                    "\"tol\":{\"type\":\"number\"},\"creases\":{\"type\":\"boolean\"},\"replace\":{\"type\":\"boolean\"}," +
+                    "\"tol\":{\"type\":\"number\"},\"creases\":{\"type\":\"boolean\"},\"replace\":{\"type\":\"boolean\"},\"force\":{\"type\":\"boolean\",\"description\":\"override max_subd_levels / max_subd_faces (not block_rss_mb)\"}," +
                     "\"plane\":{\"$ref\":\"#/$defs/plane\"},\"layer\":{\"type\":\"string\"},\"name\":{\"type\":\"string\"},\"user_text\":{\"type\":\"object\",\"additionalProperties\":{\"type\":\"string\"}}",
                     "\"op\"");
             }
@@ -59,6 +59,12 @@ namespace RhinoMCP.Tools.Freeform
             bool replace = p.Bool("replace");
             var attr = GeoUtil.Attributes(p, doc, null);
             if (p.Errors.Count > 0) return FF.ArgFail(p.Errors);
+
+            var blocked = Resources.CheckRss("subd");
+            if (blocked != null) return blocked;
+            var guard = Resources.Begin("subd");
+            var pre = Preflight(op, p, ctx);
+            if (pre != null) return pre;
 
             var r = new Dictionary<string, object>();
             var ids = new List<Guid>();
@@ -87,7 +93,58 @@ namespace RhinoMCP.Tools.Freeform
                     "SubD ops need a valid SubD target (subd create_from_mesh/from_loft/from_surface) or valid inputs. Booleans are not available on SubD: use op to_brep first.");
             }
             r["op"] = op;
-            return ToolResult.Ok(r);
+            return guard.Finish(ToolResult.Ok(r));
+        }
+
+        /// <summary>Resource pre-flight: SubD level and face-count estimates before anything is computed.</summary>
+        static ToolResult Preflight(string op, P p, ToolContext ctx)
+        {
+            var lim = Resources.Limits;
+            bool force = p.Bool("force");
+            if (p.Errors.Count > 0) return null;       // let the normal argument errors surface
+            if (op == "subdivide")
+            {
+                int lv = p.Int("levels", false, 1);
+                if (p.Errors.Count > 0) { p.Errors.Clear(); return null; }
+                if (lv > lim.MaxSubdLevels && !force)
+                    return Resources.LimitFail("max_subd_levels", lv, lim.MaxSubdLevels,
+                        "subdivide levels=" + lv + " exceeds max_subd_levels (" + lim.MaxSubdLevels + "). Each level multiplies the face count by 4.",
+                        "Subdivide 1 level at a time and check subd info; usually 1-2 levels are enough. A SubD is already smooth at its control cage; you rarely need to subdivide it.", true);
+                var t = p.Tok("target");
+                var o = t == null ? null : FF.OneObject(p, t, "target");
+                var sd = o == null ? null : o.Geometry as SubD;
+                if (sd != null && lv >= 1)
+                {
+                    double faces = (double)sd.Faces.Count * Math.Pow(4, lv);
+                    if (faces > lim.MaxSubdFaces && !force)
+                        return Resources.LimitFail("max_subd_faces", faces, lim.MaxSubdFaces,
+                            "subdividing " + sd.Faces.Count + " faces " + lv + " level(s) would give ~" + (long)faces + " faces (limit " + lim.MaxSubdFaces + ").",
+                            "Subdivide fewer levels (1 level = x4 faces), or work on a lower-face cage.", true);
+                }
+                p.Errors.Clear();                      // errors found while peeking are reported by the real op
+            }
+            else if (op == "to_brep" || op == "offset")
+            {
+                var t = p.Tok("target");
+                var o = t == null ? null : FF.OneObject(p, t, "target");
+                var sd = o == null ? null : o.Geometry as SubD;
+                if (sd != null && sd.Faces.Count > lim.MaxSubdFaces && !force)
+                    return Resources.LimitFail("max_subd_faces", sd.Faces.Count, lim.MaxSubdFaces,
+                        op + " on a SubD with " + sd.Faces.Count + " faces exceeds max_subd_faces (" + lim.MaxSubdFaces + ").",
+                        "Work on a lower-face cage, or split the SubD into parts first.", true);
+                p.Errors.Clear();
+            }
+            else if (op == "create_from_mesh" && p.Has("mesh"))
+            {
+                var o = FF.OneObject(p, p.Tok("mesh"), "mesh");
+                var m = o == null ? null : o.Geometry as Mesh;
+                if (m != null && m.Faces.Count > lim.MaxSubdFaces && !force)
+                    return Resources.LimitFail("max_subd_faces", m.Faces.Count, lim.MaxSubdFaces,
+                        "create_from_mesh with " + m.Faces.Count + " mesh faces exceeds max_subd_faces (" + lim.MaxSubdFaces + ").",
+                        "Use a low-poly quad cage (a few hundred faces); reduce the mesh first.", true);
+                p.Errors.Clear();
+            }
+            return null;
         }
 
         static string Add(ToolContext ctx, GeometryBase g, ObjectAttributes attr, Dictionary<string, object> r, List<Guid> ids)

@@ -44,6 +44,7 @@ namespace RhinoMCP.Tools.Geometry
                     "\"domain\":{\"type\":\"array\",\"items\":{\"type\":\"number\"},\"minItems\":2,\"maxItems\":2}," +
                     "\"points\":{\"type\":\"integer\",\"description\":\"rebuild_curve: control point count\"},\"degree\":{\"type\":\"integer\"}," +
                     "\"solid\":{\"type\":\"boolean\"}," +
+                    "\"max_cp\":{\"type\":\"integer\",\"minimum\":16,\"description\":\"offset_surface/shell: faces of the result above this control-point count are rebuilt when possible (single untrimmed face); default limits.max_surface_control_points\"}," +
                     "\"include_guids\":{\"type\":\"boolean\"}",
                     "\"target\",\"op\"");
             }
@@ -376,9 +377,11 @@ namespace RhinoMCP.Tools.Geometry
             var bo = b.GetBoundingBox(true); bo.Inflate(tol * 2);
             if (!bo.Contains(result.GetBoundingBox(true).Min) || !bo.Contains(result.GetBoundingBox(true).Max)) { Fail(o, "shell grew outside the original bounding box (offset went outward)"); return; }
             if (v0 > 0 && v1 >= v0) { Fail(o, "shell result is not thinner than the original (" + GeoUtil.R(v1) + " >= " + GeoUtil.R(v0) + ")"); return; }
+            var cpInfo = new Dictionary<string, object>();
+            result = Lighten(result, _p.Int("max_cp", false, Resources.Limits.MaxSurfaceControlPoints), cpInfo);
             string h = ReplaceKeep(o, result);
             if (h == null) { Fail(o, "could not store the shell"); return; }
-            _o.Items.Add(new { handle = h, thickness = t, removed_faces = faces, volume_before = GeoUtil.R(v0), volume_after = GeoUtil.R(v1), solid = result.IsSolid });
+            _o.Items.Add(new { cp = cpInfo, handle = h, thickness = t, removed_faces = faces, volume_before = GeoUtil.R(v0), volume_after = GeoUtil.R(v1), solid = result.IsSolid });
         }
 
         void CapHoles(RhinoObject o)
@@ -517,6 +520,41 @@ namespace RhinoMCP.Tools.Geometry
             _o.Items.Add(new { handle = h, point_count = n, degree = deg, max_deviation = GeoUtil.R(maxDev) });
         }
 
+        static long SurfCp(Surface s) { var ns = s as NurbsSurface; return ns == null ? 4 : (long)ns.Points.CountU * ns.Points.CountV; }
+
+        /// <summary>Reports face control-point counts of a result and rebuilds it when it is one untrimmed face above maxCp.</summary>
+        Brep Lighten(Brep g, int maxCp, Dictionary<string, object> info)
+        {
+            long total = 0, mx = 0;
+            foreach (var s in g.Surfaces) { long k = SurfCp(s); total += k; if (k > mx) mx = k; }
+            info["cp_total"] = total; info["cp_max_face"] = mx;
+            if (mx <= maxCp) return g;
+            var ns = g.Surfaces.Count == 1 && g.Faces.Count == 1 && g.Faces[0].IsSurface ? g.Surfaces[0] as NurbsSurface : null;
+            if (ns == null)
+            {
+                _o.Warnings.Add("result has a face with " + mx + " control points (max_cp " + maxCp + ") and cannot be rebuilt automatically (joined or trimmed). Explode it and use freeform_surface rebuild_surface on the dense faces.");
+                return g;
+            }
+            double ratio = (double)ns.Points.CountU / Math.Max(1, ns.Points.CountV);
+            int pv = Math.Max(4, (int)Math.Floor(Math.Sqrt(maxCp / ratio))), pu = Math.Max(4, (int)Math.Floor(pv * ratio));
+            while ((long)pu * pv > maxCp && pu > 4 && pv > 4) { if (pu >= pv) pu--; else pv--; }
+            var rb = ns.Rebuild(Math.Min(3, pu - 1), Math.Min(3, pv - 1), pu, pv);
+            if (rb == null) { _o.Warnings.Add("rebuild to " + pu + "x" + pv + " failed; result kept with " + mx + " control points"); return g; }
+            double dev = 0;
+            for (int i = 0; i <= 8; i++) for (int j = 0; j <= 8; j++)
+                {
+                    var q = rb.PointAt(rb.Domain(0).ParameterAt(i / 8.0), rb.Domain(1).ParameterAt(j / 8.0));
+                    double u, v;
+                    if (ns.ClosestPoint(q, out u, out v)) dev = Math.Max(dev, q.DistanceTo(ns.PointAt(u, v)));
+                }
+            var nb = Brep.CreateFromSurface(rb);
+            if (nb == null) return g;
+            info["rebuilt_from_cp"] = mx; info["rebuilt_to"] = pu + "x" + pv; info["rebuild_max_deviation"] = GeoUtil.R(dev);
+            info["cp_total"] = (long)pu * pv; info["cp_max_face"] = (long)pu * pv;
+            _o.Warnings.Add("result had " + mx + " control points; rebuilt to " + pu + "x" + pv + " (max deviation " + GeoUtil.R(dev) + ")");
+            return nb;
+        }
+
         void OffsetSurface(RhinoObject o)
         {
             double tol = _ctx.Tol;
@@ -530,14 +568,17 @@ namespace RhinoMCP.Tools.Geometry
             var res = Brep.CreateOffsetBrep(b, d, solid, false, tol, out blends, out walls);
             if (res == null || res.Length == 0) { Fail(o, "offset by " + d + " failed (distance too large for the surface curvature?)"); return; }
             var hs = new List<string>();
-            foreach (var g in res)
+            var cpInfo = new Dictionary<string, object>();
+            int maxCp = _p.Int("max_cp", false, Resources.Limits.MaxSurfaceControlPoints);
+            foreach (var g0 in res)
             {
                 string log;
-                if (!g.IsValidWithLog(out log)) continue;
+                if (!g0.IsValidWithLog(out log)) continue;
+                var g = Lighten(g0, maxCp, cpInfo);
                 var id = AddLike(o, g); if (id != Guid.Empty) hs.Add(_ctx.Handles.For(id));
             }
             if (hs.Count == 0) { Fail(o, "offset result was invalid"); return; }
-            _o.Items.Add(new { source = H(o), handles = hs, distance = d, solid = res.All(x => x.IsSolid), volume = GeoUtil.R(res.Sum(x => GeoUtil.Volume(x))), area = GeoUtil.R(AreaMassProperties.Compute(res[0]) == null ? 0 : AreaMassProperties.Compute(res[0]).Area) });
+            _o.Items.Add(new { source = H(o), cp = cpInfo, handles = hs, distance = d, solid = res.All(x => x.IsSolid), volume = GeoUtil.R(res.Sum(x => GeoUtil.Volume(x))), area = GeoUtil.R(AreaMassProperties.Compute(res[0]) == null ? 0 : AreaMassProperties.Compute(res[0]).Area) });
         }
     }
 }

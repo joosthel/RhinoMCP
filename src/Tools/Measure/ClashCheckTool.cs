@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using Rhino.Geometry;
+using RhinoMCP.Tools.Shared;
 
 namespace RhinoMCP.Tools.Measure
 {
@@ -32,7 +33,8 @@ namespace RhinoMCP.Tools.Measure
                     "\"compute_volume\":{\"type\":\"boolean\",\"default\":false}," +
                     "\"top_k\":{\"type\":\"integer\",\"minimum\":1,\"maximum\":200,\"default\":20}," +
                     "\"max_pairs\":{\"type\":\"integer\",\"minimum\":1,\"maximum\":1000000,\"default\":5000,\"description\":\"Max candidate pairs after broad phase\"}," +
-                    "\"budget_ms\":{\"type\":\"integer\",\"minimum\":100,\"maximum\":600000,\"default\":20000}",
+                    "\"budget_ms\":{\"type\":\"integer\",\"minimum\":100,\"maximum\":600000,\"default\":30000,\"description\":\"time budget (default limits.clash_budget_ms). On expiry the partial result is returned with data.timeout {pairs_tested, pairs_total, hints}\"}," +
+                    "\"force\":{\"type\":\"boolean\",\"description\":\"allow max_pairs above limits.clash_max_pairs\"}",
                     "\"a\"");
             }
         }
@@ -57,9 +59,18 @@ namespace RhinoMCP.Tools.Measure
             bool wantVol = a.Bool("compute_volume", false);
             int topK = a.Int("top_k", false, 20, 1, 200);
             int maxPairs = a.Int("max_pairs", false, 5000, 1, 1000000);
-            int budget = a.Int("budget_ms", false, 20000, 100, 600000);
+            int budget = a.Int("budget_ms", false, Resources.Limits.ClashBudgetMs, 100, 600000);
             if (clearance < 0) a.Error("'clearance' must be >= 0");
+            bool force = a.Bool("force", false);
             if (a.HasErrors) return a.ErrorResult();
+
+            var rssBlock = Resources.CheckRss("clash_check");
+            if (rssBlock != null) return rssBlock;
+            var resGuard = Resources.Begin("clash_check");
+            if (maxPairs > Resources.Limits.ClashMaxPairs && !force)
+                return Resources.LimitFail("clash_max_pairs", maxPairs, Resources.Limits.ClashMaxPairs,
+                    "max_pairs " + maxPairs + " exceeds clash_max_pairs (" + Resources.Limits.ClashMaxPairs + "). Nothing was computed.",
+                    "Split the check by set or layer (a = one discipline, b = another) instead of raising max_pairs; results are partial-but-useful at the default.", true);
 
             var skipped = new Dictionary<string, int>();
             var A = MU.Wrap(aObjs, ctx, skipped, null);
@@ -165,6 +176,16 @@ namespace RhinoMCP.Tools.Measure
             data["clash_count"] = clashes;
             data["clearance_count"] = clear;
             data["partial"] = truncated || timedOut;
+            if (timedOut)
+                data["timeout"] = JToken.FromObject(new
+                {
+                    budget_ms = budget, pairs_tested = tested, pairs_total = pairs.Count,
+                    hints = new[] {
+                        "Split the check by set or layer, or lower clearance.",
+                        "Self-intersecting or kinked breps make Intersection.BrepBrep very slow: run geometry_validate on the objects with the most candidate pairs.",
+                        "Near-tangent or coplanar contacts are slow: check a few pairs separately with a smaller set.",
+                        "Rebuild faces above ~2500 control points (freeform_surface rebuild_surface)." }
+                });
             data["matrix"] = mx;
             data["top"] = top;
             if (hitsOut.Count > topK) data["top_truncated"] = true;
@@ -173,7 +194,7 @@ namespace RhinoMCP.Tools.Measure
             var res = ToolResult.Ok(data);
             res.Units = ctx.Units;
             foreach (var w in warnings) res.Warn(w);
-            return res;
+            return resGuard.Finish(res);
         }
 
         static Hit Narrow(Geo ga, Geo gb, double tol, double clearance)

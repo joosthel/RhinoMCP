@@ -29,6 +29,17 @@ Rule of thumb: cheap before expensive. Counts before lists, numbers before pictu
 - Do not call `view_capture` after every step. One capture per milestone.
 - Handles are per session. A `NOT_FOUND` on a handle means it is stale: re-query by set or filter.
 
+## Keep Rhino light
+
+Rhino 7 Mac runs under Rosetta, mostly single-threaded: heavy geometry stalls or crashes it. Heavy tools refuse with `RESOURCE_LIMIT` (numbers plus guidance) rather than compute; read the guidance, don't just retry with `force:true`.
+
+- Call `system_status` on big models and before heavy work: memory, Rosetta, heaviest objects, recommendations.
+- Modest control-point counts: 20x20 per surface is usually enough (limit 50x50). Rebuild dense surfaces (`freeform_surface` `rebuild_surface`) before booleans, offsets and Make2D.
+- Low SubD levels: 1 to 2 (limit 2). A SubD is smooth at the cage.
+- Small captures: 1024 px wide; the limit is 1600x1200. Use `zoom_to` for detail.
+- Split heavy `drawing_make2d` and `clash_check` by layer or set; booleans one cutter at a time.
+- `performance_mode` `on` for dense models (fast meshing, light display); `off` restores. Watch the `resources` block and warnings in results.
+
 ## 4. Undo discipline
 
 - Every mutating call is exactly one undo record named `MCP: <tool>`. `history_undo` reverts the last record; pass a count to revert several.
@@ -54,11 +65,11 @@ Never report success on an unverified geometry result. Never retry the identical
 
 Intent to tool, abbreviated. Full table in [references/tool-map.md](references/tool-map.md). Tools marked M2+ exist only if the server build includes them: check `tools/list`.
 
-- Orient: `context_get`, `layers_list`, `objects_query`, `model_overview` (M3).
+- Orient: `context_get`, `system_status`, `layers_list`, `objects_query`, `model_overview` (M3).
 - Select / group: `objects_select`, `sets_save`, `sets_list`, `sets_delete`.
 - Create / edit: `geometry_create`, `geometry_transform`, `geometry_boolean`, `geometry_edit`, `freeform_surface`, `subd`, `objects_set_props`, `objects_delete`.
 - Measure / check: `measure`, `measure_distance`, `clash_check`, `geometry_validate`, `analyze_continuity`, `analyze_surface`, `verify_audit` (M3).
-- Look: `view_capture`, `view_set`, `views_named`.
+- Look: `view_capture`, `view_set`, `views_named`. Speed: `performance_mode`.
 - Escape hatches: `run_python`, `run_csharp`, `run_command`, `commands_search`.
 - Undo: `history_undo`, `history_redo`.
 
