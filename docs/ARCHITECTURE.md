@@ -37,6 +37,7 @@ Claude Desktop ── stdio ── rhinomcp-bridge (Swift, M5) ┤
 | Auth | `Authorization: Bearer <token>`. The token is 32 random bytes as hex, persisted in `~/Library/Application Support/RhinoMCP/config.json` (mode 0600). |
 | Host/Origin | Requests are rejected unless Host is `127.0.0.1:<port>` or `localhost:<port>`. Requests carrying any `Origin` header are rejected. |
 | Discovery | `~/Library/Application Support/RhinoMCP/instances/<pid>.json`, containing `{pid, port, version, startedAt}`. The file is removed on exit. |
+| Batching | JSON-RPC batch arrays are rejected with -32600 (not needed by Claude Code). |
 | Methods | `initialize` (echoes a supported `protocolVersion`: 2025-11-25, 2025-06-18 or 2025-03-26) · `notifications/*` (202) · `ping` · `tools/list` · `tools/call` · `resources/list` · `resources/read` · `prompts/list` · `prompts/get` |
 | Startup | The server starts on the first `RhinoApp.Idle` after load, if `autoStart` is set (default true). |
 
@@ -57,7 +58,10 @@ public interface ITool {
 - **Discovery.** `ToolRegistry` reflects over the tools assembly and registers every concrete non-abstract `ITool` that has a public parameterless constructor. Duplicate names fail loudly.
 - **Dispatch.** Each call goes HTTP thread → `UiDispatcher.Invoke` (`RhinoApp.InvokeOnUiThread` + `TaskCompletionSource`, default timeout 60 s) → `Execute`.
 - **Undo.** If `Kind` is `Mutate`, `Destructive` or `Script`, the registry wraps the call in `doc.BeginUndoRecord("MCP: <name>")` / `EndUndoRecord`. It then calls `doc.Views.Redraw()` and attaches a `state_token`.
-- **Annotations.** `Read` maps to `readOnlyHint: true`. `Destructive` maps to `destructiveHint: true`.
+- **Annotations.** `Read` maps to `readOnlyHint: true`. `Destructive` and `Script` map to `destructiveHint: true`.
+- **Own undo.** A tool implementing the marker interface `IManagesOwnUndo` is not wrapped in an undo record (used by `run_command`, whose commands, including `_Undo`, manage undo themselves). The registry still redraws and bumps `state_token`.
+- **Schemas.** Tools write `$ref: "#/$defs/target|point|plane"`; `tools/list` injects the `$defs` block.
+- **Core tools.** `server_info` and `dev_reload` (devMode only) live in the core. Both are `Read` kind because they do not touch the model.
 - **Argument errors.** `ArgReader` gathers *all* argument errors into one `INVALID_ARGS` result.
 
 ### ToolContext
