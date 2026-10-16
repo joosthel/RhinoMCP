@@ -7,14 +7,7 @@ A personal research project, built to find out how far an agent can drive Rhino 
 > [!NOTE]
 > **Windows:** this project is untested on Rhino 7 for Windows. It builds and passes the automated checks on Windows, but it hasn't run inside a real Rhino there yet. **Feedback & logs are much appreciated**: see [Feedback & logs](#feedback--logs).
 
-![RhinoMCP: a carabiner modelled by an agent, and its clean section drawing](docs/media/hero.png)
-
-<p align="center">
-  <img src="docs/media/demo.gif" alt="Demo: an agent builds a carabiner hoop in Rhino 7 through MCP, then draws it" width="800"><br>
-  <sub>33 s, filmed through <code>view_capture</code> (no screen recording). <a href="docs/media/demo.mp4">Watch the MP4</a> · <a href="tests/demo/README.md">how it was recorded</a></sub>
-</p>
-
-The carabiner hoop is built from a photo in about 40 tool calls: outline curves, extrusion, rounded edges, gate split and notches, engraved text. Then `drawing_make2d` produces the plan and a hatched section at true scale. Photo-to-model details are in the [carabiner evaluation](docs/eval/carabiner/REPORT.md); the Make2D numbers are in the [drawing evaluation](docs/eval/drawing/REPORT.md).
+*A new demo video is being recorded.*
 
 ## Highlights
 - **Runs inside Rhino 7.** A C# plugin serves MCP on `127.0.0.1` with a token. A small native bridge connects stdio clients. Users need no Python, Node or .NET.
@@ -93,7 +86,7 @@ Details are in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). It also records e
 | [ARCHITECTURE](docs/ARCHITECTURE.md) | Design, tool contract, learned quirks |
 | [DEVELOPMENT](docs/DEVELOPMENT.md) | Build, dev loop, writing tools, tests |
 | [PLAN](docs/PLAN.md) · [DECISIONS](docs/DECISIONS.md) | Milestones and owner decisions |
-| [Evaluations](docs/eval/) | [freeform](docs/eval/freeform/REPORT.md) · [drawing](docs/eval/drawing/REPORT.md) · [layout](docs/eval/layout/REPORT.md) · [scale](docs/eval/scale/REPORT.md) · [sculpture rebuild](docs/eval/rebuild/REPORT.md) · [carabiner](docs/eval/carabiner/REPORT.md) |
+| [Evaluations](docs/eval/) | [freeform](docs/eval/freeform/REPORT.md) · [drawing](docs/eval/drawing/REPORT.md) · [layout](docs/eval/layout/REPORT.md) · [scale](docs/eval/scale/REPORT.md) · [sculpture rebuild](docs/eval/rebuild/REPORT.md) |
 | [Research](docs/research/) | 11 research notes behind the design ([synthesis](docs/research/00-synthesis.md)) |
 | [Skills](skills/) | Agent skills (Claude Code plugin) |
 

@@ -28,12 +28,12 @@ The limiting factors are not missing APIs. They are:
 | A2 sheet at 1:100 with PDF and DXF export | Scale exact, vector PDF, DXF with no SPLINEs from clean drawings | – | [layout](eval/layout/REPORT.md) |
 | 20,000-object model | Overview in 0.9 s (~460 tokens); nearest-object query 4 ms warm; change journal 0.01 s | – | [scale](eval/scale/REPORT.md) |
 | Two-element paper sculpture from one photo (Opus) | Plan and silhouette matched (camera fitted to 0.9 px). 3D form was guessed and over-engineered | 368 calls, 14 failed, 90 s timeouts | [rebuild](eval/rebuild/REPORT.md) |
-| Carabiner hoop from a photo (Opus), basic shapes then details | Two clean solids. Outline within about 1.3 mm, exact straight front edge after owner feedback, engraving | 137 calls (about 40 for a clean replay), slowest 2.2 s | [carabiner](eval/carabiner/REPORT.md) |
+| Flat product part from a photo (Opus), basic shapes then details | Two clean solids. Outline within about 1.3 mm of the trace, exact straight edge after owner feedback | 137 calls (about 40 for a clean replay), slowest 2.2 s | *(materials removed: third-party product)* |
 
 ## What we learned
 
 ### 1. Strategy matters more than tool count
-The sculpture and the carabiner used the same server. The sculpture run used RBF height fields and doubly curved, laminated offsets: 368 calls, faces with 44×57 control points, and boolean timeouts. The carabiner run used light plan curves, one extrusion, one boolean, and details as small cuts: about 40 calls on replay, 2 s at worst.
+The sculpture and the flat product part used the same server. The sculpture run used RBF height fields and doubly curved, laminated offsets: 368 calls, faces with 44×57 control points, and boolean timeouts. The product-part run used light plan curves, one extrusion, one boolean, and details as small cuts: about 40 calls on replay, 2 s at worst.
 
 The owner's observation was decisive: "the original model is really light, no fancy curvature". Agents default to heavier geometry than designers use. The skills now push "basic shapes first, details after", and the resource guard enforces lightness.
 
