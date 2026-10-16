@@ -1,6 +1,6 @@
 {
   "name": "rhino-mcp",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Agent skills for driving Rhino 7 (macOS) through the RhinoMCP server: efficient tool use, units and tolerances, geometry hygiene, layer standards, drawing production, architectural massing and product design.",
   "author": {
     "name": "joosthel"

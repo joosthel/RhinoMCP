@@ -2,7 +2,7 @@
 // stdin: newline-delimited JSON-RPC. stdout: one JSON line per response (nothing else). stderr: logs.
 import Foundation
 
-let bridgeVersion = "0.2.0"
+let bridgeVersion = "0.3.0"
 let supportedProtocols = ["2025-11-25", "2025-06-18", "2025-03-26"]
 let dataDir: String = {
     if let override = ProcessInfo.processInfo.environment["RHINOMCP_DATA_DIR"], !override.isEmpty { return override }
