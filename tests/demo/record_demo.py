@@ -17,6 +17,7 @@ import base64
 import json
 import math
 import os
+import subprocess
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
@@ -24,6 +25,7 @@ import mcp_client as c  # noqa: E402
 
 ROOT = "_demo"
 SAVED_VIEW = "_demo_user_view"
+SHEET = "_demo_A3"
 MODE = "Rendered"               # one display mode for every model shot: plain white ground, soft shadow, layer materials, no grain
 # NEVER use "Raytraced" here: it renders progressively on all cores and blocks the capture / the MCP server
 CAP_W, CAP_H = 1840, 1035       # largest 16:9 size inside limits.max_capture_pixels (1,920,000); composed down to 1280x720
@@ -226,32 +228,202 @@ class Recorder(object):
             self.cap("turntable", "f%03d" % i, cam_at(az, dist=CAM_DIST * 1.15))
         self.meta["turntable"] = {"frames": frames}
 
-    # ------------------------------------------------------------------ drawings
+    # ------------------------------------------------------------------ drawings: Make2D + dimensions + labels + A3 sheet
+    def purge_drawings(self):
+        """Remove everything the drawing scene makes (so that it can be re-run on a kept model)."""
+        for cp in ok(c.call("drawing_clipping_plane", {"action": "list"}))["clipping_planes"]:
+            if (cp.get("name") or "").startswith("_demo"):
+                c.call("drawing_clipping_plane", {"action": "delete", "target": cp["handle"]})
+        if any(l["name"] == SHEET for l in ok(c.call("layouts_list"))["layouts"]):
+            c.call("layout_delete", {"name": SHEET, "confirm": SHEET})
+        for k in ("elev", "plan", "section"):
+            for suffix in ("", "_dims", "_lbl"):
+                path = "%s::%s%s" % (ROOT, k, suffix)
+                c.call("objects_delete", {"target": {"query": {"layer": path, "include_sublayers": True}}, "confirm_count": 100000})
+                c.call("layers_manage", {"ops": [{"op": "delete", "path": path, "recursive": True, "confirm_objects": 0}]})
+
     def drawings(self):
-        S = ROOT + "::sideboard"
-        tgt = {"query": {"layer": S, "include_sublayers": True}}
+        self.purge_drawings()
+        S = ROOT + "::sideboard::"
+        P = lambda x, y: [x, y, 0]
+        e = EDGE
+
+        def handles(layer, pred=lambda b: True):
+            r = ok(c.call("objects_query", {"filters": {"layer": S + layer}, "fields": ["handle", "bbox"], "limit": 500}))
+            return [x["handle"] for x in r["rows"] if pred(x["bbox"])]
+
+        front = lambda b: b["max"][1] < 20                                  # objects in the front plane y = 0 (the back ones hide behind them)
+        # layers: black linework (Make2D), terracotta dimensions, navy labels
+        ok(c.call("layers_manage", {"ops": [{"op": "create", "path": "%s::%s_dims" % (ROOT, k), "color": "#b3472b", "print_width_mm": 0.18} for k in ("elev", "plan", "section")]
+                                           + [{"op": "create", "path": "%s::%s_lbl" % (ROOT, k), "color": "#1c2c56", "print_width_mm": 0.18} for k in ("elev", "plan", "section")]
+                                           + [{"op": "create", "path": ROOT + "::plan_lbl::cut", "color": "#1c2c56", "print_width_mm": 0.5},
+                                              {"op": "create", "path": ROOT + "::plan_lbl::top", "color": "#7a7f87", "linetype": "Dashed", "print_width_mm": 0.13}]}))
+        res = {}
+        # ---------------------------------------------------------------- Make2D at full size (the sheet details bring them to 1:10)
+        # Front elevation: Rhino's hidden-line drops the tube silhouettes that sit tangent to the flush panels (also with
+        # include_tangent_edges), so the elevation is made from the objects of the FRONT plane only: the back tubes, connectors and
+        # feet are hidden behind them anyway. Panels, tubes and connectors then do not compete, and every silhouette survives.
+        elev_t = handles("Tubes", front) + handles("Connectors", front) + handles("Knobs") + handles("Top") + handles("Feet", front)
+        d = ok(c.call("drawing_make2d", {"target": elev_t, "view": "Front", "scale": "1:1", "layer_root": ROOT + "::elev", "origin": [-19, -10000, 0], "hatch": "none"}))
+        res["elev"] = {"report": d["report"], "set": d["output_set"], "layers": d["layers"]}
+        # the four front panels in a run of their own: together with the tubes, their edges (0.15 mm inside the tube surface) cancel the silhouettes
+        c.call("drawing_make2d", {"target": handles("Fronts"), "view": "Front", "scale": "1:1", "layer_root": ROOT + "::elev", "origin": [XS[0] + e, -10000 + ZB + e, 0], "hatch": "none"})
         plan_clip = ok(c.call("drawing_clipping_plane", {"action": "create", "z": 520, "looking": "down", "name": "_demo_plan", "layer": ROOT + "::clip"}))
         sec_clip = ok(c.call("drawing_clipping_plane", {"action": "create", "section_line": {"from": [XS[1] / 2.0, -1500, 0], "to": [XS[1] / 2.0, 1500, 0]},
                                                           "looking": "left", "name": "_demo_section", "layer": ROOT + "::clip"}))
-        res = {}
-        # (a Front elevation is not used: Rhino's hidden-line drops the tube silhouettes that sit tangent to the flush panels)
-        for key, kw in (("plan", {"view": "Top", "clipping_planes": [plan_clip["handle"]], "origin": [0, -4000, 0]}),
-                        ("section", {"view": sec_clip["view"], "clipping_planes": [sec_clip["handle"]], "origin": [0, -2000, 0]})):
-            d = ok(c.call("drawing_make2d", dict(target=tgt, scale="1:10", layer_root=ROOT + "::" + key, hatch={"pattern": "Solid"}, **kw)))
+        tgt = {"query": {"layer": ROOT + "::sideboard", "include_sublayers": True}}
+        for key, kw in (("plan", {"view": "Top", "clipping_planes": [plan_clip["handle"]], "origin": [-17, -20017, 0]}),
+                        ("section", {"view": sec_clip["view"], "clipping_planes": [sec_clip["handle"]], "origin": [11597, -10000, 0]})):
+            d = ok(c.call("drawing_make2d", dict(target=tgt, scale="1:1", layer_root=ROOT + "::" + key, hatch={"pattern": "Solid"}, **kw)))
             res[key] = {"report": d["report"], "set": d["output_set"], "layers": d["layers"]}
         self.meta["drawings"] = res
-        for key in res:
-            self.cap("drawing", key, "Top", mode=DRAW_MODE, zoom_to={"set": res[key]["set"]}, margin=0.08, only_layers=[ROOT + "::" + key])
+        # drawing coordinates: elevation (X, Z-10000) · plan (X, Y-20000) · section (12000-Y, Z-10000), all in mm at full size
+        ex, ey = (lambda X: X), (lambda Z: Z - 10000)
+        px, py = (lambda X: X), (lambda Y: Y - 20000)
+        sx, sy = (lambda Y: 12000 - Y), (lambda Z: Z - 10000)
+        DOOR = (ZB + e, ZM - e)
+        DRAWER = (ZM + e, ZT - e)
+        xl, xr = -R_TUBE - TOP_OVER, XS[-1] + R_TUBE + TOP_OVER        # top slab x extent
+        yf, yb = -R_TUBE - TOP_OVER, DEPTH + R_TUBE + TOP_OVER         # top slab y extent
+        zt0, zt1 = ZT + R_BALL, ZT + R_BALL + TOP_T                    # top slab z extent
+
+        def lin(a, b, off, axis=None):
+            it = {"type": "linear", "from": a, "to": b, "offset_mm": off}
+            if axis:
+                it["axis"] = axis
+            return it
+
+        def run_ann(layer, items, height, arrows):
+            r = ok(c.call("annotate", {"scale": "1:10", "layer": layer, "arrows": arrows, "text_height_mm": height, "items": items}))
+            bad = [x for x in r["results"] if not x.get("ok", True)]
+            if bad:
+                raise RuntimeError(json.dumps(bad[:3]))
+            return r
+
+        # ---------------------------------------------------------------- dimensions (3.5 mm text, ticks, chained, one dim style for 1:10)
+        z0, zT = ey(0), ey(zt1)
+        elev_dims = [lin(P(XS[0], z0), P(XS[1], z0), -8), lin(P(XS[1], z0), P(XS[2], z0), -8), lin(P(xl, z0), P(xr, z0), -18),            # bays, overall width
+                     lin(P(xl, zT), P(-R_TUBE, zT), 14), lin(P(-R_TUBE, zT), P(XS[-1] + R_TUBE, zT), 14), lin(P(XS[-1] + R_TUBE, zT), P(xr, zT), 14)]   # top overhang
+        for a, b in ((0, ZB), (ZB, ZM), (ZM, ZT)):                                  # foot, lower and upper zone (chain on the right)
+            elev_dims.append(lin(P(xr, ey(a)), P(xr, ey(b)), 8, "y"))
+        elev_dims.append(lin(P(xr, ey(0)), P(xr, ey(zt1)), 20, "y"))                           # overall height
+        for a, b in (DOOR, DRAWER):                                                            # door and drawer fronts (chain on the left)
+            elev_dims.append(lin(P(xl, ey(a)), P(xl, ey(b)), -8, "y"))
+        run_ann(ROOT + "::elev_dims", elev_dims, 3.5, "tick")
+        pz = py(0)
+        plan_dims = [lin(P(XS[0], pz), P(XS[1], pz), -12), lin(P(XS[1], pz), P(XS[2], pz), -12), lin(P(xl, pz), P(xr, pz), -22),
+                     lin(P(xr, py(0)), P(xr, py(DEPTH)), 8, "y"), lin(P(xr, py(yf)), P(xr, py(yb)), 18, "y")]
+        run_ann(ROOT + "::plan_dims", plan_dims, 3.5, "tick")
+        sec_dims = [lin(P(sx(yb), sy(0)), P(sx(yb), sy(ZB)), -8, "y"), lin(P(sx(yb), sy(ZB)), P(sx(yb), sy(ZT)), -8, "y"), lin(P(sx(yb), sy(ZT)), P(sx(yb), sy(zt1)), -8, "y"),
+                    lin(P(sx(yb), sy(0)), P(sx(yb), sy(zt1)), -18, "y"),
+                    lin(P(sx(yf), sy(DOOR[0])), P(sx(yf), sy(DOOR[1])), 8, "y"), lin(P(sx(yf), sy(DRAWER[0])), P(sx(yf), sy(DRAWER[1])), 8, "y"),
+                    lin(P(sx(yf), sy(zt0)), P(sx(yf), sy(zt1)), 18, "y"),
+                    lin(P(sx(DEPTH), sy(0)), P(sx(0), sy(0)), -8), lin(P(sx(yb), sy(0)), P(sx(yf), sy(0)), -18)]
+        run_ann(ROOT + "::section_dims", sec_dims, 3.5, "tick")
+        # a diameter dimension on one knob (radial dimensions need a true circle: Make2D joins it from two arcs, so a circle is added on the dimension layer)
+        kc = [XS[1] / 2.0, ey((ZM + ZT) / 2.0), 0]
+        kh = ok(c.call("geometry_create", {"items": [{"kind": "circle", "center": kc, "radius": 11}], "layer": ROOT + "::elev_dims"}))["items"][0]["handle"]
+        run_ann(ROOT + "::elev_dims", [{"type": "radial", "curve": kh, "kind": "diameter", "angle_deg": 40}], 3.5, "tick")
+
+        # ---------------------------------------------------------------- labels: leaders (2.5 mm), view titles (5 mm), section marker
+        def lead(tip, end, text):
+            return {"type": "leader", "points": [tip, end], "text": text}
+
+        ztn = ey(zt1 - 8)
+        elev_lbl = [lead(P(1100, ztn), P(1200, ey(700)), "oak top 22 mm"),
+                    lead(P(XS[1] - R_BALL, ey(ZM)), P(700, ey(345)), "spherical connector \u00d826"),
+                    lead(P(XS[2] - R_TUBE, ey(250)), P(1450, ey(200)), "steel tube \u00d818"),
+                    lead(P(1000, ey(480)), P(1060, ey(560)), "drawer front"),
+                    lead(P(1000, ey(250)), P(1060, ey(300)), "door"),
+                    lead(P(XS[2] - 17, ey(3)), P(1400, ey(28)), "glider foot"),
+                    {"type": "text", "text": "Front elevation 1:10", "point": P(XS[1], ey(-300)), "height_mm": 5, "justify": "center"}]
+        run_ann(ROOT + "::elev_lbl", elev_lbl, 2.5, "arrow")
+        plan_lbl = [lead(P(300, py(DEPTH)), P(150, py(470)), "back panel 6 mm"),
+                    lead(P(XS[1] + 6, py(DEPTH + R_TUBE)), P(900, py(530)), "steel tube \u00d818"),
+                    lead(P(XS[2] + 9, py(DEPTH + 9)), P(1450, py(590)), "spherical connector \u00d826"),
+                    lead(P(1300, py(yb)), P(1250, py(470)), "oak top outline (above the cut)"),
+                    lead(P(1000, py(0)), P(1100, py(100)), "drawer front"),
+                    lead(P(-12, py(-12)), P(-130, py(-90)), "glider foot"),
+                    {"type": "text", "text": "Plan 1:10", "point": P(XS[1], py(-330)), "height_mm": 5, "justify": "center"}]
+        run_ann(ROOT + "::plan_lbl", plan_lbl, 2.5, "arrow")
+        sec_lbl = [lead(P(sx(100), sy(zt1 - 11)), P(sx(190), sy(740)), "oak top 22 mm"),
+                   lead(P(sx(0) - 9, sy(ZM)), P(11960, sy(480)), "steel tube \u00d818"),
+                   lead(P(11960, sy(ZB + 3)), P(11940, sy(140)), "panel 6 mm"),
+                   lead(P(sx(0), sy(250)), P(11960, sy(300)), "door"),
+                   lead(P(sx(0), sy(520)), P(11960, sy(560)), "drawer front"),
+                   lead(P(sx(0) + 17, sy(3)), P(12070, sy(-40)), "glider foot"),
+                   {"type": "text", "text": "Section A\u2013A 1:10", "point": P(sx(DEPTH / 2.0), sy(-300)), "height_mm": 5, "justify": "center"}]
+        run_ann(ROOT + "::section_lbl", sec_lbl, 2.5, "arrow")
+        # section marker A-A on the plan: thin cut line, thick ends, arrows towards +x (the viewing direction), letters
+        xc = XS[1] / 2.0
+        y0, y1 = py(-36), py(DEPTH + 130)
+        mk = [{"kind": "line", "from": P(xc, y0), "to": P(xc, y1)},
+              {"kind": "polyline", "points": [P(xc, y0), P(xc, y0 + 60)]}, {"kind": "polyline", "points": [P(xc, y1 - 60), P(xc, y1)]},
+              {"kind": "polyline", "points": [P(xc, y0), P(xc + 100, y0)]}, {"kind": "polyline", "points": [P(xc, y1), P(xc + 100, y1)]},
+              {"kind": "polyline", "points": [P(xc + 100, y0), P(xc + 60, y0 - 16), P(xc + 60, y0 + 16)], "closed": True},
+              {"kind": "polyline", "points": [P(xc + 100, y1), P(xc + 60, y1 - 16), P(xc + 60, y1 + 16)], "closed": True}]
+        items = ok(c.call("geometry_create", {"items": mk, "layer": ROOT + "::plan_lbl::cut"}))["items"]
+        hs = [i["handle"] for i in items]
+        c.call("annotate", {"scale": "1:10", "layer": ROOT + "::plan_lbl::cut", "items": [{"type": "hatch", "curves": hs[5], "pattern": "Solid"}, {"type": "hatch", "curves": hs[6], "pattern": "Solid"}]})
+        run_ann(ROOT + "::plan_lbl::cut", [{"type": "text", "text": "A", "point": P(xc + 130, y0), "height_mm": 5, "justify": "left", "valign": "middle"},
+                                          {"type": "text", "text": "A", "point": P(xc + 130, y1), "height_mm": 5, "justify": "left", "valign": "middle"}], 2.5, "arrow")
+        # the oak top lies above the plan cut: its outline as a thin dashed line (with the overhang)
+        ok(c.call("geometry_create", {"items": [{"kind": "polyline", "points": [P(xl, py(yf)), P(xr, py(yf)), P(xr, py(yb)), P(xl, py(yb))], "closed": True}], "layer": ROOT + "::plan_lbl::top"}))
+        self.meta["annot"] = {"elev": {"dims": len(elev_dims) + 1, "labels": len(elev_lbl)}, "plan": {"dims": len(plan_dims), "labels": len(plan_lbl) + 1},
+                              "section": {"dims": len(sec_dims), "labels": len(sec_lbl)}}
+        # framing boxes for the captures (drawing + dimensions + labels)
+        self.meta["frames"] = {"elev": {"min": [-330, ey(-420), 0], "max": [1900, ey(850), 0]},
+                               "plan": {"min": [-450, py(-360), 0], "max": [1900, py(620), 0]},
+                               "section": {"min": [sx(yb) - 330, sy(-420), 0], "max": [sx(yf) + 330, sy(850), 0]}}
+        # the captures: lines only, + dimensions, + labels
+        for key in ("elev", "plan", "section"):
+            fr = self.meta["frames"][key]
+            for beat, layers in (("0", [ROOT + "::" + key]), ("1", [ROOT + "::" + key, ROOT + "::" + key + "_dims"]),
+                                 ("2", [ROOT + "::" + key, ROOT + "::" + key + "_dims", ROOT + "::" + key + "_lbl"])):
+                self.cap("drawing", "%s_%s" % (key, beat), "Top", mode=DRAW_MODE, zoom_to={"min": fr["min"], "max": fr["max"]}, margin=0.02, only_layers=layers)
+        self.sheet()
+
+    def sheet(self):
+        """A3 landscape sheet: three details at 1:10 with the annotation layers, title block, export to PDF."""
+        fr = self.meta["frames"]
+        cen = lambda f: [(f["min"][0] + f["max"][0]) / 2.0, (f["min"][1] + f["max"][1]) / 2.0, 0]
+        det = lambda key, rect: {"view": "Top", "scale": "1:10", "rect": rect, "center": cen(fr[key]), "locked": True,
+                                 "layers": [ROOT + "::" + key, ROOT + "::" + key + "_dims", ROOT + "::" + key + "_lbl"]}
+        lay = ok(c.call("layout_create", {"name": SHEET, "paper": "A3", "orientation": "landscape", "margins": 10,
+                                           "details": [det("elev", [12, 150, 262, 287]), det("section", [265, 150, 408, 287]), det("plan", [12, 52, 262, 148])],
+                                           "title_block": {"project": "Modular sideboard", "sheet_title": "General arrangement", "sheet_number": "A-01",
+                                                           "scale": "1:10", "date": "2026-10-16", "author": "RhinoMCP agent"}}))
+        self.meta["layout"] = lay
+        ok(c.call("annotate", {"layout": SHEET, "layer": ROOT + "::sheet_notes", "items": [
+            {"type": "text", "text": "Notes", "point": [275, 128], "height_mm": 3.5},
+            {"type": "text", "text": "All dimensions in mm.", "point": [275, 120], "height_mm": 2.5},
+            {"type": "text", "text": "Section A–A cuts through the middle of bay 1.", "point": [275, 114], "height_mm": 2.5},
+            {"type": "text", "text": "Overall 1598 × 422 × 640 mm, two bays of 780 mm.", "point": [275, 108], "height_mm": 2.5}]}))
+        os.makedirs(os.path.join(self.work, "sheet"), exist_ok=True)
+        pdf = os.path.join(self.work, "sheet", "sheet.pdf")
+        r = ok(c.call("export", {"format": "pdf", "path": pdf, "layout": SHEET, "overwrite": True}))
+        # the PDF as a vector-crisp raster (view_capture refuses page views): macOS sips renders the first page, A3 at 300 dpi
+        png = os.path.join(self.work, "sheet", "sheet.png")
+        subprocess.check_call(["sips", "-s", "format", "png", "--resampleHeightWidthMax", "4961", pdf, "--out", png], stdout=subprocess.DEVNULL)
+        dxf = ok(c.call("export", {"format": "dxf", "path": os.path.join(self.work, "sheet", "drawings.dxf"), "overwrite": True,
+                                   "target": [{"query": {"layer": "%s::%s%s" % (ROOT, k, sfx), "include_sublayers": True}} for k in ("elev", "plan", "section") for sfx in ("", "_dims", "_lbl")]}))
+        self.meta["sheet"] = {"pdf": pdf, "png": png, "export": r, "dxf": dxf}
 
     # ------------------------------------------------------------------ cleanup
     def cleanup(self):
+        if any(l["name"] == SHEET for l in ok(c.call("layouts_list"))["layouts"]):
+            c.call("layout_delete", {"name": SHEET, "confirm": SHEET})
         for cp in ok(c.call("drawing_clipping_plane", {"action": "list"}))["clipping_planes"]:
             if (cp.get("name") or "").startswith("_demo"):
                 c.call("drawing_clipping_plane", {"action": "delete", "target": cp["handle"]})
         c.call("objects_delete", {"target": {"query": {"layer": ROOT, "include_sublayers": True}}, "confirm_count": 100000})
         c.call("sets_delete", {"name": "_demo_sideboard"})
+        for st in ok(c.call("sets_list"))["sets"]:                    # the output sets of drawing_make2d (empty after the delete above)
+            if st["name"].startswith("make2d_"):
+                c.call("sets_delete", {"name": st["name"]})
         c.call("run_python", {"code": CLEAN_MATERIALS})
         c.call("layers_manage", {"ops": [{"op": "delete", "path": ROOT, "recursive": True, "confirm_objects": 0}]})
+        c.call("layers_manage", {"ops": [{"op": "delete", "path": "Sheet", "recursive": True, "confirm_objects": 0}]})   # made by layout_create (frame, title block, details)
 
 
 def main():
