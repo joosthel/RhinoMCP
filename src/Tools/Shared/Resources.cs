@@ -167,7 +167,7 @@ namespace RhinoMCP.Tools.Shared
                 }
             }
             catch (Exception) { }
-            if (rss <= 0)
+            if (rss <= 0 && Platform.IsMac)
             {
                 string o = Run("/bin/ps", "-o rss= -p " + Process.GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture), 2000);
                 double kb;
@@ -196,6 +196,12 @@ namespace RhinoMCP.Tools.Shared
         {
             if (_staticDone) return;
             _staticDone = true;
+            if (Platform.IsWindows)
+            {
+                double tot, avail;
+                if (Script.WinNative.MemoryMb(out tot, out avail)) _ramMb = tot;
+                return;   // no Rosetta on Windows; physical core count stays unknown (0)
+            }
             string t = Run("/usr/sbin/sysctl", "-n sysctl.proc_translated", 2000);
             _rosetta = t != null && t.Trim() == "1";
             double mem;
@@ -216,6 +222,12 @@ namespace RhinoMCP.Tools.Shared
         {
             if ((DateTime.UtcNow - _freeAt).TotalSeconds < 10) return _freeMb;
             _freeAt = DateTime.UtcNow; _freeMb = -1;
+            if (Platform.IsWindows)
+            {
+                double tot, avail;
+                if (Script.WinNative.MemoryMb(out tot, out avail)) _freeMb = avail;   // "available" already includes standby/cache pages
+                return _freeMb;
+            }
             string o = Run("/usr/bin/vm_stat", "", 3000);
             if (o == null) return _freeMb;
             double page = 4096, pages = 0;
@@ -338,7 +350,7 @@ namespace RhinoMCP.Tools.Shared
         {
             return ToolResult.Fail("RESOURCE_LIMIT", message,
                 guidance + (forceable ? " To override on purpose, pass force:true (Rhino may become slow)." : ""),
-                new { limit = limitKey, estimated = estimated, max = limit, force_allowed = forceable, config = "limits." + limitKey + " in ~/Library/Application Support/RhinoMCP/config.json" });
+                new { limit = limitKey, estimated = estimated, max = limit, force_allowed = forceable, config = "limits." + limitKey + " in " + Platform.ConfigPathDisplay });
         }
 
         /// <summary>Never forceable: refuses heavy work while Rhino's memory is above block_rss_mb.</summary>

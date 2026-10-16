@@ -1,7 +1,7 @@
 # Development
 
 ## Requirements
-- Rhino 7 for Mac (7.39 tested). Its bundled Mono 6.12 and Roslyn compiler are the whole toolchain.
+- Rhino 7 for Mac (7.39 tested) or Rhino 7 for Windows (see "Windows" below; unverified). Its bundled Mono 6.12 and Roslyn compiler are the whole toolchain.
 - `python3` (system 3.9 is fine) for tests. `curl`.
 - Optional: the `claude` CLI.
 
@@ -52,6 +52,15 @@ namespace RhinoMCP.Tools.Measure {
 - Shared schema fragments (`target`, `point`, `plane`) live in `Core/Schemas.cs`. Just write `{"$ref":"#/$defs/target"}`; the registry injects the `$defs` block when listing tools.
 - A tool that runs Rhino commands which manage their own undo records (like `run_command`) also implements the marker interface `IManagesOwnUndo`, so the registry does not open an outer undo record.
 - Keep descriptions short. State what the tool does, when to use it, and how it fails.
+
+## Windows (Rhino 7, net48)
+```powershell
+scripts\build_win.ps1 -Deploy                 # dist\win\RhinoMCP.rhp + RhinoMCP.Tools.<stamp>.dll; tools dll copied to %APPDATA%\RhinoMCP\tools
+scripts\build_win.ps1 -LocalRhino             # reference RhinoCommon from C:\Program Files\Rhino 7\System instead of NuGet
+scripts\dev-test.ps1 -Build tests\test_core.py   # lock, build, dev_reload, python -m unittest
+dotnet build src\Tools\RhinoMCP.Tools.csproj -c Release   # what CI runs (builds src\Core\RhinoMCP.csproj too)
+```
+Install the `.rhp` once through `_PlugInManager`. The data dir is `%APPDATA%\RhinoMCP`; `scripts/mcp.py` (also used by `mcp.sh`) and `tests/mcp_client.py` read it (override: `RHINOMCP_DATA_DIR`). Platform branching is described in ARCHITECTURE.md ("Platforms"). Logic-only tests that need no Rhino: `scripts/test_platform.sh` on Mac.
 
 ## Troubleshooting
 - **The plugin doesn't load.** Check Rhino's command history for `RhinoMCP` lines and run `MCPStatus`.

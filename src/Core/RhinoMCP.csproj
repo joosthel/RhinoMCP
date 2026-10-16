@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Portable (Windows / CI) build of the plugin core: dist/win/RhinoMCP.rhp. The Mac build does NOT use this file (scripts/build.sh).
+    Rhino 7 only: net48 (.NET Framework 4.8 on Windows), C# 7.3, RhinoCommon 7.x. Same sources as the Mac build.
+
+      dotnet build src/Core/RhinoMCP.csproj -c Release                       (RhinoCommon from NuGet)
+      msbuild src/Core/RhinoMCP.csproj /p:Configuration=Release /p:RhinoSystemDir="C:\Program Files\Rhino 7\System"   (local install)
+  -->
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <AssemblyName>RhinoMCP</AssemblyName>
+    <RootNamespace>RhinoMCP</RootNamespace>
+    <TargetExt>.rhp</TargetExt>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <Deterministic>true</Deterministic>
+    <DebugType>portable</DebugType>
+    <Optimize Condition="'$(Configuration)' == 'Release'">true</Optimize>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>$(MSBuildThisFileDirectory)..\..\dist\win\</OutputPath>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
+    <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+
+  <!-- Compile-only references: Rhino ships RhinoCommon and Newtonsoft.Json (9.0.x), so never copy them next to the .rhp. -->
+  <ItemGroup Condition="'$(RhinoSystemDir)' == ''">
+    <PackageReference Include="RhinoCommon" Version="7.38.24338.17001" PrivateAssets="all" ExcludeAssets="runtime" />
+    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" PrivateAssets="all" ExcludeAssets="runtime" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(RhinoSystemDir)' != ''">
+    <Reference Include="RhinoCommon"><HintPath>$(RhinoSystemDir)\RhinoCommon.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Newtonsoft.Json"><HintPath>$(RhinoSystemDir)\Newtonsoft.Json.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+</Project>

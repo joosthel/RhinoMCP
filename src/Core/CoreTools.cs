@@ -27,6 +27,7 @@ namespace RhinoMCP
         {
             if (_rosetta.HasValue) return _rosetta.Value;
             bool r = false;
+            if (!Platform.IsMac) { _rosetta = false; return false; }   // Rosetta only exists on Apple Silicon Macs
             try
             {
                 var psi = new System.Diagnostics.ProcessStartInfo("/usr/sbin/sysctl", "-n sysctl.proc_translated") { UseShellExecute = false, RedirectStandardOutput = true, CreateNoWindow = true };
@@ -45,8 +46,7 @@ namespace RhinoMCP
         public ToolResult Execute(ToolContext ctx, JObject args)
         {
             var s = RhinoMCPPlugin.Server;
-            double rss = -1;
-            try { using (var pr = System.Diagnostics.Process.GetCurrentProcess()) rss = Math.Round(pr.WorkingSet64 / 1048576.0); } catch (Exception) { }
+            double rss = Platform.RssMb();
             return ToolResult.Ok(new
             {
                 version = RhinoMCPPlugin.VersionString,
@@ -58,7 +58,8 @@ namespace RhinoMCP
                 dev_mode = RhinoMCPPlugin.Config.DevMode,
                 allow_scripts = RhinoMCPPlugin.Config.AllowScripts,
                 rss_mb = rss < 0 ? (double?)null : rss,
-                rosetta = IsRosetta()
+                rosetta = IsRosetta(),
+                platform = Platform.Name
             });
         }
     }
@@ -66,7 +67,7 @@ namespace RhinoMCP
     sealed class DevReloadTool : ITool
     {
         public string Name { get { return "dev_reload"; } }
-        public string Description { get { return "Development only: reload a tools DLL without restarting Rhino: the given 'dll' path, else the newest in ~/Library/Application Support/RhinoMCP/tools. Returns tool count and names. On failure the previous tool set stays active."; } }
+        public string Description { get { return "Development only: reload a tools DLL without restarting Rhino: the given 'dll' path, else the newest in the RhinoMCP data folder's tools directory (Mac ~/Library/Application Support/RhinoMCP/tools, Windows %APPDATA%\\RhinoMCP\\tools). Returns tool count and names. On failure the previous tool set stays active."; } }
         public string InputSchema { get { return "{\"type\":\"object\",\"properties\":{\"dll\":{\"type\":\"string\",\"description\":\"Absolute path of a RhinoMCP.Tools.*.dll to load\"}},\"additionalProperties\":false}"; } }
         public ToolKind Kind { get { return ToolKind.Read; } }
         public ToolResult Execute(ToolContext ctx, JObject args)

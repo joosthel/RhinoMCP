@@ -25,6 +25,23 @@ class CoreTests(c.IdleTestCase):
         status, _, _ = c.http("POST", "/mcp", body, headers={"Origin": "http://evil.example"})
         self.assertEqual(status, 403)
 
+    def test_loopback_host_header_accepted(self):
+        # The guard accepts both loopback spellings (Platform.IsLoopbackHost, unit-tested). Over HTTP only the spelling the listener
+        # prefix is bound to reaches it (Mono and http.sys both answer 400 for the other), which discovery reports as "host".
+        port = c.instance()["port"]
+        host = c.instance().get("host") or "127.0.0.1"
+        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"})
+        status, _, _ = c.http("POST", "/mcp", body, headers={"Host": "%s:%d" % (host, port)})
+        self.assertEqual(status, 200)
+
+    def test_platform_reported(self):
+        expected = "windows" if c.WINDOWS else "mac"
+        d = c.call("system_status")["data"]
+        self.assertEqual(d["process"]["platform"], expected)
+        if c.WINDOWS:
+            self.assertFalse(d["process"]["rosetta"])   # Rosetta is a Mac-only concept
+        self.assertEqual(c.call("server_info")["data"]["platform"], expected)
+
     def test_bad_host_rejected(self):
         body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"})
         status, _, _ = c.http("POST", "/mcp", body, headers={"Host": "evil.example"})

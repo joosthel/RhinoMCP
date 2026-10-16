@@ -59,12 +59,39 @@ namespace RhinoMCP.Tools.Script
 
         static bool _resolverInstalled;
         static string _monoDir;
+        /// <summary>Mac: Rhino's bundled Mono 4.5 lib folder, which also holds the Roslyn 3.9 scripting assemblies.</summary>
         public static string MonoDir
         {
             get
             {
                 if (_monoDir == null) _monoDir = Path.GetDirectoryName(typeof(object).Assembly.Location);
                 return _monoDir;
+            }
+        }
+
+        const string ScriptingDll = "Microsoft.CodeAnalysis.Scripting.dll";
+        const string CsScriptingDll = "Microsoft.CodeAnalysis.CSharp.Scripting.dll";
+        static string _roslynDir;
+
+        /// <summary>
+        /// Folder holding the Roslyn scripting assemblies. Mac: the Mono 4.5 folder. Windows: Rhino 7 does not put Roslyn next to mscorlib,
+        /// so look in the places a Rhino 7 install keeps it (see Platform.RoslynCandidates). Throws a descriptive exception when nothing is found
+        /// (run_csharp then returns UNSUPPORTED; every other tool is unaffected).
+        /// </summary>
+        public static string RoslynDir
+        {
+            get
+            {
+                if (_roslynDir != null) return _roslynDir;
+                if (!Platform.IsWindows) return _roslynDir = MonoDir;
+                var tried = new List<string>();
+                foreach (string d in Platform.RoslynCandidates(ScriptingDll, null, null))
+                {
+                    tried.Add(d);
+                    try { if (File.Exists(Path.Combine(d, ScriptingDll)) && File.Exists(Path.Combine(d, CsScriptingDll))) return _roslynDir = d; }
+                    catch (Exception) { }
+                }
+                throw new FileNotFoundException("Roslyn scripting assemblies (" + ScriptingDll + ") not found in the Rhino 7 install; searched: " + string.Join("; ", tried));
             }
         }
 
@@ -81,7 +108,7 @@ namespace RhinoMCP.Tools.Script
                     foreach (var loaded in AppDomain.CurrentDomain.GetAssemblies())
                         if (string.Equals(loaded.GetName().Name, simple, StringComparison.OrdinalIgnoreCase)) return loaded;
                     if (!ResolveAllowList.Contains(simple)) return null;
-                    string path = Path.Combine(MonoDir, simple + ".dll");
+                    string path = Path.Combine(RoslynDir, simple + ".dll");
                     return File.Exists(path) ? Assembly.LoadFrom(path) : null;
                 }
                 catch (Exception) { return null; }
@@ -112,8 +139,8 @@ namespace RhinoMCP.Tools.Script
         {
             InstallResolver();
             var res = new CsRunResult();
-            Assembly scripting = Assembly.LoadFrom(Path.Combine(MonoDir, "Microsoft.CodeAnalysis.Scripting.dll"));
-            Assembly csScripting = Assembly.LoadFrom(Path.Combine(MonoDir, "Microsoft.CodeAnalysis.CSharp.Scripting.dll"));
+            Assembly scripting = Assembly.LoadFrom(Path.Combine(RoslynDir, ScriptingDll));
+            Assembly csScripting = Assembly.LoadFrom(Path.Combine(RoslynDir, CsScriptingDll));
             Type optionsT = scripting.GetType("Microsoft.CodeAnalysis.Scripting.ScriptOptions", true);
             Type csScriptT = csScripting.GetType("Microsoft.CodeAnalysis.CSharp.Scripting.CSharpScript", true);
 
@@ -259,7 +286,8 @@ namespace RhinoMCP.Tools.Script
             sw.Stop();
             if (r == null)
                 return ToolResult.Fail("UNSUPPORTED", "No C# engine could be started: " + string.Join(" | ", engineErrors),
-                    "Use run_python (IronPython 2.7) instead.");
+                    Platform.IsWindows ? "run_csharp needs Roslyn scripting assemblies from the Rhino 7 install, which were not found or did not load (unverified on Windows). Use run_python (IronPython 2.7) instead; all other tools are unaffected."
+                                       : "Use run_python (IronPython 2.7) instead.");
             _engineName = engine;
 
             var live = added.Distinct().Where(id => ctx.Doc.Objects.FindId(id) != null).ToList();
