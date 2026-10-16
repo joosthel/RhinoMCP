@@ -86,7 +86,7 @@ Details are in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). It also records e
 | [ARCHITECTURE](docs/ARCHITECTURE.md) | Design, tool contract, learned quirks |
 | [DEVELOPMENT](docs/DEVELOPMENT.md) | Build, dev loop, writing tools, tests |
 | [PLAN](docs/PLAN.md) · [DECISIONS](docs/DECISIONS.md) | Milestones and owner decisions |
-| [Evaluations](docs/eval/) | [freeform](docs/eval/freeform/REPORT.md) · [drawing](docs/eval/drawing/REPORT.md) · [layout](docs/eval/layout/REPORT.md) · [scale](docs/eval/scale/REPORT.md) · [sculpture rebuild](docs/eval/rebuild/REPORT.md) |
+| [Evaluations](docs/eval/) | [freeform](docs/eval/freeform/REPORT.md) · [drawing](docs/eval/drawing/REPORT.md) · [layout](docs/eval/layout/REPORT.md) · [scale](docs/eval/scale/REPORT.md) |
 | [Research](docs/research/) | 11 research notes behind the design ([synthesis](docs/research/00-synthesis.md)) |
 | [Skills](skills/) | Agent skills (Claude Code plugin) |
 
