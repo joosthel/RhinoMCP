@@ -1,0 +1,33 @@
+name: Bug report / logs
+description: Something didn't work. Logs help a lot, especially from Windows.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for trying RhinoMCP! Please attach the log zip. It contains system info, server status and the crash log, with the token removed:
+        - **Mac:** `scripts/collect_logs.sh`
+        - **Windows:** `powershell -ExecutionPolicy Bypass -File scripts\windows\collect_logs.ps1`. Running `scripts\windows\verify.ps1` first adds `verify-report.txt`.
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options: ["macOS (Apple Silicon)", "macOS (Intel)", "Windows 10", "Windows 11", "Other"]
+    validations: { required: true }
+  - type: input
+    id: rhino
+    attributes: { label: Rhino version, placeholder: "e.g. 7.39.25314" }
+  - type: input
+    id: client
+    attributes: { label: MCP client, placeholder: "Claude Code / Claude Desktop / Cursor / …" }
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you asked the agent, what you expected, and what happened instead. Include the tool name and error code if you saw one.
+    validations: { required: true }
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Drag the zip from collect_logs here, or paste relevant output.
