@@ -12,6 +12,7 @@ Quality rules implemented here:
 """
 import argparse
 import json
+import math
 import os
 import shutil
 import subprocess
@@ -167,18 +168,82 @@ def fit_model(frame, k=0.9, top=14):
     return canvas
 
 
-def fit_drawing(img, box_w=1120, box_h=455, top=84):
-    """Crop a (thickened) drawing capture to its ink and fit it into the free area above the caption bar."""
+def ink_bbox(img, pad=24):
     g = ImageChops.invert(img.convert("L")).point(lambda v: 255 if v > 40 else 0)
     bb = g.getbbox()
-    pad = 24
-    bb = (max(0, bb[0] - pad), max(0, bb[1] - pad), min(img.width, bb[2] + pad), min(img.height, bb[3] + pad))
-    crop = img.crop(bb)
+    return (max(0, bb[0] - pad), max(0, bb[1] - pad), min(img.width, bb[2] + pad), min(img.height, bb[3] + pad))
+
+
+def fit_drawing(img, box_w=1120, box_h=500, top=80, bb=None):
+    """Crop a (thickened) drawing capture to its ink (bb: shared by all beats of a view) and fit it into the free area above the caption bar."""
+    crop = img.crop(bb or ink_bbox(img))
     k = min(box_w / float(crop.width), box_h / float(crop.height))
     sm = crop.resize((int(round(crop.width * k)), int(round(crop.height * k))), Image.LANCZOS)
     canvas = Image.new("RGB", (W, H), BG)
     canvas.paste(sm, ((W - sm.width) // 2, top + (box_h - sm.height) // 2))
     return canvas
+
+
+# ---- the A3 sheet: camera path over the 300 dpi render of the exported PDF (paper mm: x right, y up from the bottom-left corner)
+PAD_MM = 100
+SHEET_KEYS = [(210, 148.5, 560, 1.2),      # whole sheet
+              (140, 224.5, 275, 1.4),      # front elevation, all of it
+              (95, 222, 150, 1.7),         # elevation: left half, closer
+              (185, 222, 150, 1.7),        # elevation: right half
+              (345, 224, 258, 1.7),        # section A-A
+              (118, 101, 262, 1.7),        # plan
+              (320, 75, 270, 1.6)]         # notes and title block
+SHEET_MOVE = 0.9
+
+
+def sheet_seconds():
+    return sum(k[3] for k in SHEET_KEYS) + SHEET_MOVE * (len(SHEET_KEYS) - 1)
+
+
+def sheet_path():
+    segs, t = [], 0.0
+    for i, k in enumerate(SHEET_KEYS):
+        segs.append(("hold", t, t + k[3], i))
+        t += k[3]
+        if i < len(SHEET_KEYS) - 1:
+            segs.append(("move", t, t + SHEET_MOVE, i))
+            t += SHEET_MOVE
+
+    def state(i, s):                      # a hold drifts in by 4 % while it lasts
+        cx, cy, w, _ = SHEET_KEYS[i]
+        return cx, cy, w * (1 - 0.04 * s)
+
+    def f(u):
+        tt = min(max(u, 0.0), 1.0) * t
+        for kind, a, b, i in segs:
+            if tt <= b:
+                s = (tt - a) / (b - a)
+                if kind == "hold":
+                    return state(i, s)
+                e = ease(s)
+                c0, c1 = state(i, 1.0), state(i + 1, 0.0)
+                lw = math.log(c0[2]) + (math.log(c1[2]) - math.log(c0[2])) * e
+                return c0[0] + (c1[0] - c0[0]) * e, c0[1] + (c1[1] - c0[1]) * e, math.exp(lw)
+        return state(len(SHEET_KEYS) - 1, 1.0)
+    return f
+
+
+def sheet_canvas(sheet):
+    kk = sheet.width / 420.0
+    pad = int(PAD_MM * kk)
+    cv = Image.new("RGB", (sheet.width + 2 * pad, sheet.height + 2 * pad), BG)
+    cv.paste(sheet, (pad, pad))
+    return cv
+
+
+def sheet_frame(cv, st):
+    cx, cy, w = st
+    kk = (cv.width / (420.0 + 2 * PAD_MM))
+    h = w * 9.0 / 16.0
+    cyv = cy - 0.07 * h                                   # the content sits a little high, clear of the caption bar
+    x0 = (cx - w / 2.0 + PAD_MM) * kk
+    y0 = (297 + PAD_MM - (cyv + h / 2.0)) * kk
+    return cv.resize((W, H), Image.LANCZOS, box=(x0, y0, x0 + w * kk, y0 + h * kk))
 
 
 def fade(img, k):
@@ -262,41 +327,79 @@ def build_all(work, outdir, frames_dir):
     scene(out, nt / float(FPS), mk_t, label="turntable")
     stills["turntable"] = mk_t(int(nt * 0.55), nt)
 
-    # 4 architecture-style drawings: model, front elevation, plan with solid poche
-    lab = overlay_label("Clean drawings")
-    sub = "clean Make2D: lines & arcs, solid-poché sections, true scale 1:10"
+    # 4 drawings: model, then every view appears in three beats (Make2D linework, dimensions, leaders and labels), then the A3 sheet
+    lab = overlay_label("Dimensioned drawings")
+    sub = "front elevation, plan and section A–A at true scale 1:10, dimensioned and annotated"
     src = load(os.path.join(work, "build", "s6.png"))
-    ov = overlay_caption("drawing_clipping_plane  +  drawing_make2d  scale:\"1:10\"", sub=sub)
-    scene(out, 1.6, lambda i, n: with_overlay(with_overlay(fit_model(push_in(src, i / float(n - 1), 0.03, 0.5, 0.45), 0.78), lab), ov), fade_out=False, label="model")
+    ov = overlay_caption("drawing_clipping_plane  +  drawing_make2d  +  annotate  +  layout_create  +  export", sub=sub)
+    scene(out, 1.6, lambda i, n: with_overlay(with_overlay(fit_model(push_in(src, i / float(n - 1), 0.03, 0.5, 0.45), 0.78), lab), ov), fade_out=True, label="model")
     d = meta["drawings"]
+    an = meta["annot"]
+
     def cv(k):
         co = d[k]["report"]["curves_out"]
         return "%d curves, %d arcs" % (co["total"], co["arc"])
 
-    for key, hold, txt in (("plan", 4.2, 'drawing_make2d  clipping plane z:520  hatch:"Solid"  \u2192  ' + cv("plan")),
-                           ("section", 4.4, 'drawing_make2d  section through bay 1  hatch:"Solid"  \u2192  ' + cv("section"))):
-        im = thicken_drawing(load(os.path.join(work, "drawing", key + ".png")), 5)
-        im = fit_drawing(im)
-        ovd = overlay_caption(txt, sub=sub)
-        frame = with_overlay(with_overlay(im, lab), ovd)
-        scene(out, hold, lambda i, n, frame=frame: frame, fade_in=False, fade_out=(key == "section"), label=key)
-        stills[key] = frame
+    beats = {
+        "elev": [('drawing_make2d  view:"Front"  →  ' + cv("elev"), "every tube silhouette kept: elevation from the front-plane objects"),
+                 ("annotate  linear dimensions, ticks, text 3.5 mm  →  %d" % an["elev"]["dims"], "overall, bays, chained heights, door and drawer, overhang, Ø22"),
+                 ("annotate  leaders + text 2.5 mm  →  %d labels" % an["elev"]["labels"], "oak top 22 mm · steel tube Ø18 · spherical connector Ø26 · glider foot")],
+        "plan": [('drawing_clipping_plane z:520  +  drawing_make2d  hatch:"Solid"  →  ' + cv("plan"), "plan cut just under the oak top"),
+                 ("annotate  linear dimensions  →  %d   (bays 780, overall 1598 × 422)" % an["plan"]["dims"], "same dimension style, chained"),
+                 ("annotate  leaders + section marker A–A  →  %d items" % an["plan"]["labels"], "cut line, arrows and letters; oak top shown dashed above the cut")],
+        "section": [('drawing_make2d  section_line through bay 1  hatch:"Solid"  →  ' + cv("section"), "solid poché where tubes, panels and top are cut"),
+                    ("annotate  linear dimensions  →  %d   (heights, depth, top 22 mm)" % an["section"]["dims"], "foot, frame, door, drawer front, top thickness"),
+                    ("annotate  leaders  →  %d labels" % an["section"]["labels"], "panel 6 mm · steel tube Ø18 · door · drawer front · glider foot")],
+    }
+    holds = {"elev": [1.5, 1.8, 2.0], "plan": [1.4, 1.5, 1.8], "section": [1.4, 1.5, 1.8]}
+    stills_key = {"elev": "elevation", "plan": "plan", "section": "section"}
+    for key in ("elev", "plan", "section"):
+        raw = [load(os.path.join(work, "drawing", "%s_%d.png" % (key, b))) for b in range(3)]
+        lines = thicken_drawing(raw[0], 3)                                     # black linework: dilated so that it survives the downscale
+        imgs = [ImageChops.darker(lines, r.filter(ImageFilter.MinFilter(3))) for r in raw]   # annotations keep their colours (dilated by 1 px)
+        bb = ink_bbox(imgs[2])
+        for b in range(3):
+            frame = with_overlay(with_overlay(fit_drawing(imgs[b], bb=bb), lab), overlay_caption(beats[key][b][0], sub=beats[key][b][1]))
+            scene(out, holds[key][b], lambda i, n, frame=frame: frame, fade_in=(b == 0), fade_out=(b == 2), label="%s%d" % (key, b))
+            if b == 2:
+                stills[stills_key[key]] = frame
+
+    # the A3 sheet: the PDF rendered at 300 dpi (sips), a slow push-in and pan over the three views, the notes and the title block
+    sheet = Image.open(meta["sheet"]["png"]).convert("RGB")
+    ov = overlay_caption("layout_create + export  \u2192  dimensioned A3 sheet, exported to PDF & DXF")
+    seq = sheet_path()
+    pan = sheet_canvas(sheet)
+
+    def mk_sheet(i, n):
+        return with_overlay(sheet_frame(pan, seq(i / float(n - 1))), ov)
+
+    scene(out, sheet_seconds(), mk_sheet, fade_in=True, fade_out=False, label="sheet")
+    stills["sheet"] = mk_sheet(int(2.9 * FPS), int(sheet_seconds() * FPS))   # the whole elevation, seen from the first hold
 
     # 5 end card
     end = overlay_end().convert("RGB")
     scene(out, 2.5, lambda i, n: end, fade_out=False, label="end")
 
-    # hero 1600 x 800: rendered sideboard (left) + section drawing with solid poche (right)
+    # hero 1600 x 800: rendered sideboard (left) + the crisp sheet (elevation and plan with their dimensions, right)
     hero = Image.new("RGB", (1600, 800), BG)
     m = load(os.path.join(work, "build", "s6.png"))
-    bw = m.height * 960 / 800.0
-    left = m.resize((960, 800), Image.LANCZOS, box=((m.width - bw) / 2.0 + 20, 0, (m.width - bw) / 2.0 + 20 + bw, m.height))
-    hero.paste(left, (0, 0))
-    e = thicken_drawing(load(os.path.join(work, "drawing", "section.png")), 5)
-    sec = fit_drawing(e, 540, 640, 80).crop(((W - 540) // 2, 80, (W - 540) // 2 + 540, 80 + 640))
-    hero.paste(sec, (960 + 50, 80))
+    bw = m.width * 0.62
+    left = m.resize((690, int(690 * m.height / bw)), Image.LANCZOS, box=(m.width * 0.15, 0, m.width * 0.15 + bw, m.height))
+    hero.paste(left, (0, (800 - left.height) // 2))
+    kk = sheet.width / 420.0
+    mm = lambda x0, y0, x1, y1: sheet.crop((int(x0 * kk), int((297 - y1) * kk), int(x1 * kk), int((297 - y0) * kk)))
+    top = mm(42, 162, 238, 282)                      # front elevation incl. all dimensions and labels
+    bot = mm(230, 25, 410, 53)                       # the title block
+    top = top.resize((890, int(top.height * 890 / float(top.width))), Image.LANCZOS)
+    bot = bot.resize((890, int(bot.height * 890 / float(bot.width))), Image.LANCZOS)
+    hero.paste(top, (700, 8))
+    hero.paste(bot, (700, 8 + top.height + 14))
+    dh = ImageDraw.Draw(hero)
+    dh.line((694, 40, 694, 760), fill=(222, 224, 228), width=2)
+    yb = 8 + top.height + 14 + bot.height
+    dh.line((700, yb, 1590, yb), fill=(0, 0, 0), width=3)
     stills["hero"] = hero
-    return out, stills
+    return out, stills, sheet
 
 
 def encode(frames_dir, outdir, nframes):
@@ -315,13 +418,17 @@ def gif_selection(out, gdir):
     def take(lbl, a, b, step=1):
         s0, e0 = seg[lbl]
         pick.extend(range(s0 + a, min(e0, s0 + b), step))
-    take("title", 0, 30)
+    take("title", 0, 24)
     for k in ("s1", "s2", "s3", "s4", "s5"):
         take(k, 0, 18)
     take("s6", 6, 40)
-    take("turntable", 0, 120, 2)
-    take("plan", 0, 24)
-    take("section", 0, 34)
+    take("turntable", 0, 120, 3)
+    take("elev0", 0, 14)
+    take("elev1", 0, 12)
+    take("elev2", 0, 22)
+    take("plan2", 0, 20)
+    take("section2", 0, 20)
+    take("sheet", 0, 210, 3)
     take("end", 0, 34)
     for i, f in enumerate(pick):
         os.symlink(os.path.join(out.dir, "%05d.png" % f), os.path.join(gdir, "%05d.png" % i))
@@ -351,10 +458,15 @@ def main():
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
     if not a.skip_frames:
-        out, stills = build_all(a.work, a.out, a.frames)
+        out, stills, sheet = build_all(a.work, a.out, a.frames)
         stills["hero"].save(os.path.join(a.out, "hero.png"), optimize=True)
-        for k in ("build", "turntable", "plan", "section"):
+        for k in ("build", "turntable", "elevation", "plan", "section", "sheet"):
             stills[k].save(os.path.join(a.out, "still-%s.png" % k), optimize=True)
+        sheet.save(os.path.join(a.out, "sheet.png"), optimize=True)
+        pdf = json.load(open(os.path.join(a.work, "meta.json")))["sheet"]["pdf"]
+        if os.path.getsize(pdf) < 2 * 1024 * 1024:
+            shutil.copy(pdf, os.path.join(a.out, "sheet.pdf"))
+        print("seg", {k: v for k, v in out.seg.items() if k in ("sheet", "elev0", "end")})
         print("frames:", out.n, "= %.1f s" % (out.n / float(FPS)))
     print(encode(a.frames, a.out, 0))
     if not a.skip_frames:
