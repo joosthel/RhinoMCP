@@ -15,7 +15,13 @@
   },
   "homepage": "https://github.com/joosthel/RhinoMCP",
   "license": "MIT",
-  "keywords": ["rhino", "cad", "architecture", "3d", "design"],
+  "keywords": [
+    "rhino",
+    "cad",
+    "architecture",
+    "3d",
+    "design"
+  ],
   "server": {
     "type": "binary",
     "entry_point": "server/rhinomcp-bridge",
@@ -25,6 +31,8 @@
     }
   },
   "compatibility": {
-    "platforms": ["darwin"]
+    "platforms": [
+      "darwin"
+    ]
   }
 }

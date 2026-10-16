@@ -7,5 +7,12 @@
   },
   "homepage": "https://github.com/joosthel/RhinoMCP",
   "repository": "https://github.com/joosthel/RhinoMCP",
-  "keywords": ["rhino", "mcp", "cad", "architecture", "product-design"]
+  "keywords": [
+    "rhino",
+    "mcp",
+    "cad",
+    "architecture",
+    "product-design"
+  ],
+  "license": "MIT"
 }
