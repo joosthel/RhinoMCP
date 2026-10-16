@@ -115,7 +115,7 @@ Script tools are gated by `allowScripts` in `config.json` (default true for this
 src/Core/          RhinoMCP.rhp: plugin, server, contracts, dispatcher, commands
 src/Tools/         RhinoMCP.Tools.dll: one folder per tool family
 skills/            Agent skills (SKILL.md + references/), also served as MCP resources
-scripts/           build.sh · install.sh · mcp.sh (curl helper) · dev-test.sh (locked integration run)
+scripts/           build.sh · build_win.ps1 · install.sh · mcp.sh/mcp.py · dev-test.sh/.ps1 · test_platform.sh
 tests/             integration tests (python3 stdlib, talk to the live server)
 bridge/            Swift stdio↔HTTP bridge (M5)
 docs/              research/ · ARCHITECTURE.md · PLAN.md · DEVELOPMENT.md · DECISIONS.md
@@ -220,3 +220,30 @@ Rhino 7.39 Mac runs x86_64 under Rosetta and is mostly single-threaded, so heavy
 - **Roll.** `SetCameraLocations` resets the up vector; `Framing.SetCamera` re-applies it through a `ViewportInfo`.
 - **Tight zoom.** `Framing.Zoom` replaces `ZoomBoundingBox` (which leaves large margins): for a capture of W x H, parallel views keep the SHORT side of the frustum, perspective views solve the camera distance from the lens frame. `margin` = fraction of the image left free per side. The reported `framing.fill_x/fill_y` matches the rendered pixels within about 1 %.
 - **Isolate / only_layers** use a `DisplayConduit` (`PreDrawObject` with `DrawObject = false`) enabled only during the capture: nothing in the document (visibility, layers, undo, change journal) is touched. The same conduit draws per-panel labels with `Draw2dText` in `DrawForeground`.
+
+## Platforms (Rhino 7 for Mac and Rhino 7 for Windows)
+One build of `RhinoMCP.rhp` + `RhinoMCP.Tools.dll` (net48 / RhinoCommon 7, C# 7.3) runs on both; the platform is decided at run time by `Platform.IsMac` (`HostUtils.RunningOnOSX`). Rhino 8 is out of scope. **Verified live on Mac only (Rhino 7.39); every Windows path below is unverified until the Windows CI/agent runs the suite.**
+
+`src/Core/Platform.cs` is the single source of truth. Its path/host functions are pure (`DataDirFor(mac, home, appData)`, `IsLoopbackHost`, `RoslynCandidates`) and `Platform.ForceForTest(bool?)` injects a platform, so the Windows branches are unit-tested on Mac (`scripts/test_platform.sh`: `tests/platform_logic/PlatformTests.cs` + `tests/test_platform_logic.py`).
+
+| Concern | Mac | Windows | Where |
+|---|---|---|---|
+| Data dir (config.json, tools/, instances/, crash.log) | `~/Library/Application Support/RhinoMCP` (`$HOME`) | `%APPDATA%\RhinoMCP` | `Platform.DataDir` |
+| Secret file (config.json holds the token) | `chmod 600` | protected ACL: inheritance off, only the current user (`FileSecurity`, try/catch) | `Platform.SecureFile` |
+| Clipboard (`MCPConnect`) | `pbcopy` | `clip.exe` | `Platform.CopyToClipboard` |
+| HTTP prefix | `http://127.0.0.1:port/` | same; on `HttpListenerException` error 5 (access denied, no URL ACL for a non-admin) retry `http://localhost:port/` | `HttpServer.TryListen` |
+| Host-header guard | accepts `127.0.0.1:<port>` and `localhost:<port>` | same (http.sys already routes by the bound prefix) | `Platform.IsLoopbackHost` |
+| Discovery file | `{pid, port, host, version, startedAt}` | same; `host` is `localhost` after the fallback, so clients use `host` + `port` (`Server.BaseUrl`) | `instances/<pid>.json` |
+| Cancel a command waiting for input | native Escape `NSEvent` into the document window (de-minimizing it), `SendKeystrokes` as backup; `cancel_method` = `main_window` / `found_window[+deminiaturized]` / `no_window` [+ `sendkeystrokes`] | `RhinoApp.SetFocusToMainWindow()` then `SendKeystrokes("!", true)`; `cancel_method` = `sendkeystrokes+focus`; the watchdog retries (4 attempts, 2 s apart) | `CancelHelper` |
+| Window state (`system_status.window`, capture pre-check) | AppKit window list (`MacWindow`) | `RhinoApp.MainWindowHandle()` + user32 `IsIconic` / `IsWindowVisible`; a minimized window is restored with `ShowWindow(SW_RESTORE)` for the capture and minimized again afterwards | `HostWindow`, `WindowLease`, `WinWindow` |
+| RAM total / free | `sysctl hw.memsize`, `vm_stat` | `GlobalMemoryStatusEx` (available = free + standby) | `Resources`, `WinNative` |
+| Rosetta flag / physical cores | `sysctl` | always `false` / `null` (physical core count not queried) | `Resources` |
+| RSS | `Process.WorkingSet64` (+ `ps` fallback) | `Process.WorkingSet64` | `Resources`, `Platform.RssMb` |
+| `run_csharp` Roslyn | `Microsoft.CodeAnalysis.*` from the Mono 4.5 lib folder | searched in the Rhino install: dir of `RhinoCommon.dll`, `Plug-ins\Grasshopper\{Components,Libraries}`, `Plug-ins\Rhino.Python`, then any folder under `Plug-ins\` that holds `Microsoft.CodeAnalysis.Scripting.dll`. Not found: `run_csharp` returns `UNSUPPORTED` (use `run_python`); no other tool is affected | `CsEngine.RoslynDir`, `Platform.RoslynCandidates` |
+| `view_capture` | `-_ViewCaptureToFile` into `Path.GetTempPath()` | same command route (parity); `RhinoView.CaptureToBitmap` is not used | `ViewCommon` |
+| Build | `scripts/build.sh` (Rhino's Mono + csc) | `scripts/build_win.ps1`, `src/Core/RhinoMCP.csproj` + `src/Tools/RhinoMCP.Tools.csproj` (SDK style, net48) | |
+| Dev test loop | `scripts/dev-test.sh` | `scripts/dev-test.ps1` (lock dir in `%TEMP%`) | |
+
+Tool loading: `ToolsLoader` prefers the newest stamped `RhinoMCP.Tools.<stamp>.dll` (dev builds in the data dir's `tools\`); an unstamped `RhinoMCP.Tools.dll` next to the `.rhp` (what the portable csproj and packaging produce) is the fallback.
+
+Unverified on Windows (check first when something fails there): the `localhost` URL-ACL fallback; the ACL code under Mono-free .NET Framework; whether the Roslyn candidates actually exist in a Rhino 7 install (the Grasshopper C# component may not ship Roslyn scripting assemblies at all); `SendKeystrokes("!")` reaching a command that waits at a prompt when Rhino is in the background; `ProjectReference` to an assembly with the `.rhp` extension in the SDK csproj; PowerShell scripts. Tests that depend on Mac internals (Rosetta, AppKit window minimize) are skipped or relaxed on Windows via `mcp_client.WINDOWS` / `skip_unless_mac`.

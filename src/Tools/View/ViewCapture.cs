@@ -227,13 +227,13 @@ namespace RhinoMCP.Tools.View
             {
                 if (lease.Error != null)
                     return ToolResult.Fail("WINDOW_UNAVAILABLE", "Cannot capture: " + lease.Error,
-                        "Restore or unhide the Rhino window (click its Dock icon) and retry. system_status shows the window state.", new { window = RhinoMCP.Tools.Script.MacWindow.State() });
+                        "Restore or unhide the Rhino window (click its Dock icon) and retry. system_status shows the window state.", new { window = RhinoMCP.Tools.Script.HostWindow.State() });
                 windowRestored = lease.Restored;
                 bytes = Renderer.Render(ctx, view, s, a, s.Jpeg, out viewLabel, out camera, out modeName);
             }
             if (a.HasErrors) return a.ErrorResult();
             if (bytes == null || bytes.Length == 0)
-                return ToolResult.Fail("CAPTURE_FAILED", "ViewCaptureToFile produced no file", "Rhino reported no error and the window looks usable; retry once, then check system_status (window state) and Rhino's command history", new { log = ctx.Logs, window = RhinoMCP.Tools.Script.MacWindow.State() });
+                return ToolResult.Fail("CAPTURE_FAILED", "ViewCaptureToFile produced no file", "Rhino reported no error and the window looks usable; retry once, then check system_status (window state) and Rhino's command history", new { log = ctx.Logs, window = RhinoMCP.Tools.Script.HostWindow.State() });
             string mime = Png.IsPng(bytes) ? "image/png" : (Png.IsJpeg(bytes) ? "image/jpeg" : null);
             if (mime == null) return ToolResult.Fail("CAPTURE_FAILED", "Rhino wrote a file that is neither PNG nor JPEG");
             int iw, ih; Png.Size(bytes, out iw, out ih);

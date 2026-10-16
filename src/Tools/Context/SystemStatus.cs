@@ -14,9 +14,9 @@ namespace RhinoMCP.Tools.Context
         {
             get
             {
-                return "Hardware and load check for Rhino: process memory (RSS), free system RAM, Rosetta/x86_64 flag, CPU cores, document complexity " +
+                return "Hardware and load check for Rhino: process memory (RSS), free system RAM, Rosetta/x86_64 flag (Mac only; always false on Windows), CPU cores, document complexity " +
                        "(control points, mesh/SubD faces, render-mesh density), the 5 heaviest objects with handles, the active resource limits and recommendations. " +
-                       "Call on big or slow models before heavy work. Rhino 7 Mac runs under Rosetta and is mostly single-threaded, so heavy geometry stalls it. " +
+                       "Call on big or slow models before heavy work. Rhino 7 on Apple Silicon runs under Rosetta and is mostly single-threaded, so heavy geometry stalls it. " +
                        "Heavy tools return RESOURCE_LIMIT instead of computing past these limits. Document totals are cached per change epoch (refresh:true rescans, time-boxed to 2 s).";
             }
         }
@@ -98,9 +98,9 @@ namespace RhinoMCP.Tools.Context
 
             var res = ToolResult.Ok(new
             {
-                process = new { pid = System.Diagnostics.Process.GetCurrentProcess().Id, rss_mb = Math.Round(rss), private_mb = Math.Round(Resources.PrivateMb()), rosetta = rosetta, arch = IntPtr.Size == 8 ? "x64" : "x86" },
-                system = new { ram_total_mb = ram, ram_free_mb = free < 0 ? (double?)null : free, cores_physical = Resources.PhysicalCores(), cores_logical = Resources.LogicalCores() },
-                window = RhinoMCP.Tools.Script.MacWindow.State(),
+                process = new { pid = System.Diagnostics.Process.GetCurrentProcess().Id, rss_mb = Math.Round(rss), private_mb = Math.Round(Resources.PrivateMb()), rosetta = rosetta, arch = IntPtr.Size == 8 ? "x64" : "x86", platform = Platform.Name },
+                system = new { ram_total_mb = ram, ram_free_mb = free < 0 ? (double?)null : free, cores_physical = Resources.PhysicalCores() > 0 ? (int?)Resources.PhysicalCores() : null, cores_logical = Resources.LogicalCores() },
+                window = RhinoMCP.Tools.Script.HostWindow.State(),
                 document = doc,
                 limits = lim.ToJson(),
                 recommendations = rec

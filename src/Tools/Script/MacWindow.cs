@@ -201,6 +201,7 @@ namespace RhinoMCP.Tools.Script
         public static WindowLease Acquire()
         {
             var l = new WindowLease();
+            if (Platform.IsWindows) return AcquireWindows(l);
             if (!MacWindow.Available) return l;
             try
             {
@@ -222,8 +223,28 @@ namespace RhinoMCP.Tools.Script
             return l;
         }
 
+        IntPtr _hwnd;
+
+        static WindowLease AcquireWindows(WindowLease l)
+        {
+            try
+            {
+                IntPtr h = WinWindow.Handle();
+                if (h == IntPtr.Zero || !WinNative.IsWindow(h)) return l;   // unknown: try the capture anyway
+                if (WinNative.IsIconic(h))
+                {
+                    if (!WinWindow.Restore(h, 3000)) { l.Error = "the Rhino window is minimized and could not be restored"; return l; }
+                    l._hwnd = h; l.Restored = true;
+                }
+                else if (!WinNative.IsWindowVisible(h)) l.Error = "the Rhino window is hidden (not on screen)";
+            }
+            catch (Exception) { /* unknown state: try the capture anyway */ }
+            return l;
+        }
+
         public void Dispose()
         {
+            if (_hwnd != IntPtr.Zero) { WinWindow.Minimize(_hwnd); _hwnd = IntPtr.Zero; }
             if (_restoreMini && _win != null) { MacWindow.Miniaturize(_win); _restoreMini = false; }
         }
     }

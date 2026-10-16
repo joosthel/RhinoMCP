@@ -126,7 +126,7 @@ namespace RhinoMCP
             if (bad != null) return bad;
             if (tool.Kind == ToolKind.Script && cfg != null && !cfg.AllowScripts)
                 return ToolResult.Fail("UNSUPPORTED", "Script tools are disabled (allowScripts=false in config.json)",
-                    "Set allowScripts to true in ~/Library/Application Support/RhinoMCP/config.json and restart the server (MCPStop, MCPStart).");
+                    "Set allowScripts to true in " + Platform.ConfigPathDisplay + " and restart the server (MCPStop, MCPStart).");
             if (ctx.Doc == null && tool.Kind != ToolKind.Read)
                 return ToolResult.Fail("NO_DOCUMENT", "No active Rhino document", "Open or create a document in Rhino first.");
 
@@ -204,11 +204,14 @@ namespace RhinoMCP
         /// </summary>
         public static string NewestDll()
         {
-            var dirs = new List<string> { Config.ToolsDir };
+            var dirs = new List<string> { Platform.ToolsDir };
             try { dirs.Add(Path.GetDirectoryName(typeof(ToolsLoader).Assembly.Location)); } catch (Exception) { }
+            // Stamped dev builds (RhinoMCP.Tools.<yyyyMMddHHmmss>.dll) win, newest first; an unstamped RhinoMCP.Tools.dll
+            // (the shipped copy next to the .rhp, as built by src/RhinoMCP.Tools.csproj) is the fallback.
             return dirs.Where(d => !string.IsNullOrEmpty(d) && Directory.Exists(d))
-                .SelectMany(d => Directory.GetFiles(d, Prefix + "*.dll"))
-                .OrderByDescending(f => Path.GetFileName(f), StringComparer.Ordinal).FirstOrDefault();
+                .SelectMany(d => Directory.GetFiles(d, Prefix + "*dll"))
+                .OrderBy(f => string.Equals(Path.GetFileName(f), Prefix + "dll", StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+                .ThenBy(f => Path.GetFileName(f), StringComparer.Ordinal).LastOrDefault();
         }
 
         static readonly Dictionary<string, Assembly> Loaded = new Dictionary<string, Assembly>();

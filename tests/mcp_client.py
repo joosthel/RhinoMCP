@@ -2,34 +2,48 @@
 import glob
 import json
 import os
+import sys
 import urllib.error
 import time
 import unittest
 import urllib.request
 
-def _data_dir():
-    o = os.environ.get("RHINOMCP_DATA_DIR")
-    if o:
-        return o
-    if os.name == "nt":
-        return os.path.join(os.environ.get("APPDATA") or os.path.expanduser("~"), "RhinoMCP")
-    return os.path.expanduser("~/Library/Application Support/RhinoMCP")
+WINDOWS = sys.platform == "win32"
 
 
-BASE = _data_dir()
+def data_dir(platform=None, env=None, home=None):
+    """RhinoMCP data folder: Mac ~/Library/Application Support/RhinoMCP, Windows %APPDATA%\\RhinoMCP (RHINOMCP_DATA_DIR overrides).
+
+    Pure given its arguments (platform: "win32" | other, env: mapping, home: user home), so it is unit-testable on any OS.
+    """
+    platform = sys.platform if platform is None else platform
+    env = os.environ if env is None else env
+    if env.get("RHINOMCP_DATA_DIR"):
+        return env["RHINOMCP_DATA_DIR"]
+    if platform == "win32":
+        appdata = env.get("APPDATA") or os.path.join(home or os.path.expanduser("~"), "AppData", "Roaming")
+        return os.path.join(appdata, "RhinoMCP")
+    return os.path.join(home or os.path.expanduser("~"), "Library", "Application Support", "RhinoMCP")
 
 
-def _pid_alive(pid):
-    """Existence check without touching the process (os.kill(pid, 0) would TERMINATE it on Windows)."""
-    if os.name == "nt":
+BASE = data_dir()
+
+
+def pid_alive(pid):
+    """True if a process with this pid exists. (os.kill(pid, 0) is NOT safe on Windows: signal 0 is CTRL_C_EVENT.)"""
+    pid = int(pid)
+    if WINDOWS:
         import ctypes
-        h = ctypes.windll.kernel32.OpenProcess(0x1000, False, int(pid))  # PROCESS_QUERY_LIMITED_INFORMATION
-        if h:
-            ctypes.windll.kernel32.CloseHandle(h)
-            return True
-        return False
+        k32 = ctypes.windll.kernel32
+        h = k32.OpenProcess(0x1000, False, pid)   # PROCESS_QUERY_LIMITED_INFORMATION
+        if not h:
+            return False
+        code = ctypes.c_ulong()
+        ok = k32.GetExitCodeProcess(h, ctypes.byref(code))
+        k32.CloseHandle(h)
+        return bool(ok) and code.value == 259     # STILL_ACTIVE
     try:
-        os.kill(int(pid), 0)
+        os.kill(pid, 0)
         return True
     except PermissionError:
         return True
@@ -51,7 +65,7 @@ def instance():
         try:
             with open(f) as fh:
                 info = json.load(fh)
-            if _pid_alive(info["pid"]):
+            if pid_alive(info["pid"]):
                 return info
         except (OSError, ValueError, KeyError):
             continue
@@ -64,7 +78,9 @@ def token():
 
 
 def base_url():
-    return "http://127.0.0.1:%d" % instance()["port"]
+    info = instance()
+    # "host" is 127.0.0.1, or localhost after the server's Windows URL-ACL fallback (older discovery files lack it).
+    return "http://%s:%d" % (info.get("host") or "127.0.0.1", info["port"])
 
 
 def http(method, path, body=None, headers=None, auth=True):
@@ -127,6 +143,10 @@ def ensure_idle(attempts=10):
             return last
         time.sleep(1.0)
     raise RuntimeError("Rhino is still stuck in a command after %d cancel attempts: %s" % (attempts, last))
+
+
+def skip_unless_mac(reason="Mac-only behaviour"):
+    return unittest.skipUnless(not WINDOWS, reason)
 
 
 class IdleTestCase(unittest.TestCase):

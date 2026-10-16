@@ -74,7 +74,7 @@ namespace RhinoMCP.Tools.Drawing
             if (format != null && !Exts.ContainsKey(format)) { a.Error("'format' must be one of " + string.Join(", ", Exts.Keys)); format = null; }
             if (path != null)
             {
-                if (!Path.IsPathRooted(path)) a.Error("'path' must be absolute (starts with /): " + path);
+                if (!Path.IsPathRooted(path)) a.Error("'path' must be an absolute path: " + path);
                 else if (path.IndexOf('"') >= 0 || path.Any(ch => ch < 32)) a.Error("'path' contains a quote or control character");
                 else if (format != null && !Exts[format].Contains(Path.GetExtension(path).ToLowerInvariant()))
                     a.Error("'path' must end with " + string.Join(" or ", Exts[format]) + " for format " + format);
