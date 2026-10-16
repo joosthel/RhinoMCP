@@ -27,7 +27,7 @@ The limiting factors are not missing APIs. They are:
 | Clean Make2D on a 2-storey building and a vase | **120 curves vs 320 from native Make2D**. Lines and arcs instead of NURBS, closed and hatched sections, exact 1:100 | 0.4–0.6 s per drawing | [drawing](eval/drawing/REPORT.md) |
 | A2 sheet at 1:100 with PDF and DXF export | Scale exact, vector PDF, DXF with no SPLINEs from clean drawings | – | [layout](eval/layout/REPORT.md) |
 | 20,000-object model | Overview in 0.9 s (~460 tokens); nearest-object query 4 ms warm; change journal 0.01 s | – | [scale](eval/scale/REPORT.md) |
-| Two-element paper sculpture from one photo (Opus) | Plan and silhouette matched (camera fitted to 0.9 px). 3D form was guessed and over-engineered | 368 calls, 14 failed, 90 s timeouts | [rebuild](eval/rebuild/REPORT.md) |
+| Two-element paper sculpture from one photo (Opus) | Plan and silhouette matched (camera fitted to 0.9 px). 3D form was guessed and over-engineered | 368 calls, 14 failed, 90 s timeouts | *(materials removed: third-party design)* |
 | Flat product part from a photo (Opus), basic shapes then details | Two clean solids. Outline within about 1.3 mm of the trace, exact straight edge after owner feedback | 137 calls (about 40 for a clean replay), slowest 2.2 s | *(materials removed: third-party product)* |
 
 ## What we learned
