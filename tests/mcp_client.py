@@ -7,7 +7,34 @@ import time
 import unittest
 import urllib.request
 
-BASE = os.path.expanduser("~/Library/Application Support/RhinoMCP")
+def _data_dir():
+    o = os.environ.get("RHINOMCP_DATA_DIR")
+    if o:
+        return o
+    if os.name == "nt":
+        return os.path.join(os.environ.get("APPDATA") or os.path.expanduser("~"), "RhinoMCP")
+    return os.path.expanduser("~/Library/Application Support/RhinoMCP")
+
+
+BASE = _data_dir()
+
+
+def _pid_alive(pid):
+    """Existence check without touching the process (os.kill(pid, 0) would TERMINATE it on Windows)."""
+    if os.name == "nt":
+        import ctypes
+        h = ctypes.windll.kernel32.OpenProcess(0x1000, False, int(pid))  # PROCESS_QUERY_LIMITED_INFORMATION
+        if h:
+            ctypes.windll.kernel32.CloseHandle(h)
+            return True
+        return False
+    try:
+        os.kill(int(pid), 0)
+        return True
+    except PermissionError:
+        return True
+    except OSError:
+        return False
 
 
 class ProtocolError(Exception):
@@ -24,8 +51,8 @@ def instance():
         try:
             with open(f) as fh:
                 info = json.load(fh)
-            os.kill(int(info["pid"]), 0)
-            return info
+            if _pid_alive(info["pid"]):
+                return info
         except (OSError, ValueError, KeyError):
             continue
     raise RuntimeError("no live RhinoMCP instance found")

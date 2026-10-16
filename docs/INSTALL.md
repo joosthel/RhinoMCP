@@ -1,5 +1,7 @@
 # Install
 
+macOS instructions first; [Windows](#windows-rhino-7) is further down.
+
 RhinoMCP is a Rhino 7 (macOS) plugin that runs an authenticated MCP server on `127.0.0.1`, plus a small native stdio bridge (`rhinomcp-bridge`) for clients that cannot speak HTTP. No Node, Python or JSON editing is needed at runtime. Nothing is signed or notarized (personal research project); see Gatekeeper below.
 
 ## 1. Install the plugin and bridge
@@ -65,3 +67,45 @@ If Rhino is closed, the bridge still starts and exposes a single tool, `rhino_st
 ## Tools DLL location
 
 Core (0.2.0+) loads the newest `RhinoMCP.Tools.*.dll` from `~/Library/Application Support/RhinoMCP/tools/`, falling back to the plugin's own folder, so Yak installs that ship the DLL next to the `.rhp` work too.
+
+## Windows (Rhino 7)
+
+Windows support is new and has been verified in CI only for the bridge (see `docs/TESTING-WINDOWS.md` for what still needs a real Rhino 7 on Windows). Requirements: Windows 10/11 (the bridge is a .NET Framework 4.8 exe, which ships with Windows; no runtime install) and Rhino 7.
+
+**From a release zip** (`RhinoMCP-<version>-windows.zip`): unzip, then in PowerShell
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install.ps1
+```
+
+**From a source checkout:** build the plugin (`scripts\build_win.ps1`) and the bridge (`msbuild bridge-win\RhinoMcpBridge.csproj -p:Configuration=Release`, output `dist\rhinomcp-bridge.exe`), then run `scripts\windows\install.ps1`. Package builders: `packaging\build_zip_win.ps1`, `packaging\build_yak_win.ps1` (writes `dist\rhino-mcp-<version>-rh7_0-win.yak`).
+
+The script copies (current user, no admin):
+
+| What | Where |
+|---|---|
+| plugin | `%APPDATA%\RhinoMCP\plugin\RhinoMCP.rhp` |
+| tools DLL | `%APPDATA%\RhinoMCP\tools\` |
+| bridge | `%APPDATA%\RhinoMCP\bin\rhinomcp-bridge.exe` |
+
+It also removes the "downloaded from the internet" flag (`Unblock-File`); Rhino will not load a blocked `.rhp`. It never edits Claude or Cursor configs and prints the lines to copy.
+
+**Load the plugin once** (either way), then restart Rhino: drag `RhinoMCP.rhp` onto the Rhino window, or run `_PlugInManager` > Install... and pick the file. Yak alternative: `yak install rhino-mcp-<version>-rh7_0-win.yak` or `_PackageManager`.
+
+**Connect a client:**
+
+```powershell
+claude mcp add rhino -- "$env:APPDATA\RhinoMCP\bin\rhinomcp-bridge.exe"
+```
+
+Claude Desktop: install `rhino-mcp.mcpb` (one extension for macOS and Windows; `platform_overrides.win32` selects the `.exe`), or add to `%APPDATA%\Claude\claude_desktop_config.json`:
+
+```json
+{ "mcpServers": { "rhino": { "command": "C:\\Users\\YOU\\AppData\\Roaming\\RhinoMCP\\bin\\rhinomcp-bridge.exe" } } }
+```
+
+Cursor (`%USERPROFILE%\.cursor\mcp.json`): same JSON.
+
+The server listens on `http://127.0.0.1:<port>/mcp` (port 7340, falling back through 7359) or, if that cannot be bound, `http://localhost:<port>/mcp`; the bridge tries both. Data lives in `%APPDATA%\RhinoMCP` (`config.json`, `instances\<pid>.json`); set `RHINOMCP_DATA_DIR` to relocate it (tests).
+
+Windows troubleshooting: SmartScreen on the unsigned exe ("More info" > "Run anyway"); blocked `.rhp` (re-run `install.ps1` or Properties > Unblock); only `rhino_status` listed means Rhino is not running or the plugin is not loaded (check `%APPDATA%\RhinoMCP\instances`); `netstat -ano | findstr 7340` shows who holds the port; run `scripts\windows\verify.ps1` for a full self-check.
