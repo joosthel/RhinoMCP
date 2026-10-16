@@ -100,7 +100,7 @@ namespace RhinoMCP
         public static System.Collections.Generic.List<string> RoslynCandidates(string scriptingDll, string rhinoCommonDir, string pluginsRoot)
         {
             var l = new System.Collections.Generic.List<string>();
-            if (rhinoCommonDir == null) { try { rhinoCommonDir = Path.GetDirectoryName(typeof(Rhino.RhinoApp).Assembly.Location); } catch (Exception) { } }
+            if (rhinoCommonDir == null) { try { rhinoCommonDir = RhinoCommonDir(); } catch (Exception) { } }
             if (string.IsNullOrEmpty(rhinoCommonDir)) return l;
             string root = Path.GetDirectoryName(rhinoCommonDir);
             var seeds = new System.Collections.Generic.List<string> { rhinoCommonDir };
@@ -127,6 +127,9 @@ namespace RhinoMCP
             catch (Exception) { }
             return l;
         }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        static string RhinoCommonDir() { return Path.GetDirectoryName(typeof(Rhino.RhinoApp).Assembly.Location); }
 
         // ------------------------------------------------------------------ owner-only files
 
