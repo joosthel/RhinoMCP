@@ -32,7 +32,7 @@
 
   <!-- Compile-only references: Rhino ships RhinoCommon and Newtonsoft.Json (9.0.x), so never copy them next to the .rhp. -->
   <ItemGroup Condition="'$(RhinoSystemDir)' == ''">
-    <PackageReference Include="RhinoCommon" Version="7.13.21348.13001" PrivateAssets="all" ExcludeAssets="runtime" />
+    <PackageReference Include="RhinoCommon" Version="7.38.24338.17001" PrivateAssets="all" ExcludeAssets="runtime" />
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" PrivateAssets="all" ExcludeAssets="runtime" />
   </ItemGroup>
   <ItemGroup Condition="'$(RhinoSystemDir)' != ''">
