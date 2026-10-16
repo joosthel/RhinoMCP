@@ -1,0 +1,204 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    name: Windows (bridge, tests, plugin build, packaging)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: microsoft/setup-msbuild@v2
+
+      - name: Build rhinomcp-bridge.exe (.NET Framework 4.8)
+        shell: pwsh
+        run: |
+          msbuild bridge-win\RhinoMcpBridge.csproj -nologo -verbosity:minimal -p:Configuration=Release
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (-not (Test-Path dist\rhinomcp-bridge.exe)) { throw 'dist\rhinomcp-bridge.exe was not produced' }
+          Get-Item dist\rhinomcp-bridge.exe | Format-List FullName, Length
+
+      - name: Bridge protocol tests (against the stdlib stub server)
+        shell: pwsh
+        env:
+          BRIDGE_CMD: dist\rhinomcp-bridge.exe
+        run: python -m unittest discover -s tests -p "test_bridge_protocol.py" -v
+
+      - name: Detect plugin build inputs
+        id: plugin
+        shell: pwsh
+        run: |
+          $script = Test-Path scripts\build_win.ps1
+          $proj = @(Get-ChildItem -Path src -Filter *.csproj -ErrorAction SilentlyContinue)
+          $mode = if ($script) { 'script' } elseif ($proj.Count -gt 0) { 'csproj' } else { 'none' }
+          "mode=$mode" >> $env:GITHUB_OUTPUT
+          if ($mode -eq 'none') {
+            Write-Host "::notice title=Plugin build skipped::no scripts/build_win.ps1 and no src/*.csproj in this checkout (the cross-platform plugin work has not landed yet)."
+          }
+
+      - name: Build plugin (scripts/build_win.ps1)
+        if: steps.plugin.outputs.mode == 'script'
+        shell: pwsh
+        run: ./scripts/build_win.ps1
+
+      - name: Build plugin (src/*.csproj, RhinoCommon 7.x from NuGet)
+        if: steps.plugin.outputs.mode == 'csproj'
+        shell: pwsh
+        run: |
+          foreach ($p in Get-ChildItem -Path src -Filter *.csproj) {
+            msbuild $p.FullName -restore -nologo -verbosity:minimal -p:Configuration=Release
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+
+      - name: Package (zip, yak)
+        id: package
+        shell: pwsh
+        run: |
+          # Package only when a plugin build produced RhinoMCP.rhp somewhere we know about.
+          $rhp = Get-ChildItem -Recurse -Include RhinoMCP.rhp -Path dist, src -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $rhp) { Write-Host '::notice title=Packaging skipped::no RhinoMCP.rhp was built'; "packaged=false" >> $env:GITHUB_OUTPUT; exit 0 }
+          if ($rhp.DirectoryName -ne (Resolve-Path dist).Path) {
+            # gather the build output into dist\ in the layout the packagers expect
+            Get-ChildItem $rhp.DirectoryName -Filter 'RhinoMCP.Tools.*.dll' | Copy-Item -Destination dist -Force
+            Copy-Item $rhp.FullName dist -Force
+          }
+          ./packaging/build_zip_win.ps1
+          "packaged=true" >> $env:GITHUB_OUTPUT
+          try { ./packaging/build_yak_win.ps1 -DownloadYak } catch { Write-Host "::warning title=Yak package not built::$($_.Exception.Message)" }
+
+      - name: HttpListener probe (127.0.0.1 vs localhost) as the runner (admin) user
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          # Report only. Runners are administrators, which hides urlacl problems; see the next step.
+          ./scripts/windows/probe_httplistener.ps1 | Tee-Object -FilePath probe-admin.txt
+
+      - name: HttpListener probe as a freshly created standard (non-admin) user
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          # Best effort: create a local standard user and run the same probe under it. This is the closest a hosted
+          # runner gets to "a normal Rhino user", but it still is not a real desktop session (no Rhino, no UAC profile).
+          $plain = 'Pw-' + [guid]::NewGuid().ToString('N')
+          $pw = ConvertTo-SecureString $plain -AsPlainText -Force
+          New-LocalUser -Name rmcpprobe -Password $pw -AccountNeverExpires -PasswordNeverExpires | Out-Null
+          Add-LocalGroupMember -Group 'Users' -Member 'rmcpprobe'
+          New-Item -ItemType Directory -Force C:\probe | Out-Null
+          Copy-Item scripts\windows\probe_httplistener.ps1 C:\probe\
+          icacls C:\probe /grant 'rmcpprobe:(OI)(CI)M' | Out-Null
+          $cred = New-Object System.Management.Automation.PSCredential('.\rmcpprobe', $pw)
+          Start-Process -FilePath powershell.exe -Credential $cred -LoadUserProfile -WorkingDirectory C:\probe `
+            -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File','C:\probe\probe_httplistener.ps1' `
+            -RedirectStandardOutput C:\probe\out.txt -RedirectStandardError C:\probe\err.txt -Wait
+          Get-Content C:\probe\out.txt, C:\probe\err.txt | Tee-Object -FilePath probe-standard-user.txt
+          Remove-LocalUser -Name rmcpprobe
+
+      - name: Job summary
+        if: always()
+        shell: pwsh
+        run: |
+          "### Windows CI" >> $env:GITHUB_STEP_SUMMARY
+          "Plugin build mode: ``${{ steps.plugin.outputs.mode }}``; packaged: ``${{ steps.package.outputs.packaged }}``" >> $env:GITHUB_STEP_SUMMARY
+          foreach ($f in 'probe-admin.txt', 'probe-standard-user.txt') {
+            if (Test-Path $f) { "#### $f" >> $env:GITHUB_STEP_SUMMARY; '```' >> $env:GITHUB_STEP_SUMMARY; Get-Content $f >> $env:GITHUB_STEP_SUMMARY; '```' >> $env:GITHUB_STEP_SUMMARY }
+          }
+          "Note: runners are administrators; the standard-user probe is best effort and cannot replace a test on a real non-admin Windows desktop with Rhino 7 (scripts/windows/verify.ps1)." >> $env:GITHUB_STEP_SUMMARY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-bridge
+          path: dist/rhinomcp-bridge.exe
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-plugin
+          path: |
+            dist/RhinoMCP.rhp
+            dist/RhinoMCP.Tools.*.dll
+            src/**/bin/Release/**/*.rhp
+            src/**/bin/Release/**/RhinoMCP.Tools*.dll
+          if-no-files-found: ignore
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-packages
+          path: |
+            dist/RhinoMCP-*-windows.zip
+            dist/rhino-mcp-*-win.yak
+          if-no-files-found: ignore
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-probes
+          path: probe-*.txt
+          if-no-files-found: ignore
+
+  macos:
+    name: macOS (Swift bridge, protocol tests, skills check)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Swift bridge
+        run: bridge/build.sh
+      - name: Bridge protocol tests (Swift bridge)
+        env:
+          BRIDGE_CMD: dist/rhinomcp-bridge
+        run: python3 tests/test_bridge_protocol.py -v
+      - name: Skills check
+        run: python3 scripts/check_skills.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-bridge
+          path: dist/rhinomcp-bridge
+          if-no-files-found: error
+
+  release:
+    name: Attach Windows artifacts to the GitHub release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [windows, macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Assemble release files
+        run: |
+          set -euo pipefail
+          mkdir -p dist release
+          cp artifacts/windows-bridge/rhinomcp-bridge.exe dist/
+          cp artifacts/macos-bridge/rhinomcp-bridge dist/ && chmod +x dist/rhinomcp-bridge
+          cp artifacts/windows-bridge/rhinomcp-bridge.exe release/
+          # Universal Claude Desktop extension (macOS + Windows bridges, platform_overrides.win32)
+          packaging/build_mcpb.sh
+          cp dist/rhino-mcp.mcpb release/
+          for f in artifacts/windows-packages/*; do [ -e "$f" ] && cp "$f" release/ || true; done
+          for f in artifacts/windows-plugin/*.rhp artifacts/windows-plugin/RhinoMCP.Tools.*.dll; do [ -e "$f" ] && cp "$f" release/ || true; done
+          ls -la release
+      - name: Upload to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          gh release view "$TAG" >/dev/null 2>&1 || gh release create "$TAG" --title "$TAG" --generate-notes
+          gh release upload "$TAG" release/* --clobber
