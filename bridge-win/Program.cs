@@ -33,7 +33,7 @@ namespace RhinoMcp.Bridge
 
     internal static class Program
     {
-        const string BridgeVersion = "0.2.0";
+        const string BridgeVersion = "0.3.0";
         static readonly string[] SupportedProtocols = { "2025-11-25", "2025-06-18", "2025-03-26" };
         static readonly string[] Hosts = { "127.0.0.1", "localhost" };
         static readonly JavaScriptSerializer Json = new JavaScriptSerializer { MaxJsonLength = int.MaxValue, RecursionLimit = 512 };

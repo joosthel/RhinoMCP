@@ -6,7 +6,7 @@ using Rhino.PlugIns;
 
 [assembly: Guid("995CF377-563C-482D-B295-F80F5E24840B")]
 [assembly: AssemblyTitle("RhinoMCP")]
-[assembly: AssemblyVersion("0.2.0.0")]
+[assembly: AssemblyVersion("0.3.0.0")]
 [assembly: AssemblyFileVersion("0.1.0.0")]
 [assembly: PlugInDescription(DescriptionType.Organization, "RhinoMCP")]
 [assembly: PlugInDescription(DescriptionType.WebSite, "https://github.com/joosthel/RhinoMCP")]
@@ -16,7 +16,7 @@ namespace RhinoMCP
 {
     public sealed class RhinoMCPPlugin : PlugIn
     {
-        public const string VersionString = "0.2.0";
+        public const string VersionString = "0.3.0";
         static readonly object Gate = new object();
 
         public static RhinoMCPPlugin Instance { get; private set; }
