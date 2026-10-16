@@ -94,3 +94,6 @@ Details are in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). It also records e
 - **Unsigned binaries.** macOS may block the bridge on first run; see [`docs/INSTALL.md`](docs/INSTALL.md).
 - **Captures** briefly drive the active viewport, and the Rhino window must be visible.
 - **Next on the list:** photo matching, Grasshopper definitions as tools, a Python 3 sidecar, a background job system. See [FINDINGS → What's still missing](docs/FINDINGS.md#whats-still-missing-ranked).
+
+## License
+[MIT](LICENSE) © 2026 Joost Helfers. Rhino is a product of Robert McNeel & Associates. This project references Rhino's assemblies but does not redistribute them.
