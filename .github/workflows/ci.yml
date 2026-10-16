@@ -40,44 +40,31 @@ jobs:
           BRIDGE_CMD: dist\rhinomcp-bridge.exe
         run: python -m unittest discover -s tests -p "test_bridge_protocol.py" -v
 
-      - name: Detect plugin build inputs
+      - name: Platform logic tests (Platform.cs with an injected platform, real Windows ACL/clipboard-free paths)
+        shell: pwsh
+        run: |
+          dotnet run --project tests/platform_logic/PlatformTests.csproj -c Release
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m unittest discover -s tests -p "test_platform_logic.py" -v
+
+      - name: Build plugin (core .rhp + tools dll, RhinoCommon 7.x from NuGet)
         id: plugin
         shell: pwsh
         run: |
-          $script = Test-Path scripts\build_win.ps1
-          $proj = @(Get-ChildItem -Path src -Filter *.csproj -ErrorAction SilentlyContinue)
-          $mode = if ($script) { 'script' } elseif ($proj.Count -gt 0) { 'csproj' } else { 'none' }
-          "mode=$mode" >> $env:GITHUB_OUTPUT
-          if ($mode -eq 'none') {
-            Write-Host "::notice title=Plugin build skipped::no scripts/build_win.ps1 and no src/*.csproj in this checkout (the cross-platform plugin work has not landed yet)."
-          }
-
-      - name: Build plugin (scripts/build_win.ps1)
-        if: steps.plugin.outputs.mode == 'script'
-        shell: pwsh
-        run: ./scripts/build_win.ps1
-
-      - name: Build plugin (src/*.csproj, RhinoCommon 7.x from NuGet)
-        if: steps.plugin.outputs.mode == 'csproj'
-        shell: pwsh
-        run: |
-          foreach ($p in Get-ChildItem -Path src -Filter *.csproj) {
-            msbuild $p.FullName -restore -nologo -verbosity:minimal -p:Configuration=Release
-            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          }
+          $stamp = Get-Date -Format yyyyMMddHHmmss
+          dotnet build src/Tools/RhinoMCP.Tools.csproj -c Release "-p:ToolsStamp=$stamp" -nologo -v:minimal
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          foreach ($f in 'dist\win\RhinoMCP.rhp', "dist\win\RhinoMCP.Tools.$stamp.dll") { if (-not (Test-Path $f)) { throw "not produced: $f" } }
+          # the packagers expect everything in dist\
+          Copy-Item dist\win\RhinoMCP.rhp dist -Force
+          Copy-Item "dist\win\RhinoMCP.Tools.$stamp.dll" dist -Force
+          "mode=csproj" >> $env:GITHUB_OUTPUT
+          Get-ChildItem dist | Format-Table Name, Length
 
       - name: Package (zip, yak)
         id: package
         shell: pwsh
         run: |
-          # Package only when a plugin build produced RhinoMCP.rhp somewhere we know about.
-          $rhp = Get-ChildItem -Recurse -Include RhinoMCP.rhp -Path dist, src -ErrorAction SilentlyContinue | Select-Object -First 1
-          if (-not $rhp) { Write-Host '::notice title=Packaging skipped::no RhinoMCP.rhp was built'; "packaged=false" >> $env:GITHUB_OUTPUT; exit 0 }
-          if ($rhp.DirectoryName -ne (Resolve-Path dist).Path) {
-            # gather the build output into dist\ in the layout the packagers expect
-            Get-ChildItem $rhp.DirectoryName -Filter 'RhinoMCP.Tools.*.dll' | Copy-Item -Destination dist -Force
-            Copy-Item $rhp.FullName dist -Force
-          }
           ./packaging/build_zip_win.ps1
           "packaged=true" >> $env:GITHUB_OUTPUT
           try { ./packaging/build_yak_win.ps1 -DownloadYak } catch { Write-Host "::warning title=Yak package not built::$($_.Exception.Message)" }
@@ -132,8 +119,6 @@ jobs:
           path: |
             dist/RhinoMCP.rhp
             dist/RhinoMCP.Tools.*.dll
-            src/**/bin/Release/**/*.rhp
-            src/**/bin/Release/**/RhinoMCP.Tools*.dll
           if-no-files-found: ignore
 
       - uses: actions/upload-artifact@v4
