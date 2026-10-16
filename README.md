@@ -8,6 +8,9 @@ A personal research project, built to find out how far an agent can drive Rhino 
 |---|---|
 | ![carabiner](docs/eval/carabiner/side_by_side.png) | ![section](docs/eval/drawing/section.png) |
 
+> [!NOTE]
+> **Windows:** this project is untested on Rhino 7 for Windows. It builds and passes the automated checks on Windows, but it hasn't run inside a real Rhino there yet. **Feedback & logs are much appreciated**: see [Feedback & logs](#feedback--logs).
+
 ## Highlights
 - **Runs inside Rhino 7.** A C# plugin serves MCP on `127.0.0.1` with a token. A small native bridge connects stdio clients. Users need no Python, Node or .NET.
 - **52 tools.** They cover objects and named sets, layers and layer schemes, geometry, freeform surfaces and SubD, measurement and clash checks, views, clean Make2D, layouts and export, model overview, change log and audit, and scripting (IronPython 2.7 and C#).
@@ -90,10 +93,21 @@ Details are in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). It also records e
 | [Skills](skills/) | Agent skills (Claude Code plugin) |
 
 ## Status and limits
-- **v0.2.0, research prototype.** Rhino 8 and Windows are not supported yet; the design allows a later net8.0 build.
+- **Research prototype.** Rhino 7 only. One build serves both Mac and Windows.
+- **Platforms:** tested live on Rhino 7.39 for Mac. **Windows is untested inside Rhino:** it compiles and passes the platform and bridge tests on GitHub's Windows runners only. Rhino 8 isn't supported.
 - **Unsigned binaries.** macOS may block the bridge on first run; see [`docs/INSTALL.md`](docs/INSTALL.md).
 - **Captures** briefly drive the active viewport, and the Rhino window must be visible.
+- **Quitting Rhino may crash on exit** after a DWG/DXF export in the same session. The crash is in Rhino's bundled DWG library (Teigha), not in this plugin, and it doesn't affect your work.
 - **Next on the list:** photo matching, Grasshopper definitions as tools, a Python 3 sidecar, a background job system. See [FINDINGS → What's still missing](docs/FINDINGS.md#whats-still-missing-ranked).
+
+## Feedback & logs
+Feedback, bug reports and "it works for me" notes are very welcome, especially from **Windows**.
+1. Collect diagnostics. The result is a zip with environment info, server and system status, the crash log and Rhino crash reports. **The token is removed.**
+   - Mac: `scripts/collect_logs.sh`
+   - Windows: `powershell -ExecutionPolicy Bypass -File scripts\windows\collect_logs.ps1`. Run `scripts\windows\verify.ps1` first; it runs a live smoke test and adds `verify-report.txt`.
+2. Check the zip, then attach it to an issue: [bug report / logs](../../issues/new?template=bug_report.yml) or [feedback](../../issues/new?template=feedback.yml).
+
+Nothing is sent automatically. Sharing logs is always your choice.
 
 ## License
 [MIT](LICENSE) © 2026 Joost Helfers. Rhino is a product of Robert McNeel & Associates. This project references Rhino's assemblies but does not redistribute them.
