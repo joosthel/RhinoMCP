@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Windows/CI runner for the pure-logic platform tests: dotnet run --project tests/platform_logic/PlatformTests.csproj -->
+  <!-- Windows/CI runner for the pure-logic platform tests: dotnet run, project tests/platform_logic/PlatformTests.csproj -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net48</TargetFramework>
