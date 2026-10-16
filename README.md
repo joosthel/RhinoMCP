@@ -7,7 +7,13 @@ A personal research project, built to find out how far an agent can drive Rhino 
 > [!NOTE]
 > **Windows:** this project is untested on Rhino 7 for Windows. It builds and passes the automated checks on Windows, but it hasn't run inside a real Rhino there yet. **Feedback & logs are much appreciated**: see [Feedback & logs](#feedback--logs).
 
-*A new demo video is being recorded.*
+[![RhinoMCP: a modular sideboard built by an agent, with a section at 1:10](docs/media/hero.png)](docs/media/demo.mp4)
+
+![Demo: an agent builds a modular sideboard in Rhino 7](docs/media/demo.gif)
+
+From one prompt, an agent builds an original modular sideboard (white steel tubes with spherical connectors, flush navy panels, drawers and doors, an oak top). It then checks it with `measure` and `geometry_validate`, turns it on a turntable and produces a plan cut and a section at 1:10. The drawings are clean Make2D: lines and arcs, with solid-poché sections at true scale.
+
+[Full video (MP4, 35 s)](docs/media/demo.mp4) · [How to re-record it](tests/demo/README.md)
 
 ## Highlights
 - **Runs inside Rhino 7.** A C# plugin serves MCP on `127.0.0.1` with a token. A small native bridge connects stdio clients. Users need no Python, Node or .NET.
