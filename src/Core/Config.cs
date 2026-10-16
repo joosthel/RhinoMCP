@@ -1,12 +1,11 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
 using Newtonsoft.Json;
 
 namespace RhinoMCP
 {
-    /// <summary>Persistent settings in ~/Library/Application Support/RhinoMCP/config.json (mode 0600).</summary>
+    /// <summary>Persistent settings in config.json inside Platform.DataDir (owner-only: chmod 600 on Mac, user-only ACL on Windows).</summary>
     public sealed class Config
     {
         [JsonProperty("port")] public int Port = 7340;
@@ -15,18 +14,10 @@ namespace RhinoMCP
         [JsonProperty("allowScripts")] public bool AllowScripts = true;
         [JsonProperty("devMode")] public bool DevMode = true;
 
-        public static string HomeDir
-        {
-            get
-            {
-                string h = Environment.GetEnvironmentVariable("HOME");
-                return string.IsNullOrEmpty(h) ? Environment.GetFolderPath(Environment.SpecialFolder.Personal) : h;
-            }
-        }
-        public static string DataDir { get { return Path.Combine(HomeDir, "Library/Application Support/RhinoMCP"); } }
-        public static string ConfigPath { get { return Path.Combine(DataDir, "config.json"); } }
-        public static string ToolsDir { get { return Path.Combine(DataDir, "tools"); } }
-        public static string InstancesDir { get { return Path.Combine(DataDir, "instances"); } }
+        public static string DataDir { get { return Platform.DataDir; } }
+        public static string ConfigPath { get { return Platform.ConfigPath; } }
+        public static string ToolsDir { get { return Platform.ToolsDir; } }
+        public static string InstancesDir { get { return Platform.InstancesDir; } }
 
         public static Config Load()
         {
@@ -48,7 +39,7 @@ namespace RhinoMCP
         {
             Directory.CreateDirectory(DataDir);
             File.WriteAllText(ConfigPath, JsonConvert.SerializeObject(this, Formatting.Indented));
-            Chmod600(ConfigPath);
+            Platform.SecureFile(ConfigPath);
         }
 
         static string NewToken()
@@ -60,14 +51,6 @@ namespace RhinoMCP
             return sb.ToString();
         }
 
-        public static void Chmod600(string path)
-        {
-            try
-            {
-                var psi = new ProcessStartInfo("/bin/chmod", "600 \"" + path + "\"") { UseShellExecute = false, CreateNoWindow = true };
-                using (var p = Process.Start(psi)) { p.WaitForExit(3000); }
-            }
-            catch (Exception) { }
-        }
+        public static void Chmod600(string path) { Platform.SecureFile(path); }
     }
 }

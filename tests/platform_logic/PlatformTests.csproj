@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Windows/CI runner for the pure-logic platform tests: dotnet run, project tests/platform_logic/PlatformTests.csproj -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="PlatformTests.cs" />
+    <Compile Include="..\..\src\Core\Platform.cs" Link="Platform.cs" />
+    <PackageReference Include="RhinoCommon" Version="7.38.24338.17001" />
+  </ItemGroup>
+</Project>

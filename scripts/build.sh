@@ -46,9 +46,9 @@ compile() {
 
 rm -f dist/RhinoMCP.rhp dist/RhinoMCP.pdb dist/RhinoMCP.Tools.*.dll dist/RhinoMCP.Tools.*.pdb
 
-find src/Core -name '*.cs' | sort | compile dist/RhinoMCP.rhp
+find src/Core -name '*.cs' -not -path '*/obj/*' | sort | compile dist/RhinoMCP.rhp
 TOOLS="dist/RhinoMCP.Tools.$STAMP.dll"
-find src/Tools -name '*.cs' | sort | compile "$TOOLS" -r:dist/RhinoMCP.rhp
+find src/Tools -name '*.cs' -not -path '*/obj/*' | sort | compile "$TOOLS" -r:dist/RhinoMCP.rhp
 
 # Deploy the tools dll to the hot-reload folder; keep only the newest 3.
 DEST="$HOME/Library/Application Support/RhinoMCP/tools"

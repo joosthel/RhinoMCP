@@ -79,7 +79,7 @@ namespace RhinoMCP.Tools.View
             var lease = RhinoMCP.Tools.Script.WindowLease.Acquire();
             if (lease.Error != null)
                 return ToolResult.Fail("WINDOW_UNAVAILABLE", "Cannot capture: " + lease.Error,
-                    "Restore or unhide the Rhino window (click its Dock icon) and retry. system_status shows the window state.", new { window = RhinoMCP.Tools.Script.MacWindow.State() });
+                    "Restore or unhide the Rhino window (click its Dock icon) and retry. system_status shows the window state.", new { window = RhinoMCP.Tools.Script.HostWindow.State() });
             windowRestored = lease.Restored;
             try
             {

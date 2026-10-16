@@ -46,10 +46,8 @@ namespace RhinoMCP.Tools.Script
                             // Escape key event into Rhino's own AppKit queue works in the background too.
                             // Attempts 1-2: native event into the document window (found via [NSApp windows], deminiaturized
                             // if needed). Later attempts also send the keystroke path, in case the first did not land.
-                            string m;
-                            bool posted = MacEscape.Post(out m);
-                            if (!posted || _attempts >= 3) { RhinoApp.SendKeystrokes("!", true); m = posted ? m + "+sendkeystrokes" : "sendkeystrokes"; }
-                            Method = m;
+                            Method = CancelHelper.Escape(_attempts);   // Windows: focus main window + SendKeystrokes
+
                         }
                         catch (Exception) { }
                     }));

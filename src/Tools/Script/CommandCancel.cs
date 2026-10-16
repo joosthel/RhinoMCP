@@ -7,7 +7,7 @@ namespace RhinoMCP.Tools.Script
 {
     /// <summary>
     /// Cancels a Rhino command that is stuck waiting for input (e.g. "Start of line"). Posts Escape into the Rhino document window
-    /// (deminiaturizing it if it is minimized) and reports how. Safe to call when idle (does nothing). Because it runs while the
+    /// (Mac: deminiaturizing it if it is minimized; Windows: focus the main window, then SendKeystrokes("!")) and reports how. Safe to call when idle (does nothing). Because it runs while the
     /// stuck command pumps UI callbacks, call it repeatedly until was_in_command is false.
     /// </summary>
     public sealed class CommandCancel : ITool
@@ -30,9 +30,7 @@ namespace RhinoMCP.Tools.Script
             if (!inCmd) return ToolResult.Ok(new { was_in_command = false, cancel_method = (string)null, prompt = (string)null });
             string prompt = null;
             try { prompt = RhinoApp.CommandPrompt; } catch (Exception) { }
-            string m;
-            bool posted = MacEscape.Post(out m);
-            if (!posted) { RhinoApp.SendKeystrokes("!", true); m = "sendkeystrokes"; }
+            string m = CancelHelper.Escape(0);
             try { RhinoApp.Wait(); } catch (Exception) { }
             return ToolResult.Ok(new { was_in_command = true, cancel_method = m, prompt = prompt });
         }

@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Portable (Windows / CI) build of the tools assembly: dist/win/RhinoMCP.Tools.dll (or RhinoMCP.Tools.<stamp>.dll with -p:ToolsStamp=...).
+    Builds the core (src/Core/RhinoMCP.csproj) first. The Mac build does NOT use this file (scripts/build.sh).
+
+      dotnet build src/Tools/RhinoMCP.Tools.csproj -c Release                    (builds both assemblies; RhinoCommon from NuGet)
+      msbuild src/Tools/RhinoMCP.Tools.csproj /p:Configuration=Release /p:RhinoSystemDir="C:\Program Files\Rhino 7\System"
+      Dev builds (hot-reload naming):  -p:ToolsStamp=20260101120000  ->  RhinoMCP.Tools.20260101120000.dll
+  -->
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <AssemblyName>RhinoMCP.Tools</AssemblyName>
+    <AssemblyName Condition="'$(ToolsStamp)' != ''">RhinoMCP.Tools.$(ToolsStamp)</AssemblyName>
+    <RootNamespace>RhinoMCP.Tools</RootNamespace>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <Deterministic>true</Deterministic>
+    <DebugType>portable</DebugType>
+    <Optimize Condition="'$(Configuration)' == 'Release'">true</Optimize>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>$(MSBuildThisFileDirectory)..\..\dist\win\</OutputPath>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Drawing" />
+  </ItemGroup>
+
+  <!-- The core is referenced for compilation only; it is a separate file (the .rhp) at runtime. -->
+  <ItemGroup>
+    <ProjectReference Include="..\Core\RhinoMCP.csproj"><Private>false</Private></ProjectReference>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(RhinoSystemDir)' == ''">
+    <PackageReference Include="RhinoCommon" Version="7.38.24338.17001" PrivateAssets="all" ExcludeAssets="runtime" />
+    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" PrivateAssets="all" ExcludeAssets="runtime" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(RhinoSystemDir)' != ''">
+    <Reference Include="RhinoCommon"><HintPath>$(RhinoSystemDir)\RhinoCommon.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Newtonsoft.Json"><HintPath>$(RhinoSystemDir)\Newtonsoft.Json.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+</Project>

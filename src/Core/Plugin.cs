@@ -10,7 +10,7 @@ using Rhino.PlugIns;
 [assembly: AssemblyFileVersion("0.1.0.0")]
 [assembly: PlugInDescription(DescriptionType.Organization, "RhinoMCP")]
 [assembly: PlugInDescription(DescriptionType.WebSite, "https://github.com/joosthel/RhinoMCP")]
-[assembly: PlugInDescription(DescriptionType.Address, "Research prototype: MCP server inside Rhino 7 for Mac")]
+[assembly: PlugInDescription(DescriptionType.Address, "Research prototype: MCP server inside Rhino 7 (Mac and Windows)")]
 
 namespace RhinoMCP
 {
@@ -38,14 +38,13 @@ namespace RhinoMCP
 
         /// <summary>
         /// Mono exits the process on an unhandled exception (e.g. thrown in a finalizer); we cannot stop that,
-        /// but we can leave a trace in ~/Library/Application Support/RhinoMCP/crash.log for diagnosis.
+        /// but we can leave a trace in crash.log in the RhinoMCP data folder (Platform.DataDir) for diagnosis.
         /// </summary>
         static void OnUnhandled(object sender, UnhandledExceptionEventArgs e)
         {
             try
             {
-                string dir = RhinoMCP.Config.DataDir;
-                System.IO.File.AppendAllText(System.IO.Path.Combine(dir, "crash.log"),
+                System.IO.File.AppendAllText(Platform.CrashLogPath,
                     DateTime.Now.ToString("o") + " terminating=" + e.IsTerminating + "\n" + e.ExceptionObject + "\n\n");
             }
             catch (Exception) { }
@@ -83,7 +82,7 @@ namespace RhinoMCP
                 var s = new HttpServer(Config);
                 s.Start();
                 Server = s;
-                RhinoApp.WriteLine("RhinoMCP: listening on http://127.0.0.1:" + s.Port + "/mcp (" + ToolRegistry.Count + " tools)");
+                RhinoApp.WriteLine("RhinoMCP: listening on " + s.BaseUrl + "/mcp (" + ToolRegistry.Count + " tools)");
                 return s;
             }
         }

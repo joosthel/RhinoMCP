@@ -17,6 +17,9 @@ namespace RhinoMCP
         byte[] _tokenBytes;
 
         public int Port { get; private set; }
+        /// <summary>Host name the listener is bound to: "127.0.0.1", or "localhost" after the Windows URL-ACL fallback.</summary>
+        public string Host { get; private set; }
+        public string BaseUrl { get { return "http://" + (Host ?? "127.0.0.1") + ":" + Port; } }
         public bool Running { get { return _listener != null && _listener.IsListening; } }
         public DateTime StartedAt { get; private set; }
         string DiscoveryPath { get { return Path.Combine(Config.InstancesDir, Process.GetCurrentProcess().Id + ".json"); } }
@@ -29,16 +32,39 @@ namespace RhinoMCP
             Exception last = null;
             for (int port = _cfg.Port; port < _cfg.Port + 20; port++)
             {
-                var l = new HttpListener();
-                l.Prefixes.Add("http://127.0.0.1:" + port + "/");
-                try { l.Start(); }
-                catch (Exception ex) { last = ex; try { l.Close(); } catch (Exception) { } continue; }
-                _listener = l; Port = port; StartedAt = DateTime.UtcNow;
+                string host;
+                var l = TryListen(port, out host, ref last);
+                if (l == null) continue;
+                _listener = l; Port = port; Host = host; StartedAt = DateTime.UtcNow;
                 WriteDiscovery();
                 Task.Run(() => AcceptLoop(l));
                 return;
             }
             throw new InvalidOperationException("No free port in " + _cfg.Port + ".." + (_cfg.Port + 19) + ": " + (last == null ? "" : last.Message));
+        }
+
+        /// <summary>
+        /// Binds http://127.0.0.1:port/. On Windows a non-admin user may not register that prefix (HttpListenerException, native error 5,
+        /// "Access is denied"; it needs a URL ACL from `netsh http add urlacl`), while http://localhost:port/ is allowed for the current user.
+        /// So on access-denied we retry with localhost. On Mac (Mono) the first prefix always works and behaviour is unchanged.
+        /// </summary>
+        static HttpListener TryListen(int port, out string host, ref Exception last)
+        {
+            host = null;
+            foreach (string h in new[] { "127.0.0.1", "localhost" })
+            {
+                var l = new HttpListener();
+                l.Prefixes.Add("http://" + h + ":" + port + "/");
+                try { l.Start(); host = h; return l; }
+                catch (HttpListenerException ex)
+                {
+                    last = ex; try { l.Close(); } catch (Exception) { }
+                    if (ex.ErrorCode == 5 && h == "127.0.0.1" && Platform.IsWindows) continue;   // access denied -> try localhost
+                    return null;
+                }
+                catch (Exception ex) { last = ex; try { l.Close(); } catch (Exception) { } return null; }
+            }
+            return null;
         }
 
         public void Stop()
@@ -59,7 +85,7 @@ namespace RhinoMCP
                 Directory.CreateDirectory(Config.InstancesDir);
                 var o = new JObject
                 {
-                    { "pid", Process.GetCurrentProcess().Id }, { "port", Port },
+                    { "pid", Process.GetCurrentProcess().Id }, { "port", Port }, { "host", Host ?? "127.0.0.1" },
                     { "version", RhinoMCPPlugin.VersionString }, { "startedAt", StartedAt.ToString("o") }
                 };
                 File.WriteAllText(DiscoveryPath, o.ToString(Formatting.None));
@@ -86,8 +112,8 @@ namespace RhinoMCP
                 var req = ctx.Request;
                 string path = req.Url.AbsolutePath;
 
-                string host = (req.Headers["Host"] ?? "").ToLowerInvariant();
-                if (host != "127.0.0.1:" + Port && host != "localhost:" + Port)
+                // DNS-rebinding guard; both loopback spellings are accepted whichever prefix was bound.
+                if (!Platform.IsLoopbackHost(req.Headers["Host"], Port))
                 { Send(ctx, 403, "{\"error\":\"forbidden host\"}"); return; }
                 if (req.Headers["Origin"] != null)
                 { Send(ctx, 403, "{\"error\":\"origin not allowed\"}"); return; }

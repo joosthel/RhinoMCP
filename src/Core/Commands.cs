@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Rhino;
 using Rhino.Commands;
@@ -15,7 +14,7 @@ namespace RhinoMCP
             try
             {
                 var s = RhinoMCPPlugin.StartServer();
-                RhinoApp.WriteLine("RhinoMCP running at http://127.0.0.1:" + s.Port + "/mcp");
+                RhinoApp.WriteLine("RhinoMCP running at " + s.BaseUrl + "/mcp");
                 return Result.Success;
             }
             catch (Exception ex) { RhinoApp.WriteLine("RhinoMCP: could not start: " + ex.Message); return Result.Failure; }
@@ -43,7 +42,7 @@ namespace RhinoMCP
             var s = RhinoMCPPlugin.Server;
             if (s == null || !s.Running) { RhinoApp.WriteLine("RhinoMCP: not running. Use MCPStart."); return Result.Success; }
             var up = DateTime.UtcNow - s.StartedAt;
-            RhinoApp.WriteLine("RhinoMCP " + RhinoMCPPlugin.VersionString + ": http://127.0.0.1:" + s.Port + "/mcp, " +
+            RhinoApp.WriteLine("RhinoMCP " + RhinoMCPPlugin.VersionString + ": " + s.BaseUrl + "/mcp, " +
                                ToolRegistry.Count + " tools, uptime " + (long)up.TotalSeconds + "s");
             return Result.Success;
         }
@@ -57,20 +56,9 @@ namespace RhinoMCP
         {
             var s = RhinoMCPPlugin.Server;
             if (s == null || !s.Running) { RhinoApp.WriteLine("RhinoMCP: not running. Use MCPStart first."); return Result.Failure; }
-            string line = "claude mcp add --transport http rhino http://127.0.0.1:" + s.Port + "/mcp --header \"Authorization: Bearer " + RhinoMCPPlugin.Config.Token + "\"";
+            string line = "claude mcp add --transport http rhino " + s.BaseUrl + "/mcp --header \"Authorization: Bearer " + RhinoMCPPlugin.Config.Token + "\"";
             RhinoApp.WriteLine(line);
-            try
-            {
-                var psi = new ProcessStartInfo("/usr/bin/pbcopy") { UseShellExecute = false, RedirectStandardInput = true, CreateNoWindow = true };
-                using (var p = Process.Start(psi))
-                {
-                    p.StandardInput.Write(line);
-                    p.StandardInput.Close();
-                    p.WaitForExit(3000);
-                }
-                RhinoApp.WriteLine("(copied to clipboard)");
-            }
-            catch (Exception) { RhinoApp.WriteLine("(could not copy to clipboard)"); }
+            RhinoApp.WriteLine(Platform.CopyToClipboard(line) ? "(copied to clipboard)" : "(could not copy to clipboard)");
             return Result.Success;
         }
     }
