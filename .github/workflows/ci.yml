@@ -177,7 +177,6 @@ jobs:
           packaging/build_mcpb.sh
           cp dist/rhino-mcp.mcpb release/
           for f in artifacts/windows-packages/*; do [ -e "$f" ] && cp "$f" release/ || true; done
-          for f in artifacts/windows-plugin/*.rhp artifacts/windows-plugin/RhinoMCP.Tools.*.dll; do [ -e "$f" ] && cp "$f" release/ || true; done
           ls -la release
       - name: Upload to the release
         env:
