@@ -3,7 +3,7 @@
   "name": "rhino-mcp",
   "display_name": "Rhino MCP",
   "version": "0.2.0",
-  "description": "Drive Rhino 7 (macOS) from Claude: modelling, layers, drawings and exports.",
+  "description": "Drive Rhino 7 (macOS and Windows) from Claude: modelling, layers, drawings and exports.",
   "long_description": "Connects Claude to a running Rhino 7 with the RhinoMCP plugin installed. The bundled bridge talks to Rhino over an authenticated loopback-only connection (127.0.0.1). If Rhino is closed, Claude is told to open it; no restart of Claude is needed. Requires the RhinoMCP plugin in Rhino (see the project's INSTALL.md).",
   "author": {
     "name": "joosthel",
@@ -27,12 +27,19 @@
     "entry_point": "server/rhinomcp-bridge",
     "mcp_config": {
       "command": "${__dirname}/server/rhinomcp-bridge",
-      "args": []
+      "args": [],
+      "platform_overrides": {
+        "win32": {
+          "command": "${__dirname}/server/rhinomcp-bridge.exe",
+          "args": []
+        }
+      }
     }
   },
   "compatibility": {
     "platforms": [
-      "darwin"
+      "darwin",
+      "win32"
     ]
   }
 }
