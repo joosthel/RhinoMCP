@@ -31,7 +31,7 @@ Rule of thumb: cheap before expensive. Counts before lists, numbers before pictu
 
 ## Keep Rhino light
 
-Rhino 7 Mac runs under Rosetta, mostly single-threaded: heavy geometry stalls or crashes it. Heavy tools refuse with `RESOURCE_LIMIT` (numbers plus guidance) rather than compute; read the guidance, don't just retry with `force:true`.
+Rhino 7 is mostly single-threaded (and runs under Rosetta on Apple Silicon Macs): heavy geometry stalls or crashes it. Heavy tools refuse with `RESOURCE_LIMIT` (numbers plus guidance) rather than compute; read the guidance, don't just retry with `force:true`.
 
 - Call `system_status` on big models and before heavy work: memory, Rosetta, heaviest objects, recommendations.
 - Modest control-point counts: 20x20 per surface is usually enough (limit 50x50). Rebuild dense surfaces (`freeform_surface` `rebuild_surface`) before booleans, offsets and Make2D.

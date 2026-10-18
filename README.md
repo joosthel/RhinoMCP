@@ -1,6 +1,6 @@
 # RhinoMCP
 
-**An MCP server that lets AI agents work inside Rhino 7 for Mac:** model, organize layers, measure, check, and produce clean drawings at scale.
+**An MCP server that lets AI agents work inside Rhino 7 (Mac and Windows):** model, organize layers, measure, check, and produce clean drawings at scale.
 
 A personal research project, built to find out how far an agent can drive Rhino 7 on an Intel/Rosetta Mac. The answer is in [`docs/FINDINGS.md`](docs/FINDINGS.md).
 
